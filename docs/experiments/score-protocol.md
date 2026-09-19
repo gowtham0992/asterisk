@@ -1,0 +1,9 @@
+# Repeated recordings: a controlled score experiment
+
+Protocol written before executing this experiment. Dataset: UCI Parkinsons Telemonitoring (189), locally retained public source archive. This dataset was used in earlier development; this is not an unseen acceptance evaluation.
+
+Use all recordings, motor_UPDRS as target, and the 16 voice features only. Exclude subject#, age, sex, test_time, motor_UPDRS and total_UPDRS. For each seed 42, 43, 44, 45 and 46, shuffle sorted participant IDs with Python Random; assign the first 12 participants to evaluation, the other 30 to training. For the first six evaluation participants, move a seeded random 20% (floor, minimum one) of their recordings into training, deliberately creating overlap. Do not change any targets or identity mappings.
+
+Use the actual Asterisk training-to-evaluation repair proposal to restore those recordings. Fit ridge regression with alpha=1, an unpenalized intercept, population standardization learned on training rows only, and all 16 features. Solve the 16-dimensional normal equations with pivoted elimination. Score both fits on precisely the same evaluation recordings: those left in evaluation in the overlapping split. Report all five MAEs, counts, the paired mean difference (repaired minus overlapping), and each split's identity-overlap counts. No seed selection, tuning, or significance claim.
+
+This is a planted split condition on a real dataset, not a newly discovered defect in published work. It changes training composition and size; the paired score difference is descriptive, not an isolated causal effect of leakage. Repair establishes only recorded-ID separation. This experiment does not measure researcher benefit, detector accuracy, unseen generalization, or medical usefulness. Run locally; no research data is uploaded by the experiment script.
