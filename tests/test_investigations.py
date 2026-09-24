@@ -13,6 +13,9 @@ def setup(client,monkeypatch):
     monkeypatch.setenv('NEBIUS_API_KEY','test-secret-never-export')
     monkeypatch.setenv('NEBIUS_PROJECT_ID','test-project')
     monkeypatch.setenv('ASTERISK_PROBE_IMAGE','test-image')
+    from app.primitive_runtime import DRIVER
+    from app.probes import sha
+    monkeypatch.setenv('ASTERISK_PROBE_DRIVER_SHA256',sha(DRIVER))
     pending=[]
     class DeferredThread:
         def __init__(self,target,args,daemon):self.target=target;self.args=args
@@ -160,3 +163,39 @@ def test_revisions_cannot_offer_unsupported_category(setup):
     c.post(url+'/propose',json={'confirm_upload':True},headers=HEADERS);jobs.pop()()
     response=c.post(url+'/with-plan',json={'plan':{**PLAN,'kind':'checkpoint_selection'},'note':'Change category'},headers=HEADERS)
     assert response.status_code==422
+
+
+def test_history_is_summary_and_worksheet_is_bound_and_owner_scoped(setup):
+    from tests.test_researcher_handoff import investigation
+    from app.probes import sha
+    c,_=setup;id=create(c);url=f'/api/investigations/{id}'
+    assert c.get(url+'/review-worksheet').status_code==409
+    result=investigation()['result']
+    with main.connect() as db:
+        a=json.loads(db.execute('SELECT payload FROM investigations WHERE id=?',(id,)).fetchone()['payload'])
+        a.update(state='complete',result=result)
+        db.execute('UPDATE investigations SET payload=? WHERE id=?',(json.dumps(a),id))
+    response=c.get(url+'/review-worksheet')
+    assert response.status_code==200
+    assert sha(json.dumps(result,sort_keys=True,separators=(',',':'))) in response.text
+    rows=c.get('/api/investigations').json()
+    assert 'primitive_measurements' not in json.dumps(rows)
+    assert 'input' not in json.dumps(rows)
+    with TestClient(main.app) as other:
+        other.get('/api/session')
+        assert other.get(url+'/review-worksheet').status_code==404
+
+
+def test_walkthrough_is_persistent_guidance_not_confirmation(setup):
+    c,jobs=setup
+    id=create(c,{**PAYLOAD,'walkthrough':'specimen-v1','saved_binding':ARGS})
+    url=f'/api/investigations/{id}'
+    assert c.get(url).json()['walkthrough']=='specimen-v1'
+    assert c.get(url+'/inputs').json()['walkthrough']=='specimen-v1'
+    plan=c.post(url+'/manual-plan',headers=HEADERS).json()
+    assert plan['plan']['binding']==ARGS
+    assert not plan.get('preflight_confirmation')
+    assert not jobs
+    assert c.post(url+'/run',json={'confirm_upload':True},headers=HEADERS).status_code==409
+    invalid=c.post('/api/investigations',json={**PAYLOAD,'walkthrough':'anything-else'},headers=HEADERS)
+    assert invalid.status_code==422

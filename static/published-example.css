@@ -1,0 +1,5 @@
+.case-hero{align-items:start}.case-number{margin-top:24px}.case-number>strong{display:block;font:clamp(88px,10vw,144px)/1 var(--serif);letter-spacing:-6px;color:var(--accent);margin:24px 0 8px}.case-number>p{margin:10px 0 24px}.case-number dl dd{font-size:20px}.case-hero .product-intro>p:not(.product-kicker){line-height:1.75}.case-hero a,.product-section a{text-underline-offset:4px}.product-section li{line-height:1.8}.product-close>p:not(.product-kicker){max-width:540px;margin:20px auto;line-height:1.7;color:#fffefa}.product-section code{font-size:.88em}.product-section li+li{margin-top:10px}.product-steps li+li{margin-top:0}.case-number{min-width:0}.case-hero{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr)}
+@media(max-width:600px){.case-hero{grid-template-columns:1fr}.case-number{margin-top:0}.case-number>strong{font-size:100px}.product-hero.case-hero{gap:24px}}
+/* Keep the two explanatory columns aligned; shorten the mobile entrance. */
+.evidence-section>div+div{margin-top:0}
+@media(max-width:600px){.product-hero.case-hero{padding-top:44px}}

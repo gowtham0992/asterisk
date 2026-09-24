@@ -3,6 +3,14 @@
 <body><main class="about"><a href="/">← Back to workspace</a>
 <h1>Different samples. Same subjects?</h1>
 <p>Training on one image of a specimen and evaluating on another image of the same specimen does not test performance on unseen specimens. Asterisk records an exact-identity overlap check, with the assumptions and evidence needed to inspect it.</p>
+<h2 id="prepare-inputs">Prepare your files</h2>
+<p>You need realized sample assignments, not the images or model weights. Keep identifiers as text. One CSV can contain all three columns, or you can supply separate tables joined by a sample identifier.</p>
+<pre>sample_id,partition,patient_id
+scan_014,train,P07
+scan_092,test,P07
+scan_105,test,P12</pre>
+<p>Include a README or data dictionary explaining what <code>patient_id</code> means and which partition labels represent training and evaluation. These rows are a synthetic example. Do not upload sensitive patient information.</p>
+<p>From an existing notebook, export your realized sample IDs, entity IDs and partition labels as CSV. The project also provides <code>asterisk.export_split</code> to export those arrays and a reusable column configuration; see the project README. Asterisk does not execute your notebook to discover a split.</p>
 <h2>One claim, one binding</h2>
 <p>Start a split receipt. Supply a CSV split, an identity mapping and documentation. State the generating unit your evaluation should hold out. NVIDIA Nemotron Super reads previews through Nebius Token Factory and proposes the columns and labels. You see cardinalities computed from all rows, correct the fields, and confirm their meaning before execution.</p>
 <p>Repeated or blank sample identifiers, identical sample and partition columns, absent labels and conflicting mappings are rejected with specific errors. These are binding checks, not proof that an entity column means “patient” or “specimen.” That assumption remains yours.</p>
@@ -11,7 +19,7 @@
 <ul><li><strong>Violation:</strong> recorded identities occur on both sides of the confirmed split.</li><li><strong>Clear:</strong> no recorded identity overlaps, coverage is complete, and the exact binding has a recorded confirmation. This is not experiment certification.</li><li><strong>Insufficient:</strong> the available mapping or binding does not establish separation.</li><li><strong>Incomplete:</strong> execution or replay failed; no definitive result is available.</li></ul>
 <p>Factual findings and missing-evidence text come from the harness. Any model interpretation is separately labeled unverified. Identity assumptions, undocumented links, duplicate content and accuracy effects are outside the check.</p>
 <h2>A receipt someone else can inspect</h2>
-<p>Export the claim, input files, confirmed binding, source quotations, checker source, measured results and replay records. The included verifier checks retained file hashes. Hashes show byte integrity relative to an unsigned manifest; replay shows repeatability. Neither establishes scientific validity or independent provenance.</p>
+<p>Export the claim, input files, confirmed binding, source quotations, checker source, measured results and replay records. The included verifier checks retained file hashes. Hashes show byte integrity relative to an unsigned manifest; replay shows repeatability. Neither establishes scientific validity or independent provenance. A sender can replace the inputs, checker and manifest together. For a separate check, obtain and verify a matching Asterisk release independently of the receipt, then run <code>python -m asterisk verify /absolute/path/to/receipt</code> from that trusted installation directory. It recomputes with installed code without executing bundled Python or uploading data. It still does not authenticate the author or the original dataset.</p>
 <h2>Scope and evaluation</h2>
 <p>Only entity overlap is offered. Checkpoint and preprocessing code remain research artifacts. V3 acceptance failed; v4 is a new development iteration. Human evidence review, comprehension and evidence of reduced verification effort remain unmeasured. A synthetic example or automated confirmation is not a human study.</p>
 <h2>Your data</h2>

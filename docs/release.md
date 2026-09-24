@@ -6,7 +6,7 @@ This is an invitation-only, single-process research preview. Human utility and f
 
 Use Python 3.14 and `requirements.lock.txt`. Store `NEBIUS_API_KEY` and `NEBIUS_PROJECT_ID` in the host secret manager; Sandbox access is required. No credentials belong in an artifact.
 
-For a fresh host, create the base scientific image with `evaluation/probe-pilot/bake.py`, then inspect the exact trusted source upload inventory with `evaluation/primitive-v4/bake.py`. After inspecting it, `evaluation/primitive-v4/bake.py --execute` bakes a matching immutable image and records `.data/primitive-v4/environment.json`. These scripts use the existing SDK and are exercised on the development machine. Supply `ASTERISK_PROBE_IMAGE` if moving the image ID to another installation with the same account. A different source/image combination fails provenance checks. Image availability is account-specific.
+For a fresh host, create the base scientific image with `evaluation/probe-pilot/bake.py`, then inspect the exact trusted source upload inventory with `evaluation/primitive-v4/bake.py`. After inspecting it, `evaluation/primitive-v4/bake.py --execute` bakes a matching immutable image and records `.data/primitive-v4/environment.json`. These scripts use the existing SDK and are exercised on the development machine. Supply both `ASTERISK_PROBE_IMAGE` and `ASTERISK_PROBE_DRIVER_SHA256` if moving the image ID to another installation with the same account. The configured driver hash must equal the installed `sha256(DRIVER)`. Each remote launch also hashes the actual image driver before execution; stale driver bytes fail closed. Primitive output is separately checked against the installed measurement implementation. Image availability is account-specific.
 
 The product uses Super only, requires a confirmed binding before execution and offers only entity overlap. Start locally with `sh scripts/start_preview.sh`.
 
@@ -18,7 +18,7 @@ Use one worker and one replica, an HTTPS reverse proxy, a persistent SQLite disk
 - `ASTERISK_ALLOWED_HOSTS` to the exact hosted domain, no wildcard
 - `ASTERISK_PREVIEW_PASSWORD` to a random value of at least 24 characters; username `reviewer`
 - `ASTERISK_DB` to an absolute persistent-disk path
-- `ASTERISK_PROBE_IMAGE`, `NEBIUS_API_KEY`, `NEBIUS_PROJECT_ID`
+- `ASTERISK_PROBE_IMAGE`, `ASTERISK_PROBE_DRIVER_SHA256`, `NEBIUS_API_KEY`, `NEBIUS_PROJECT_ID`
 
 Use `sh scripts/start_hosted.sh`. The platform must terminate HTTPS, preserve scheme/host, and restrict direct ingress to its proxy. Configure `FORWARDED_ALLOW_IPS` with the actual proxy addresses; never blindly trust arbitrary forwarding headers. Public mode uses Secure, HttpOnly, SameSite Strict session cookies, exact host validation and shared preview authentication. This is not a multi-tenant production identity system.
 

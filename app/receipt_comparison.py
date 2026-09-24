@@ -5,11 +5,21 @@ from .audit import table, validate_binding
 
 def snapshot(a):
     result=a.get('result') or {}
-    records=[r for r in result.get('primitive_measurements',{}).values() if r.get('primitive')=='entity_overlap']
+    records=[(mid,r) for mid,r in result.get('primitive_measurements',{}).items() if r.get('primitive')=='entity_overlap']
     if len(records)!=1:raise ValueError('Complete one entity measurement on each revision first.')
-    record=records[0];files={f['name']:f['content'] for f in a['input']['files']}
+    measurement_id,record=records[0];files={f['name']:f['content'] for f in a['input']['files']}
     hashes={n:hashlib.sha256(t.encode()).hexdigest() for n,t in files.items()}
     if record.get('input_hashes')!=hashes:raise ValueError('Saved inputs do not match their measurement.')
+    from .primitives import measure
+    fields=('primitive','version','arguments','input_hashes','output')
+    fresh=measure('entity_overlap',files,record['arguments'])
+    if any(record.get(k)!=fresh.get(k) for k in fields):
+        raise ValueError('Retained measurement disagrees with original inputs.')
+    for replay in result.get('primitive_replays') or []:
+        if replay.get('measurement_id')==measurement_id and replay.get('matches') is True:
+            retained=replay.get('record') or {}
+            if retained.get('execution_error') or any(record.get(k)!=retained.get(k) for k in fields):
+                raise ValueError('Claimed replay disagrees with its retained measurement.')
     args=record['arguments'];validate_binding(args,files)
     sf=args['split_file'];mf=args.get('mapping_file') or sf;join=args.get('mapping_sample_column') or args['sample_column']
     _,rows=table(files[sf]);_,mapping=table(files[mf])
@@ -25,7 +35,7 @@ def snapshot(a):
     return {'args':args,'samples':samples,'ids':ids,'shared':shared,'affected':affected,'groups':groups,
             'missing':missing,'hashes':hashes,'claim':a['input']['claim'],
             'confirmation':result.get('preflight_confirmation') or result.get('binding_confirmation'),
-            'replay_recorded':any(r.get('matches') is True for r in result.get('primitive_replays',[]))}
+            'replay_recorded':any(r.get('measurement_id')==measurement_id and r.get('matches') is True for r in result.get('primitive_replays',[]))}
 
 
 def compare_receipts(before,after):
@@ -37,15 +47,15 @@ def compare_receipts(before,after):
     remapped=[{'sample':s,'before':a['ids'].get(s),'after':b['ids'].get(s)} for s in sorted(a['samples'].keys()|b['samples'].keys()) if a['ids'].get(s)!=b['ids'].get(s)]
     same_binding=a['args']==b['args'];same_claim=a['claim']==b['claim'];same_ids=not remapped
     same_universe=not added and not removed
-    shared_comparable=same_binding and same_claim and same_ids
+    shared_comparable=same_binding and same_claim and same_ids and before['input'].get('evaluation_intent')==after['input'].get('evaluation_intent')
     def summary(s):
         return {'shared_identities':len(s['shared']),'affected_evaluation_rows':len(s['affected']),
                 'evaluation_rows':len(s['groups']['test']),'training_rows':len(s['groups']['train']),
                 'ignored_rows':len(s['samples'])-len(s['groups']['train']|s['groups']['test']),'unmapped_selected_rows':len(s['missing']),'confirmation_recorded':bool(s['confirmation']),
                 'replay_recorded':s['replay_recorded']}
-    return {'available':True,'before':summary(a),'after':summary(b),
-            'same_claim':same_claim,'same_binding':same_binding,'same_identity_assignments':same_ids,'same_sample_universe':same_universe,
-            'partition_only_change':shared_comparable and same_universe,
+    return {'schema_version':2,'available':True,'before':summary(a),'after':summary(b),
+            'same_intent':before['input'].get('evaluation_intent')==after['input'].get('evaluation_intent'),'same_claim':same_claim,'same_binding':same_binding,'same_identity_assignments':same_ids,'same_sample_universe':same_universe,
+            'identity_membership_comparable':shared_comparable and same_universe,
             'shared_identity_comparison_available':shared_comparable,
             'resolved_identities':sorted(a['shared']-b['shared']) if shared_comparable else None,
             'introduced_identities':sorted(b['shared']-a['shared']) if shared_comparable else None,
@@ -54,4 +64,4 @@ def compare_receipts(before,after):
             'evaluation_rows_removed':sorted(a['groups']['test']-b['groups']['test']),
             'samples_added':added,'samples_removed':removed,'partition_moves':moved,'identity_changes':remapped,
             'changed_files':sorted(n for n in a['hashes'].keys()|b['hashes'].keys() if a['hashes'].get(n)!=b['hashes'].get(n)),
-            'scope':'Changes in exact recorded identities and partition membership. No accuracy effect, causal improvement or scientific validity is established.'}
+            'scope':'Changes in exact recorded identities and partition membership. Other input fields may differ; inspect changed files before attributing any outcome to a split change. No accuracy effect, causal improvement or scientific validity is established.'}

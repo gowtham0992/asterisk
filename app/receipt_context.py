@@ -1,6 +1,26 @@
 """Display context only. Never grants a verdict or confirms scientific meaning."""
 import re,hashlib
 from .identity_diagnostics import identity_formats
+from .audit import table, validate_binding
+
+
+def binding_scope(files, args):
+    """Presentation from retained rows; never changes or grants a verdict."""
+    validate_binding(args, files)
+    _, split = table(files[args['split_file']])
+    _, mapping = table(files[args['mapping_file']])
+    labels = set(args['train_values'] + args['test_values'])
+    selected = {r[args['sample_column']] for r in split if r[args['partition_column']] in labels}
+    index = {r[args['mapping_sample_column']]: r[args['entity_column']] for r in mapping
+             if r[args['mapping_sample_column']] and r[args['entity_column']]}
+    identities = {index[s] for s in selected if s in index}
+    warning = ''
+    if selected and selected <= index.keys() and len(identities) == len(selected):
+        warning = (f"Each selected sample maps to a distinct value of {args['entity_column']}. "
+                   "No overlap is possible under this binding regardless of the split. "
+                   "Choose the column that names the repeating unit, or retain this binding if that is your intended unit.")
+    return {'excluded_labels': sorted({r[args['partition_column']] for r in split} - labels),
+            'selected_identity': {'samples': len(selected), 'distinct': len(identities), 'warning': warning}}
 
 
 def review_context(result, files):
@@ -20,7 +40,8 @@ def review_context(result, files):
     citations=[]
     for c in (result.get('verdict') or {}).get('citations',[]):
         header=c.get('file','').lower().endswith('.csv') and c.get('start_line')==1 and c.get('end_line')==1
-        citations.append({**c,'display_scope':'Column names only; this passage does not define identity meaning.' if header else 'Original cited passage; exact text alone does not verify its meaning.'})
+        csv_data = c.get('file','').lower().endswith('.csv')
+        citations.append({**c,'display_scope':'Column names only; this passage does not define identity meaning.' if header else 'Data rows, not documentation; these values do not define identity meaning.' if csv_data else 'Original cited passage; exact text alone does not verify its meaning.'})
     first=args[0] if args else {}
     diagnostic={'available':False,'message':'Identity-format diagnostic unavailable.'}
     if len(records)==1 and records[0].get('input_hashes')=={n:hashlib.sha256(t.encode()).hexdigest() for n,t in files.items()}:

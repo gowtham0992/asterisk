@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 : "${ASTERISK_PREVIEW_PASSWORD:?Set the reviewer password in the host secret manager}"
 : "${ASTERISK_DB:?Set an absolute database path on persistent storage}"
 : "${ASTERISK_PROBE_IMAGE:?Set the matching v4 Sandbox image}"
+: "${ASTERISK_PROBE_DRIVER_SHA256:?Set the matching v4 driver hash}"
 : "${NEBIUS_API_KEY:?Set the Nebius secret}"
 : "${NEBIUS_PROJECT_ID:?Set the Nebius project}"
 export ASTERISK_PUBLIC=1

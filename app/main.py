@@ -1,4 +1,5 @@
 import io
+import csv
 import hashlib
 import json
 import os
@@ -36,8 +37,8 @@ for line in (ROOT / '.env').read_text().splitlines() if (ROOT / '.env').exists()
 MODEL = os.getenv('NEBIUS_MODEL', 'nvidia/nemotron-3-super-120b-a12b')
 BASE = os.getenv('NEBIUS_BASE_URL', 'https://api.tokenfactory.nebius.com/v1/')
 DB = Path(os.getenv('ASTERISK_DB', str(ROOT / '.data' / 'asterisk.sqlite')))
-DB.parent.mkdir(parents=True, exist_ok=True)
-DB.parent.chmod(0o700)
+from .storage import prepare_database_path
+prepare_database_path(DB)
 
 
 def connect():
@@ -85,6 +86,11 @@ async def boundaries(request: Request, call_next):
     if request.url.path.startswith('/api/'):
         response.headers['Cache-Control'] = 'no-store'
     return response
+
+
+@app.exception_handler(csv.Error)
+async def csv_input_error(request, exc):
+    return JSONResponse({'detail': 'Malformed CSV. Check quotation marks, headers and row lengths.'}, status_code=422)
 
 
 @app.exception_handler(RequestValidationError)

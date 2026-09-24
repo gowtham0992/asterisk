@@ -32,3 +32,9 @@ def test_repair_preserves_crlf_and_discloses_quoting_normalization():
     assert p['csv_format']['line_ending']=='CRLF'
     assert '\n' not in revised['split.csv'].replace('\r\n','')
     assert 'quoting is normalized' in p['scope'] and p['after']['shared_entities']==0
+
+@pytest.mark.parametrize('right',['P\u200b1','P\u200d1','P\ufeff1','P\u00ad1','P\u04301'])
+def test_invisible_and_mixed_script_warnings_do_not_change_exact_measurement(right):
+    files={**FILES,'split.csv':'image,part\na,train\nb,test\n','map.csv':f'subject_id,image\nP1,a\n{right},b\n'}
+    assert preview('claim',files,ARGS)['identity_diagnostics']['identity_count']>0
+    assert measure('entity_overlap',files,ARGS)['output']['shared_entities']==0

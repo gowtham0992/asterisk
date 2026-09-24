@@ -17,10 +17,18 @@ DOCS += ['docs/build-readiness.md','evaluation/probe-pilot/protocol.md']
 DOCS += ['evaluation/primitive-v4/'+p.name for p in (ROOT/'evaluation/primitive-v4').glob('*') if p.is_file() and p.suffix in {'.py','.md'}]
 DOCS += ['docs/reviews/v3-acceptance-results.md','docs/reviews/v4-implementation.md','devpost-submission.md','docs/validation/reviewer-a.md','docs/validation/reviewer-b.md','docs/validation/ratings-template.json']
 
+DOCS += ['docs/reviews/rc7-verification-wording.md','docs/reviews/rc6-self-review.md','docs/reviews/rc4-receipt-scope.md','docs/reviews/rc5-runtime-provenance.md']
+
+DOCS += ['docs/validation/binding-recovery-and-newlines.md','docs/validation/live-binding-rc3.md','docs/comparison-contract-v2.md']
+
+# Explicit public aggregates only; never admit arbitrary JSON trees.
+DOCS += ['static/reproductions/dermamnist-summary.json','docs/current-readiness.md',
+         'docs/design/published-example-2026-09-23.md','docs/design/guided-example-2026-09-23.md']
+
 def release_files(root):
     paths=[root/n for n in TOP+DOCS if (root/n).is_file()]
     for tree in TREES:
-        paths.extend(p for p in (root/tree).rglob('*') if p.is_file() and not p.is_symlink() and '__pycache__' not in p.parts and p.suffix in {'.py','.js','.css','.html','.svg','.png','.webp','.sh'})
+        paths.extend(p for p in (root/tree).rglob('*') if p.is_file() and not p.is_symlink() and '__pycache__' not in p.parts and p.suffix in {'.py','.js','.mjs','.css','.html','.svg','.png','.webp','.sh'})
     return sorted(set(paths))
 
 def package(root=ROOT):

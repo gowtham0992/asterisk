@@ -1,3 +1,5 @@
+> Historical record. Current release and runtime configuration: [RC5 status](rc5-runtime-provenance.md). The older image IDs and test counts below do not configure the current release.
+
 # V4 release candidate: feature freeze
 
 The current product supports entity-overlap split receipts only. Feature work is stopped. V3 acceptance remains failed; this release is not a new acceptance pass or a demonstrated human-utility success.

@@ -62,6 +62,17 @@ def propose(a,policy,target_label):
     before=execute(args,files)
     if after['shared_entities']!=0:raise ValueError('The proposed reassignment did not remove recorded overlap.')
     summary=lambda o:{k:o[k] for k in ('shared_entities','affected_test_rows','train_rows','test_rows','ignored_rows')}
-    payload={'parent_id':a.get('id'),'input_hashes':s['hashes'],'arguments':args,'policy':policy,'target_label':target_label,'moves':moves,'before':summary(before),'after':summary(after),'csv_format':formatting,'scope':SCOPE+' '+formatting['notice']}
+    before_test=s['groups']['test']
+    after_test={r[args['sample_column']] for r in rows if r[args['partition_column']] in args['test_values']}
+    population={'evaluation_rows_retained':len(before_test & after_test),
+                'evaluation_rows_removed':len(before_test-after_test),
+                'evaluation_rows_added':len(after_test-before_test),
+                'evaluation_identities_before':len({s['ids'][sid] for sid in before_test}),
+                'evaluation_identities_after':len({s['ids'][sid] for sid in after_test})}
+    consequence=(f"Evaluation changes from {len(before_test)} to {len(after_test)} rows: "
+                 f"{population['evaluation_rows_removed']} removed and {population['evaluation_rows_added']} added. "
+                 f"Distinct evaluation identities change from {population['evaluation_identities_before']} to {population['evaluation_identities_after']}. "
+                 "This changes who is evaluated and the training data. Removing recorded overlap does not establish a better or representative experiment. Review whether the revised population still answers the original claim; retrain and evaluate again.")
+    payload={'evaluation_population':population,'scientific_consequence':consequence,'evaluation_intent':a['input'].get('evaluation_intent'),'original_claim':a['input']['claim'],'parent_id':a.get('id'),'input_hashes':s['hashes'],'arguments':args,'policy':policy,'target_label':target_label,'moves':moves,'before':summary(before),'after':summary(after),'csv_format':formatting,'scope':SCOPE+' '+formatting['notice']}
     payload['proposal_hash']=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':')).encode()).hexdigest()
     return payload,revised

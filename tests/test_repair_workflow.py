@@ -85,9 +85,23 @@ def test_cli_repeat_compares_exact_inputs_and_refuses_tampered_parent(tmp_path):
     second=export_split(tmp_path/'second',sample_ids=['a','b','c'],entity_ids=['u','u','v'],partitions=['train','train','test'],claim=claim,identity_definition='entity is the specimen.')
     check(first,tmp_path/'before');check(second,tmp_path/'after',tmp_path/'before')
     r=json.loads((tmp_path/'after/result.json').read_text())
-    assert r['revision_comparison']['partition_only_change'] and r['revision_comparison']['resolved_identities']==['u']
+    assert r['revision_comparison']['identity_membership_comparable'] and r['revision_comparison']['resolved_identities']==['u']
     assert (tmp_path/'after/comparison.json').exists()
     (tmp_path/'before/inputs/splits.csv').write_text('tamper')
     check(second,tmp_path/'tampered',tmp_path/'before')
     r=json.loads((tmp_path/'tampered/result.json').read_text())
     assert not r['revision_comparison']['available']
+
+def test_cli_preserves_crlf_inputs_and_can_compare_them(tmp_path):
+    from asterisk import export_split,check
+    cfg=export_split(tmp_path/'source',sample_ids=['a','b','c'],entity_ids=['u','u','v'],partitions=['train','test','test'],claim='Evaluation specimens must be absent from training.',identity_definition='entity identifies the physical specimen.')
+    for name in ('splits.csv','identities.csv','identity.md'):
+        path=cfg.parent/name
+        path.write_bytes(path.read_bytes().replace(b'\n',b'\r\n'))
+    check(cfg,tmp_path/'first')
+    for name in ('splits.csv','identities.csv','identity.md'):
+        assert (tmp_path/'first/inputs'/name).read_bytes()==(cfg.parent/name).read_bytes()
+    check(cfg,tmp_path/'second',tmp_path/'first')
+    result=json.loads((tmp_path/'second/result.json').read_text())
+    assert result['revision_comparison']['available']
+    assert result['revision_comparison']['changed_files']==[]

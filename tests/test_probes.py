@@ -31,7 +31,7 @@ def test_abstention_requires_missing_evidence():
     v['missing_evidence']=['patient mapping']
     with pytest.raises(ValueError,match='Only retained'):i.dispatch('submit_verdict',v)
 def test_bundle_captures_inputs_code_and_results(tmp_path):
-    r={'claim':'test claim','probes':{'probe-1':'print(1)'}}
+    r={'claim':'test claim','input_hashes':{'data.txt':__import__('hashlib').sha256(b'entity').hexdigest()},'probes':{'probe-1':'print(1)'}}
     out=bundle(r,{'data.txt':'entity'},tmp_path/'bundle')
     manifest=json.loads((out/'manifest.json').read_text())
     assert 'inputs/data.txt' in manifest['files'] and 'probes/probe-1.py' in manifest['files']

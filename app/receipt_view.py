@@ -1,10 +1,12 @@
 """Offline, escaped evidence presentation. No external assets or executable inputs."""
+from .evaluation_intent import describe
 import hashlib
 import html
 import json
 from pathlib import Path
 from .witness import inspect_witness
-from .receipt_context import review_context
+from .receipt_context import review_context, binding_scope
+from .receipt_verification import assess_receipt
 
 
 def esc(value):
@@ -21,7 +23,10 @@ def render_receipt(result, files):
     intact = bool(expected) and expected == actual
     verdict = result.get('verdict') or {}
     decision = verdict.get('verdict', 'incomplete') if intact else 'unverifiable'
-    titles = {'violation':'Recorded identities appear on both sides.',
+    assessment=assess_receipt(result,files) if intact else {'matches':False,'reason':'Input hashes differ'}
+    if intact and result.get('engine_version')=='primitive-v4' and not assessment['matches']:
+        decision='inconsistent'
+    titles = {'inconsistent':'The retained receipt is inconsistent.','violation':'Recorded identities appear on both sides.',
               'clear':'No recorded overlap within the confirmed binding.',
               'clear_pending_confirmation':'No overlap recorded. Identity meaning needs confirmation.',
               'insufficient':'The evidence cannot establish separation.',
@@ -29,10 +34,13 @@ def render_receipt(result, files):
     context = review_context(result, files)
     confirmation = result.get('preflight_confirmation') or result.get('binding_confirmation') or {}
     body = '<header><p class="eyebrow">✱ ASTERISK / PORTABLE RECEIPT</p><h1>'+esc(titles.get(decision,'Historical result'))+'</h1><p>'+esc(result.get('original_claim') or result.get('claim',''))+'</p></header>'
-    body += section('Read this first', '<p>This file opens offline. It contains source evidence; share it only with authorized recipients.</p><p><strong>'+('Input hashes matched when this view was generated.' if intact else 'Input integrity failed; no definitive conclusion is displayed.')+'</strong> This is an unsigned presentation, not an authenticity certificate. Use the evidence ZIP and <code>python verify.py</code> to check retained bytes. Repeating the check remotely requires the matching Asterisk implementation and credentials.</p>')
+    body += section('Read this first', '<p>This file opens offline. It contains source evidence; share it only with authorized recipients.</p><p><strong>'+('Input hashes matched when this view was generated.' if intact else 'Input integrity failed; no definitive conclusion is displayed.')+'</strong> This is an unsigned presentation, not an authenticity certificate. To recompute, obtain and verify a matching Asterisk release separately from this receipt. From that trusted installation directory, run <code>python -m asterisk verify /absolute/path/to/extracted-receipt</code>. This checks bytes, measurements and decision consistency without credentials or executing bundled Python. Do not run the command from inside the received bundle. An unsigned bundle can have its inputs, checker and manifest replaced together; its own verifier is not independent evidence of authenticity.</p>')
+    if decision=='inconsistent':
+        body += section('Verification failed','<p>'+esc(assessment['reason'])+'</p><p>No definitive conclusion is supported. The fields below are retained history, not verified evidence. Re-run the check against the original files.</p>')
     diagnostic=context.get('identity_diagnostics',{})
     if diagnostic.get('identity_count'):
         body += section('Review similar-looking identity values', '<p>'+esc(diagnostic['message'])+'</p><p>'+esc(diagnostic['scope'])+'</p><pre>'+esc(json.dumps(diagnostic['examples'],ensure_ascii=True,indent=2))+'</pre>')
+    body += section('Intended evaluation', '<p>'+esc(describe(result.get('evaluation_intent')))+'</p>')
     body += section('The recorded assumption', '<p>'+esc(confirmation.get('text','No confirmed identity binding is recorded.'))+'</p><p>Recorded actor: <code>'+esc(confirmation.get('origin','unrecorded'))+'</code> · '+esc(confirmation.get('confirmed_at','No timestamp'))+'</p><p>Confirmation records an assumption. It does not independently establish what an identifier means.</p>')
     docs = {n:t for n,t in files.items() if n.lower().endswith(('.md','.txt'))}
     if docs:
@@ -56,8 +64,17 @@ def render_receipt(result, files):
                 diagnosis = '<p>The sample identifier and partition label use the same column. Review the column binding before changing the data.</p>' if same_column else ''
                 body += section('Check blocked', '<p>No overlap measurement is available because the check was blocked.</p><p>'+esc(output.get('error') or 'The saved measurement is unavailable.')+'</p>'+binding+diagnosis+'<p>Next: review the selected columns and required inputs, then run a new check. Preserve this record as the failed attempt.</p>')
                 continue
-            metrics = '<div class="metrics">'+''.join('<div><strong>'+esc(output.get(k,'Unavailable'))+'</strong><span>'+esc(t)+'</span></div>' for k,t in [('shared_entities','shared identities'),('affected_test_rows','evaluation rows affected'),('test_rows','total evaluation rows'),('mapping_coverage_percent','mapping coverage (%)')])+'</div>'
-            body += section('What was measured',binding+metrics+'<details><summary>Exact columns and labels</summary><pre>'+esc(json.dumps(record.get('arguments'),indent=2))+'</pre></details>')
+            metrics = '<div class="metrics">'+''.join('<div><strong>'+esc(output.get(k,'Unavailable'))+'</strong><span>'+esc(t)+'</span></div>' for k,t in [('shared_entities','shared identities'),('affected_test_rows','evaluation rows affected'),('test_rows','total evaluation rows'),('mapping_coverage_percent','mapping coverage (%)'),('ignored_rows','excluded rows'),('train_entities','distinct training identities'),('test_entities','distinct evaluation identities')])+'</div>'
+            try:
+                scope = binding_scope(files, args)
+                excluded = ', '.join(json.dumps(v, ensure_ascii=True) for v in scope['excluded_labels']) or 'none'
+                identity = scope['selected_identity']
+                scope_text = '<p>'+esc(str(output.get('ignored_rows','Unavailable'))+' rows excluded (labels: '+excluded+')')+'</p><p>'+esc(str(identity['distinct'])+' distinct mapped identities across '+str(identity['samples'])+' selected samples.')+'</p>'
+                if identity['warning']:
+                    scope_text += '<p><strong>'+esc(identity['warning'])+'</strong></p>'
+            except (KeyError, ValueError, TypeError):
+                scope_text = '<p>Selected identity counts and excluded labels could not be reconstructed from the retained binding.</p>'
+            body += section('Retained measurement · verification failed' if decision=='inconsistent' else 'What was measured',binding+metrics+scope_text+'<p>'+esc(output.get('scope','Measurement scope unavailable.'))+'</p>'+'<details><summary>Exact columns and labels</summary><pre>'+esc(json.dumps(record.get('arguments'),indent=2))+'</pre></details>')
             coverage = output.get('coverage') or {}
             if coverage:
                 rows = ''.join('<li>'+title+': '+esc(coverage[side]['mapped'])+' of '+esc(coverage[side]['rows'])+' rows mapped; '+esc(coverage[side]['rows']-coverage[side]['mapped'])+' missing.</li>' for side,title in [('train','Training'),('test','Evaluation')] if side in coverage)
@@ -87,14 +104,14 @@ def render_receipt(result, files):
     body += section('What remains unknown','<ul>'+''.join('<li>'+esc(v)+'</li>' for v in unknowns)+'</ul><p>Exact recorded IDs only. This does not measure duplicate content, undocumented links, preprocessing leakage or the effect on accuracy.</p>')
     replay=result.get('primitive_replays') or []
     records=result.get('primitive_measurements') or {}
-    replay_ok=bool(records) and all(any(r.get('measurement_id')==mid and r.get('matches') is True for r in replay) for mid in records)
+    replay_ok=assessment['matches'] and bool(records) and all(any(r.get('measurement_id')==mid and r.get('matches') is True for r in replay) for mid in records)
     replay_text = 'The retained record reports a matching replay for every measurement.' if replay_ok else 'A complete matching replay is not recorded.'
     if blocked:
         replay_text = ('The retained record reports matching outputs, including a blocked check.' if replay_ok else 'A complete matching replay is not recorded.')+' Repeatability of an error does not establish separation.'
-    body += section('Repeatability', '<p>'+replay_text+' Replay means repeating the check in a separate execution environment. This viewer does not start a new execution. Repeatability does not establish scientific validity.</p>')
+    body += section('Repeatability', '<p>'+replay_text+' Replay means repeating the check in a separate execution environment. This viewer does not start a new execution. The primitive implementation hash covers the five measurement modules, not the host renderer or this HTML. An unsigned manifest checks byte consistency, not authorship. Repeatability does not establish scientific validity.</p>')
     if result.get('setup_observation'):
         body += section('Setup record','<details><summary>Initial proposal, confirmed fields and review timing</summary><pre>'+esc(json.dumps(result['setup_observation'],indent=2))+'</pre></details>')
-    body += section('Source documentation',''.join('<details><summary>'+esc(c.get('file',''))+' · cited passage</summary><blockquote>'+esc(c.get('quote',''))+'</blockquote><p>'+esc(c['display_scope'])+'</p></details>' for c in context['citations']))
+    body += section('Source citations · documentation or data',''.join('<details><summary>'+esc(c.get('file',''))+' · cited passage</summary><blockquote>'+esc(c.get('quote',''))+'</blockquote><p>'+esc(c['display_scope'])+'</p></details>' for c in context['citations']))
     body += section('Original files and hashes','<p>CSV row references count logical records, including the header as row 1. A quoted multiline cell is one record.</p>'+''.join('<details><summary>'+esc(n)+'</summary><p class="hash">SHA-256 '+esc(actual[n])+'</p><pre>'+esc(t)+'</pre></details>' for n,t in files.items()))
     body += section('Reviewer worksheet','<p>Write these answers before discussing the expected result. Keep your notes with the evidence ZIP. No response is sent anywhere.</p><ol><li>What exact condition was checked, or attempted?</li><li>Inspect a witness if one is available: a pair of rows from the selected training labels ('+esc(', '.join(labels['train']))+') and evaluation labels ('+esc(', '.join(labels['test']))+') sharing an identity. Otherwise explain why the check has no witness.</li><li>What assumption links the identifier to the research claim?</li><li>What remains unknown? What would you do next?</li></ol><p>Use the separate review worksheet for timed notes, or print this receipt to annotate it.</p>')
     css=(Path(__file__).resolve().parent.parent/'static/receipt.css').read_text()

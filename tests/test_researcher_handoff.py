@@ -45,7 +45,7 @@ def test_partition_repair_has_all_identity_and_row_deltas():
     revised={**FILES,'split.csv':'image,part\na,train\nb,train\nc,train\nd,test\n','map.csv':FILES['map.csv']+'v,d\n'}
     c=compare_receipts(investigation(),investigation(revised))
     assert c['available'] and c['after']['shared_identities']==0
-    assert not c['partition_only_change'] and c['samples_added']==['d']
+    assert not c['identity_membership_comparable'] and c['samples_added']==['d']
     assert len(c['partition_moves'])==2
     assert c['evaluation_rows_added']==['d'] and c['evaluation_rows_removed']==['b','c']
     assert c['resolved_identities'] is None  # new identity/sample universe is explicit
@@ -55,7 +55,7 @@ def test_like_for_like_partition_repair():
     files={**FILES,'split.csv':'image,part\na,train\nb,test\nc,test\nd,train\n','map.csv':FILES['map.csv']+'v,d\n'}
     revised={**files,'split.csv':'image,part\na,train\nb,train\nc,train\nd,test\n'}
     c=compare_receipts(investigation(files),investigation(revised))
-    assert c['partition_only_change'] and c['resolved_identities']==['u']
+    assert c['identity_membership_comparable'] and c['resolved_identities']==['u']
     assert c['after']['evaluation_rows']==1 and len(c['partition_moves'])==3
 
 
@@ -155,3 +155,24 @@ def test_blocked_receipt_separates_historical_requests_from_current_guidance():
     assert 'Column names only; this passage does not define identity meaning.' in page
     assert 'Training labels: train' in page
     assert 'Selected columns and their meaning' in page
+
+@pytest.mark.parametrize('change',['feature','documentation','none'])
+def test_comparison_names_identity_scope_without_claiming_partition_only(change):
+    files={**FILES,'split.csv':'image,part,feature\na,train,10\nb,test,20\nc,test,30\n'}
+    revised=dict(files)
+    if change=='feature':revised['split.csv']=files['split.csv'].replace('b,test,20','b,test,999')
+    if change=='documentation':revised['notes.md']='A new acquisition procedure was used.'
+    c=compare_receipts(investigation(files),investigation(revised))
+    assert 'partition_only_change' not in c
+    assert c['schema_version']==2
+    assert c['identity_membership_comparable'] is True
+    assert c['partition_moves']==[]
+    assert c['changed_files']==({'feature':['split.csv'],'documentation':['notes.md'],'none':[]}[change])
+    assert 'Other input fields may differ' in c['scope']
+
+def test_comparison_replay_badge_requires_the_compared_measurement():
+    a=investigation()
+    a['result']['primitive_replays']=[{'measurement_id':'unrelated-measurement','matches':True}]
+    c=compare_receipts(a,a)
+    assert not c['before']['replay_recorded']
+    assert not c['after']['replay_recorded']

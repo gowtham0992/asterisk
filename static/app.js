@@ -1,4 +1,4 @@
-import {createInvestigations} from './investigations.js';
+import {createInvestigations} from './investigations.js?v=guided-1';
 const $ = (s, root=document) => root.querySelector(s);
 const main = $('#main');
 let config = {}, files = [], current = null, busy = false, generation = 0, revisionSource = null;

@@ -1,6 +1,6 @@
 # Asterisk — build readiness
 
-Current release: primitive-v3. See [the 18 September v3 report](../evaluation/primitive-v3/REPORT.md) for the narrowed two-category scope, human binding confirmation, Gate A/B results and remaining acceptance work. Sections below retain earlier implementation history and do not supersede that report.
+**Historical build log.** The dated entries below describe past states and include superseded scope and access failures. For the current entity-only product, preserved RC7 fallback, extraction experiments and outstanding gates, use [current readiness](current-readiness.md). Do not use this history as deployment or submission status.
 
 ## Per-audit Sandbox integration — 17 September 2026
 

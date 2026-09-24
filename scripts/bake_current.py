@@ -19,7 +19,7 @@ def main():
     client=ContreeSync(ContreeConfig(auth=IAMAuth(token=key,project_id=project),operation_timeout=150,transport_timeout=30))
     r=client.images.use(base).run('python',args=['-c',"import sys;sys.path.insert(0,'/opt/asterisk');from app.primitives import VERSION;print(VERSION)"],files=files,timeout=30,disposable=False).wait()
     if r.exit_code:raise SystemExit('Bake import failed; active image unchanged.')
-    env={'image':str(r.uuid),'base_image':base,'implementation_hash':implementation_hash(),'version':r.stdout.strip(),'inventory_hash':digest(inventory)}
+    env={'image':str(r.uuid),'base_image':base,'implementation_hash':implementation_hash(),'version':r.stdout.strip(),'inventory_hash':digest(inventory),'driver_sha256':hashlib.sha256(DRIVER.encode()).hexdigest()}
     (data/'candidate-environment.json').write_text(json.dumps(env,indent=2));print('Baked candidate '+env['image'],flush=True)
     args={'split_file':'split.csv','mapping_file':'map.csv','sample_column':'sample','mapping_sample_column':'sample','partition_column':'partition','entity_column':'entity','train_values':['train'],'test_values':['test']}
     inputs={'split.csv':'sample,partition\n'+''.join(f'{i},{"train" if i<80000 else "test"}\n' for i in range(100000)), 'map.csv':'sample,entity\n'+''.join(f'{i},{i%80000}\n' for i in range(100000))}
@@ -29,6 +29,16 @@ def main():
     report={'rows_per_csv':100000,'cells':400000,'input_bytes':sum(len(t.encode()) for t in inputs.values()),'local_seconds':elapsed,'host_peak_rss_bytes':resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,'implementation_hash':implementation_hash(),'measurement':first,'replay':second,'outputs_equal':valid}
     (data/'100k-benchmark.json').write_text(json.dumps(report,indent=2))
     if not valid:raise SystemExit('Smoke/replay failed; active image unchanged.')
+    newline_reports=[]
+    for ending in ('\n','\r\n'):
+        small={'split.csv':('sample,partition\na,train\nb,test\n').replace('\n',ending),
+               'map.csv':('sample,entity\na,p1\nb,p1\n').replace('\n',ending)}
+        expected=measure('entity_overlap',small,args)
+        runs=[sandbox.primitive('entity_overlap',args,small) for _ in range(2)]
+        match=all(not r.get('execution_error') and all(r.get(k)==expected.get(k) for k in ('input_hashes','output','arguments','primitive','version')) for r in runs)
+        newline_reports.append({'line_ending':repr(ending),'matches':match,'measurement':runs[0],'replay':runs[1]})
+    (data/'newline-replay.json').write_text(json.dumps(newline_reports,indent=2))
+    if not all(r['matches'] for r in newline_reports):raise SystemExit('Newline replay failed; active image unchanged.')
     active=ROOT/'.data/primitive-v4';immutable=active/('environment-'+env['image']+'.json')
     with immutable.open('x') as f:json.dump(env,f,indent=2)
     (active/'environment.json').write_text(json.dumps(env,indent=2));print(json.dumps({'activated':env,'local_seconds':elapsed,'remote_seconds':[first['execution']['seconds'],second['execution']['seconds']],'outputs_equal':valid},indent=2))
