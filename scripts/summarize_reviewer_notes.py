@@ -9,8 +9,8 @@ def summarize(paths):
         row=json.loads(path.read_text())
         required=('reviewer_id','artifact_label','actor_type','supported','active_seconds','wall_seconds','committed_at')
         if any(k not in row for k in required):raise ValueError(f'{path.name}: incomplete review')
-        if row['actor_type']!='human' or row.get('consent') is not True or row.get('labels_unseen') is not True:
-            excluded.append({'file':path.name,'reason':'Not a consenting, label-blind human self-report'});continue
+        if row['actor_type']!='human' or row.get('consent') is not True or row.get('labels_unseen') is not True or row.get('independent') is not True:
+            excluded.append({'file':path.name,'reason':'Not a consenting, label-blind, explicitly independent human self-report'});continue
         if row['supported'] not in ('yes','no','uncertain'):raise ValueError('Invalid support rating')
         for key in ('active_seconds','wall_seconds'):
             if type(row[key]) not in (int,float) or row[key]<0:raise ValueError('Invalid timing')

@@ -12,10 +12,10 @@ from app import main
 from fastapi.testclient import TestClient
 
 
-def investigation(files=FILES):
+def investigation(files=FILES, *, origin="automated_development_fixture"):
     claim='Evaluation specimens must be absent from training.'
     checked=preview(claim,files,ARGS)
-    confirmation={**checked,'confirmed':True,'confirmed_at':'2026-09-18T00:00:00+00:00','origin':'automated_development_fixture'}
+    confirmation={**checked,'confirmed':True,'confirmed_at':'2026-09-18T00:00:00+00:00','origin':origin}
     result=execute_receipt(claim,files,PLAN,confirmation,'test',Trusted())
     return {'input':{'claim':claim,'files':[{'name':n,'content':v} for n,v in files.items()]},'result':result}
 
@@ -41,11 +41,52 @@ def test_portable_input_tamper_suppresses_verdict():
     assert 'Recorded identities appear on both sides.' not in page
 
 
+def test_portable_receipt_preserves_crlf_inputs_and_rejects_normalization(tmp_path):
+    files={name:text.replace('\n','\r\n') if name.endswith('.csv') else text for name,text in FILES.items()}
+    a=investigation(files)
+    path=bundle(a['result'],files,tmp_path/'crlf-receipt')
+    retained={f.name:f.read_bytes().decode('utf-8') for f in (path/'inputs').iterdir()}
+    page=render_receipt(a['result'],retained)
+    assert '<h1>Recorded identities appear on both sides.</h1>' in page
+    assert 'id="witnesses-1"' in page
+    normalized={name:text.replace('\r\n','\n') for name,text in retained.items()}
+    rejected=render_receipt(a['result'],normalized)
+    assert 'The inputs do not match the saved receipt.' in rejected
+    assert 'id="witnesses-1"' not in rejected
+
+
+def test_portable_receipt_shows_later_binding_review_over_preflight():
+    a=investigation()
+    a['result']['binding_confirmation']={'text':'Later reviewed binding','origin':'human_review','confirmed_at':'2026-09-26T12:00:00Z'}
+    page=render_receipt(a['result'],FILES)
+    assumption=page.split('id="assumption"',1)[1].split('</section>',1)[0]
+    assert 'Later reviewed binding' in assumption and 'human_review' in assumption
+    assert 'automated_development_fixture' not in assumption
+
+
+def test_portable_partition_labels_are_quoted():
+    page=render_receipt(investigation()['result'],FILES)
+    assert 'Training labels: &quot;train&quot;' in page
+    assert 'Evaluation labels: &quot;test&quot;' in page
+
+
+def test_portable_receipt_leads_with_measurement_but_not_failed_verification():
+    result=investigation()['result']
+    page=render_receipt(result,FILES)
+    assert page.index('id="measurement-1"') < page.index('id="verification"')
+    assert page.count('id="measurement-1"')==1
+    broken=copy.deepcopy(result)
+    broken['primitive_measurements']['measurement-1']['output']['shared_entities']=999
+    failed=render_receipt(broken,FILES)
+    assert 'The retained receipt is inconsistent.' in failed
+    assert failed.index('Verification failed') < failed.index('id="measurement-1"')
+
+
 def test_partition_repair_has_all_identity_and_row_deltas():
     revised={**FILES,'split.csv':'image,part\na,train\nb,train\nc,train\nd,test\n','map.csv':FILES['map.csv']+'v,d\n'}
     c=compare_receipts(investigation(),investigation(revised))
     assert c['available'] and c['after']['shared_identities']==0
-    assert not c['partition_only_change'] and c['samples_added']==['d']
+    assert not c['identity_membership_comparable'] and c['samples_added']==['d']
     assert len(c['partition_moves'])==2
     assert c['evaluation_rows_added']==['d'] and c['evaluation_rows_removed']==['b','c']
     assert c['resolved_identities'] is None  # new identity/sample universe is explicit
@@ -55,7 +96,7 @@ def test_like_for_like_partition_repair():
     files={**FILES,'split.csv':'image,part\na,train\nb,test\nc,test\nd,train\n','map.csv':FILES['map.csv']+'v,d\n'}
     revised={**files,'split.csv':'image,part\na,train\nb,train\nc,train\nd,test\n'}
     c=compare_receipts(investigation(files),investigation(revised))
-    assert c['partition_only_change'] and c['resolved_identities']==['u']
+    assert c['identity_membership_comparable'] and c['resolved_identities']==['u']
     assert c['after']['evaluation_rows']==1 and len(c['partition_moves'])==3
 
 
@@ -153,5 +194,26 @@ def test_blocked_receipt_separates_historical_requests_from_current_guidance():
     page=render_receipt(r,FILES)
     assert 'Original interpretation · may be incorrect' in page
     assert 'Column names only; this passage does not define identity meaning.' in page
-    assert 'Training labels: train' in page
+    assert 'Training labels: &quot;train&quot;' in page
     assert 'Selected columns and their meaning' in page
+
+@pytest.mark.parametrize('change',['feature','documentation','none'])
+def test_comparison_names_identity_scope_without_claiming_partition_only(change):
+    files={**FILES,'split.csv':'image,part,feature\na,train,10\nb,test,20\nc,test,30\n'}
+    revised=dict(files)
+    if change=='feature':revised['split.csv']=files['split.csv'].replace('b,test,20','b,test,999')
+    if change=='documentation':revised['notes.md']='A new acquisition procedure was used.'
+    c=compare_receipts(investigation(files),investigation(revised))
+    assert 'partition_only_change' not in c
+    assert c['schema_version']==2
+    assert c['identity_membership_comparable'] is True
+    assert c['partition_moves']==[]
+    assert c['changed_files']==({'feature':['split.csv'],'documentation':['notes.md'],'none':[]}[change])
+    assert 'Other input fields may differ' in c['scope']
+
+def test_comparison_replay_badge_requires_the_compared_measurement():
+    a=investigation()
+    a['result']['primitive_replays']=[{'measurement_id':'unrelated-measurement','matches':True}]
+    c=compare_receipts(a,a)
+    assert not c['before']['replay_recorded']
+    assert not c['after']['replay_recorded']

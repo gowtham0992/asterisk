@@ -1,0 +1,18 @@
+[
+ {
+  "slide": "SYN-AB-0001-DX3.svs",
+  "label": "benign"
+ },
+ {
+  "slide": "SYN-CD-0006-DX1.svs",
+  "label": "tumour"
+ },
+ {
+  "slide": "SYN-GH-0007-DX1.svs",
+  "label": "benign"
+ },
+ {
+  "slide": "SYN-GH-0008-DX1.svs",
+  "label": "tumour"
+ }
+]

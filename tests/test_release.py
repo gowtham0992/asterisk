@@ -40,3 +40,32 @@ def test_release_archive_excludes_secrets_databases_and_symlinks(tmp_path):
     with zipfile.ZipFile(package(tmp_path)) as z:
         assert sorted(z.namelist())==['asterisk/RELEASE-MANIFEST.json','asterisk/app/main.py']
         assert all(b'never-publish' not in z.read(n) for n in z.namelist())
+
+def test_public_case_assets_and_current_docs_ship_without_arbitrary_json(tmp_path):
+    from scripts.package_release import package
+    import zipfile
+    required=('static/reproductions/dermamnist-summary.json','docs/current-readiness.md',
+              'docs/design/published-example-2026-09-23.md','docs/design/guided-example-2026-09-23.md')
+    for name in required:
+        p=tmp_path/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text('{}')
+    (tmp_path/'static/reproductions/private-rows.json').write_text('do-not-ship')
+    with zipfile.ZipFile(package(tmp_path)) as z:
+        assert all('asterisk/'+n in z.namelist() for n in required)
+        assert 'asterisk/static/reproductions/private-rows.json' not in z.namelist()
+
+
+def test_ladder_runtime_assets_ship_but_private_run_records_do_not(tmp_path):
+    from scripts.package_release import package
+    import zipfile
+    required=('static/ladders/index.json','static/ladders/experiment.json',
+              'static/ladder-example/spec.json','static/ladder-example/subjects.csv',
+              'static/ladder-example/README.md','static/ladder-example-propose/train.json',
+              'examples/ladders/docs/esc50.md')
+    for name in required:
+        path=tmp_path/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('{}')
+    (tmp_path/'static/ladders/private-rows.json').write_text('do-not-ship')
+    runs=tmp_path/'evaluation/ladder-proposal-v5';runs.mkdir(parents=True)
+    (runs/'raw-reply.json').write_text('do-not-ship')
+    with zipfile.ZipFile(package(tmp_path)) as z:
+        assert all('asterisk/'+name in z.namelist() for name in required)
+        assert not any(b'do-not-ship' in z.read(name) for name in z.namelist())

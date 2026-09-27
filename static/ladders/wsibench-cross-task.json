@@ -1,0 +1,296 @@
+{
+ "schema": "asterisk-ladder/1-result",
+ "claim": {
+  "text": "WSI-Bench report-task test slides are unseen in the training files of the other tasks.",
+  "level": "slide"
+ },
+ "finding": {
+  "status": "violation",
+  "level": "slide",
+  "reason": "83 slide value(s) occur in training and evaluation, affecting 83 of 208 evaluation rows."
+ },
+ "confirmed_levels": [],
+ "headline": "Shared: slide (83 shared), patient (83 shared), site (71 shared). Your claim needs slide.",
+ "levels": [
+  {
+   "name": "slide",
+   "kind": "unit",
+   "meaning": "One whole-slide image file. Each question-answer record is the observation; the same slide can back several records.",
+   "status": "measured",
+   "shared": 83,
+   "affected_test_rows": 83,
+   "train_rows": 6399,
+   "test_rows": 208,
+   "excluded_rows": 0,
+   "train_units": 4069,
+   "test_units": 208,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 39.9,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "TCGA-05-4432-01Z-00-DX1.90d00d62-402b-404a-85e2-0edf869193ab.pt",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@565",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/564"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@49",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/48"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "TCGA-2G-AAFV-01Z-00-DX1.3674A3B2-1B77-4102-A0D9-893C04AA06FF.pt",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@2166",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/2165"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@113",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/112"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "TCGA-2G-AAFZ-01Z-00-DX1.A782BB9C-2121-4E36-878D-475540CE5E8E.pt",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@2078",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/2077"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@111",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/110"
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "patient",
+   "kind": "unit",
+   "meaning": "GDC: the barcode prefix Project-TSS-Participant (12 characters) identifies the patient.",
+   "status": "measured",
+   "shared": 83,
+   "affected_test_rows": 83,
+   "train_rows": 6399,
+   "test_rows": 208,
+   "excluded_rows": 0,
+   "train_units": 3685,
+   "test_units": 207,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 40.1,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "TCGA-05-4432",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@565",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/564"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@49",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/48"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "TCGA-2G-AAFV",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@2166",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/2165"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@113",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/112"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "TCGA-2G-AAFZ",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@2078",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/2077"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@111",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/110"
+       }
+      ]
+     }
+    }
+   ],
+   "nests_previous": {
+    "violations": 0,
+    "examples": []
+   }
+  },
+  {
+   "name": "site",
+   "kind": "unit",
+   "meaning": "GDC: TSS (characters 6-7, with the TCGA- prefix) identifies the tissue source site.",
+   "status": "measured",
+   "shared": 71,
+   "affected_test_rows": 107,
+   "train_rows": 6399,
+   "test_rows": 208,
+   "excluded_rows": 0,
+   "train_units": 285,
+   "test_units": 141,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 50.35,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "TCGA-05",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@471",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/470"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@49",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/48"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "TCGA-2G",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@2078",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/2077"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@111",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/110"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "TCGA-2H",
+     "train": {
+      "sample": "wsibench/Stage_all_type_all_train_single.json@2242",
+      "unit_source": [
+       {
+        "file": "wsibench/Stage_all_type_all_train_single.json",
+        "at": "/2241"
+       }
+      ]
+     },
+     "test": {
+      "sample": "wsibench/Report_all_type_all_test_single.json@126",
+      "unit_source": [
+       {
+        "file": "wsibench/Report_all_type_all_test_single.json",
+        "at": "/125"
+       }
+      ]
+     }
+    }
+   ],
+   "nests_previous": {
+    "violations": 0,
+    "examples": []
+   }
+  }
+ ],
+ "population_consistent": true,
+ "population": {
+  "train": 6399,
+  "test": 208,
+  "excluded": 0
+ },
+ "agreements": [],
+ "spec_hash": "38a6b27268669bed08de4f3f83234e9152136666c5646adfc643fd5f7ea16005",
+ "input_hashes": {
+  "docs/tcga-barcode.md": "184d1a912d8ffb3d22febab871ea5d417e74ae96d50d3fc721734b6add59dd12",
+  "wsibench/Prognosis_all_type_all_train_single.json": "c3a3363379105134ece24ccae6b63221431405d4cf8192cf9f7da2da02833782",
+  "wsibench/Report_all_type_all_test_single.json": "1a571bd5503e0c3c5072fbb8f270a13569e6add81e8828a7715c2a339dbb28b9",
+  "wsibench/Stage_all_type_all_train_single.json": "d1df28cfdca480a248609168f6a724883131bc1bd9ea468478e308a45848ced8",
+  "wsibench/Subtype_all_type_all_train_single.json": "72bf344b17e5a6fe505571fe90df4d6c092c0ed3474bd6b41d6d11b063ddf1cf",
+  "wsibench/Treatment_all_type_all_train_single.json": "a0325d372588d16ed8686ba430d6741028c70c9ae2b18934a615ad9f39ef9711"
+ },
+ "scope": "Exact recorded identifiers under the stated derivations. A person must confirm what each level means before the claim level can count as held out. No content similarity, preprocessing or accuracy effect is measured.",
+ "source": {
+  "title": "WSI-Bench · across tasks",
+  "summary": "Report-task test slides compared with the training files of four other WSI-Bench tasks.",
+  "url": "https://github.com/XinhengLyu/WSI-LLaVA",
+  "licences": [
+   "As above"
+  ],
+  "spec": "examples/ladders/wsibench-cross-task.json"
+ }
+}

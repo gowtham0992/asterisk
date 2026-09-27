@@ -1,0 +1,193 @@
+{
+ "lede": "Five pre-registered experiments evaluated ladder proposals from documentation. The four fresh case sets below contain 41 PhysioNet cases. Rules were fixed before each run; later sets tested revised prompts. Public datasets may have appeared in model training.",
+ "rows": [
+  {
+   "set": "A \u00b7 11 cases",
+   "label": "Nemotron 3 Super (v2 prompt)",
+   "product": false,
+   "correct": 5,
+   "of": 11,
+   "false_reassurance": 0,
+   "abstentions": 2,
+   "abstention_cases": 2,
+   "rule": "fail"
+  },
+  {
+   "set": "A \u00b7 11 cases",
+   "label": "Nemotron 3 Ultra",
+   "product": false,
+   "correct": 5,
+   "of": 11,
+   "false_reassurance": 0,
+   "abstentions": 2,
+   "abstention_cases": 2,
+   "rule": "fail"
+  },
+  {
+   "set": "A \u00b7 11 cases",
+   "label": "Claude Sonnet (first attempt)",
+   "product": false,
+   "correct": 9,
+   "of": 11,
+   "false_reassurance": 0,
+   "abstentions": 2,
+   "abstention_cases": 2,
+   "rule": "inconclusive"
+  },
+  {
+   "set": "A \u00b7 11 cases",
+   "label": "Single-column script",
+   "product": false,
+   "correct": null,
+   "of": 11,
+   "false_reassurance": 8,
+   "abstentions": null,
+   "abstention_cases": null,
+   "rule": "proposes no ladder"
+  },
+  {
+   "set": "B \u00b7 10 cases",
+   "label": "Nemotron 3 Super (v2 prompt)",
+   "product": false,
+   "correct": 8,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 2,
+   "abstention_cases": 2,
+   "rule": "inconclusive"
+  },
+  {
+   "set": "B \u00b7 10 cases",
+   "label": "Nemotron 3 Ultra",
+   "product": false,
+   "correct": 9,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 2,
+   "abstention_cases": 2,
+   "rule": "pass"
+  },
+  {
+   "set": "B \u00b7 10 cases",
+   "label": "Claude Sonnet (first attempt)",
+   "product": false,
+   "correct": 10,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 2,
+   "abstention_cases": 2,
+   "rule": "pass"
+  },
+  {
+   "set": "B \u00b7 10 cases",
+   "label": "Single-column script",
+   "product": false,
+   "correct": null,
+   "of": 10,
+   "false_reassurance": 7,
+   "abstentions": null,
+   "abstention_cases": null,
+   "rule": "proposes no ladder"
+  },
+  {
+   "set": "C \u00b7 10 cases",
+   "label": "Nemotron 3 Super (v2 prompt)",
+   "product": false,
+   "correct": 3,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 1,
+   "abstention_cases": 1,
+   "rule": "fail"
+  },
+  {
+   "set": "C \u00b7 10 cases",
+   "label": "Nemotron 3 Ultra",
+   "product": false,
+   "correct": 4,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 1,
+   "abstention_cases": 1,
+   "rule": "fail"
+  },
+  {
+   "set": "C \u00b7 10 cases",
+   "label": "Claude Sonnet (first attempt)",
+   "product": false,
+   "correct": 8,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 1,
+   "abstention_cases": 1,
+   "rule": "inconclusive"
+  },
+  {
+   "set": "C \u00b7 10 cases",
+   "label": "Single-column script",
+   "product": false,
+   "correct": null,
+   "of": 10,
+   "false_reassurance": 7,
+   "abstentions": null,
+   "abstention_cases": null,
+   "rule": "proposes no ladder"
+  },
+  {
+   "set": "D \u00b7 10 cases \u00b7 field/characters grammar",
+   "label": "Nemotron 3 Super (ships, v4 prompt)",
+   "product": true,
+   "correct": 5,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 1,
+   "abstention_cases": 1,
+   "rule": "fail"
+  },
+  {
+   "set": "D \u00b7 10 cases \u00b7 field/characters grammar",
+   "label": "Nemotron 3 Super (previous v2 prompt)",
+   "product": false,
+   "correct": 3,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 1,
+   "abstention_cases": 1,
+   "rule": "fail"
+  },
+  {
+   "set": "D \u00b7 10 cases \u00b7 field/characters grammar",
+   "label": "Nemotron 3 Ultra",
+   "product": false,
+   "correct": 6,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 1,
+   "abstention_cases": 1,
+   "rule": "fail"
+  },
+  {
+   "set": "D \u00b7 10 cases \u00b7 field/characters grammar",
+   "label": "Claude Sonnet (first attempt)",
+   "product": false,
+   "correct": 9,
+   "of": 10,
+   "false_reassurance": 0,
+   "abstentions": 1,
+   "abstention_cases": 1,
+   "rule": "pass"
+  },
+  {
+   "set": "D \u00b7 10 cases \u00b7 field/characters grammar",
+   "label": "Single-column script",
+   "product": false,
+   "correct": null,
+   "of": 10,
+   "false_reassurance": 6,
+   "abstentions": null,
+   "abstention_cases": null,
+   "rule": "proposes no ladder"
+  }
+ ],
+ "note": "Correct = at least 2 of 3 repeats group samples like the hand-written reference. False reassurance = any repeat that says \"held out\" where the reference does not. With the guards enabled, the recorded model runs produced zero false reassurance across these 41 cases; the specified single-column baseline produced 28. This is not a guarantee for new inputs or a comparison against every leakage checker. Across the tested configurations, Super scored 21/41, Ultra 24/41 and Sonnet 36/41. Super with the shipping v4 prompt scored 5/10 on set D and failed its pass rule. Misses include abstentions and unusable attempts; zero false reassurance is not perfect proposal accuracy. Protocols and aggregate results: evaluation/ladder-proposal-v1 to v5. Raw replies and run records are retained privately and excluded from the source release."
+}

@@ -1,0 +1,162 @@
+{
+ "schema": "asterisk-ladder/1-result",
+ "claim": {
+  "text": "ESC-50 fold 1 contains no original recording used in the other folds.",
+  "level": "recording"
+ },
+ "finding": {
+  "status": "held_out_pending_confirmation",
+  "level": "recording",
+  "warning": "",
+  "confirmable": true,
+  "reason": "No recorded recording value occurs in both partitions. A person must still confirm what recording means."
+ },
+ "confirmed_levels": [],
+ "headline": "Held out: clip, recording. Your claim needs recording.",
+ "levels": [
+  {
+   "name": "clip",
+   "kind": "observation",
+   "meaning": "One 5-second clip.",
+   "status": "measured",
+   "shared": 0,
+   "affected_test_rows": 0,
+   "train_rows": 1600,
+   "test_rows": 400,
+   "excluded_rows": 0,
+   "train_units": 1600,
+   "test_units": 400,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 0.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": []
+  },
+  {
+   "name": "recording",
+   "kind": "unit",
+   "meaning": "README: src_file identifies the original Freesound recording; fragments from the same original source file are contained in a single fold.",
+   "status": "measured",
+   "shared": 0,
+   "affected_test_rows": 0,
+   "train_rows": 1600,
+   "test_rows": 400,
+   "excluded_rows": 0,
+   "train_units": 1213,
+   "test_units": 311,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 0.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [],
+   "nests_previous": {
+    "violations": 0,
+    "examples": []
+   }
+  },
+  {
+   "name": "category",
+   "kind": "attribute",
+   "meaning": "Class label; shared by design.",
+   "status": "measured",
+   "shared": 50,
+   "affected_test_rows": 400,
+   "train_rows": 1600,
+   "test_rows": 400,
+   "excluded_rows": 0,
+   "train_units": 50,
+   "test_units": 50,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 100.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "airplane",
+     "train": {
+      "sample": "2-105270-A-47.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 434"
+       }
+      ]
+     },
+     "test": {
+      "sample": "1-11687-A-47.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 27"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "breathing",
+     "train": {
+      "sample": "2-50774-A-23.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 651"
+       }
+      ]
+     },
+     "test": {
+      "sample": "1-18631-A-23.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 78"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "brushing_teeth",
+     "train": {
+      "sample": "2-73544-A-27.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 716"
+       }
+      ]
+     },
+     "test": {
+      "sample": "1-17092-A-27.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 53"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "population_consistent": true,
+ "population": {
+  "train": 1600,
+  "test": 400,
+  "excluded": 0
+ },
+ "agreements": [],
+ "spec_hash": "c6428a736865e902d513a00d39d55e4d1ec6a0afd3c0a4bf4a83a67a01a9ffb2",
+ "input_hashes": {
+  "docs/esc50.md": "8c8aa589ecfec080ffa2bf54b6a6fc0671640ea8f9fbdc6e42e3052b09e38206",
+  "esc50.csv": "ca660da60191a97de289983a05821c9382d852a38a2ba8428980816b68cf6246"
+ },
+ "scope": "Exact recorded identifiers under the stated derivations. A person must confirm what each level means before the claim level can count as held out. No content similarity, preprocessing or accuracy effect is measured.",
+ "source": {
+  "title": "ESC-50 · fold 1 held out",
+  "summary": "The same benchmark with a different held-out fold — a control where the promise holds.",
+  "url": "https://github.com/karolpiczak/ESC-50",
+  "licences": [
+   "CC BY-NC 3.0 per the ESC-50 README (ESC-10 subset CC BY)"
+  ],
+  "spec": "examples/ladders/esc50-fold1.json"
+ }
+}

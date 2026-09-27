@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "dataset": "Original DermaMNIST split mapped to HAM10000 lesion IDs",
+  "source_commit": "ac655ac5a5b93264c57d69d6d520778d915bfc89",
+  "sources": [
+    {
+      "file": "dermamnist_split_info.csv",
+      "url": "https://raw.githubusercontent.com/kakumarabhishek/Corrected-Skin-Image-Datasets/ac655ac5a5b93264c57d69d6d520778d915bfc89/DermaMNIST/DermaMNIST_Analysis/dermamnist_split_info.csv",
+      "sha256": "0c9b1719bf04fa9ad3cdee2a852067a8b848795624e88ea794df40fd13c099f0"
+    },
+    {
+      "file": "HAM10000_metadata.csv",
+      "url": "https://raw.githubusercontent.com/kakumarabhishek/Corrected-Skin-Image-Datasets/ac655ac5a5b93264c57d69d6d520778d915bfc89/DermaMNIST/DermaMNIST_Analysis/HAM10000_metadata.csv",
+      "sha256": "de17ec44cb25ea9c3f6378ba18d69224c740afd62e86ec2edc6a894d6aa663d3"
+    }
+  ],
+  "measurement": {
+    "shared_entities": 641,
+    "affected_test_rows": 693,
+    "train_rows": 7007,
+    "test_rows": 2005
+  },
+  "excluded_validation_rows": 1003,
+  "reference_agrees": true,
+  "execution": "local; no inference or provider upload",
+  "identity_scope": "Lesions, not patients. Scientific meaning supplied by upstream documentation.",
+  "published_shared_lesions": 641,
+  "matches_published_lesion_count": true,
+  "checker_sha256": "6cdfbf727a194e911e4e09ddba2bada5cb471f79f7090f5884f549badc246c43",
+  "scope": "Recorded identity overlap only; no model accuracy measurement, new discovery, or human usefulness claim."
+}

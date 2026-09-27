@@ -1,0 +1,11 @@
+scan,subject,site
+scan-001,S-01,clinic-a
+scan-002,S-02,clinic-a
+scan-003,S-03,clinic-b
+scan-004,S-04,clinic-b
+scan-005,S-05,clinic-a
+scan-006,S-06,clinic-b
+scan-007,S-02,clinic-a
+scan-008,S-07,clinic-c
+scan-009,S-08,clinic-c
+scan-010,S-04,clinic-b

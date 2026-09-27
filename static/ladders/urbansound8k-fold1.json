@@ -1,0 +1,224 @@
+{
+ "schema": "asterisk-ladder/1-result",
+ "claim": {
+  "text": "UrbanSound8K fold 1 contains no Freesound recording used in the other folds.",
+  "level": "recording"
+ },
+ "finding": {
+  "status": "violation",
+  "level": "recording",
+  "reason": "4 recording value(s) occur in training and evaluation, affecting 91 of 873 evaluation rows."
+ },
+ "confirmed_levels": [],
+ "headline": "Held out: slice. Shared: recording (4 shared). Your claim needs recording.",
+ "levels": [
+  {
+   "name": "slice",
+   "kind": "observation",
+   "meaning": "One slice.",
+   "status": "measured",
+   "shared": 0,
+   "affected_test_rows": 0,
+   "train_rows": 7859,
+   "test_rows": 873,
+   "excluded_rows": 0,
+   "train_units": 7859,
+   "test_units": 873,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 0.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": []
+  },
+  {
+   "name": "recording",
+   "kind": "unit",
+   "meaning": "The Freesound ID of the recording from which this excerpt (slice) is taken.",
+   "status": "measured",
+   "shared": 4,
+   "affected_test_rows": 91,
+   "train_rows": 7859,
+   "test_rows": 873,
+   "excluded_rows": 0,
+   "train_units": 1167,
+   "test_units": 134,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 2.99,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "106905",
+     "train": {
+      "sample": "106905-5-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 491"
+       }
+      ]
+     },
+     "test": {
+      "sample": "106905-8-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 494"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "132016",
+     "train": {
+      "sample": "132016-7-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 1280"
+       }
+      ]
+     },
+     "test": {
+      "sample": "132016-9-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 1289"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "176638",
+     "train": {
+      "sample": "176638-5-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 3753"
+       }
+      ]
+     },
+     "test": {
+      "sample": "176638-1-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 3751"
+       }
+      ]
+     }
+    }
+   ],
+   "nests_previous": {
+    "violations": 0,
+    "examples": []
+   }
+  },
+  {
+   "name": "class",
+   "kind": "attribute",
+   "meaning": "Sound class.",
+   "status": "measured",
+   "shared": 10,
+   "affected_test_rows": 873,
+   "train_rows": 7859,
+   "test_rows": 873,
+   "excluded_rows": 0,
+   "train_units": 10,
+   "test_units": 10,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 100.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "air_conditioner",
+     "train": {
+      "sample": "100852-0-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 24"
+       }
+      ]
+     },
+     "test": {
+      "sample": "127873-0-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 1172"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "car_horn",
+     "train": {
+      "sample": "100648-1-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 11"
+       }
+      ]
+     },
+     "test": {
+      "sample": "156194-1-0-0.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 2344"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "children_playing",
+     "train": {
+      "sample": "100263-2-0-117.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 3"
+       }
+      ]
+     },
+     "test": {
+      "sample": "105415-2-0-1.wav",
+      "unit_source": [
+       {
+        "file": "UrbanSound8K.csv",
+        "at": "line 445"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "population_consistent": true,
+ "population": {
+  "train": 7859,
+  "test": 873,
+  "excluded": 0
+ },
+ "agreements": [],
+ "spec_hash": "9bac1ce4204ef24c2c64055774cb540a581be51fe6b600d4962c239990520b1a",
+ "input_hashes": {
+  "UrbanSound8K.csv": "b207f7a53f9e5eb02a5dd71d58fb8b66c88c24c0637b926dc72d9d400a6a2354",
+  "docs/urbansound8k.md": "b695300ccc67767d598ed24765223a032c71d1c3ba960a42db9584d7cc926fff"
+ },
+ "scope": "Exact recorded identifiers under the stated derivations. A person must confirm what each level means before the claim level can count as held out. No content similarity, preprocessing or accuracy effect is measured.",
+ "source": {
+  "title": "UrbanSound8K · fold 1 held out",
+  "summary": "An urban-sound benchmark whose page warns against reshuffling related samples across folds.",
+  "url": "https://urbansounddataset.weebly.com/urbansound8k.html",
+  "licences": [
+   "CC BY-NC (version not verified; see https://zenodo.org/records/1203745)"
+  ],
+  "spec": "examples/ladders/urbansound8k-fold1.json"
+ }
+}

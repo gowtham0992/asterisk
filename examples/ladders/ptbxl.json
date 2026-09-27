@@ -1,0 +1,73 @@
+{
+  "schema": "asterisk-ladder/1",
+  "claim": {
+    "text": "The recommended PTB-XL test fold contains no patient seen in training (folds 1-8).",
+    "level": "patient"
+  },
+  "sources": [
+    {
+      "file": "ptbxl_database.csv",
+      "format": "csv",
+      "sample": {
+        "column": "ecg_id"
+      },
+      "partition": {
+        "column": "strat_fold",
+        "map": {
+          "1": "train",
+          "2": "train",
+          "3": "train",
+          "4": "train",
+          "5": "train",
+          "6": "train",
+          "7": "train",
+          "8": "train",
+          "9": "excluded",
+          "10": "test"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "name": "ecg",
+      "kind": "observation",
+      "expression": {
+        "column": "ecg_id"
+      },
+      "meaning": "One ECG record (ecg_id)."
+    },
+    {
+      "name": "patient",
+      "kind": "unit",
+      "expression": {
+        "column": "patient_id"
+      },
+      "meaning": "PhysioNet: all records of a particular patient were assigned to the same fold."
+    },
+    {
+      "name": "site",
+      "kind": "unit",
+      "expression": {
+        "column": "site"
+      },
+      "missing": "unmapped",
+      "meaning": "PhysioNet lists site only as recording metadata. Treating it as a unit to hold out is this ladder's interpretation, for claims about unseen recording sites."
+    },
+    {
+      "name": "device",
+      "kind": "attribute",
+      "expression": {
+        "column": "device"
+      },
+      "meaning": "Recording device; a property, not a unit to hold out."
+    }
+  ],
+  "citations": [
+    {
+      "file": "docs/ptbxl.md",
+      "start_line": 2,
+      "end_line": 5
+    }
+  ]
+}

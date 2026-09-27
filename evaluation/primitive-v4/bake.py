@@ -19,6 +19,6 @@ key,project=credentials();base=json.loads((ROOT/'.data/probe-pilot/environment.j
 client=ContreeSync(ContreeConfig(auth=IAMAuth(token=key,project_id=project),operation_timeout=150,transport_timeout=30))
 r=client.images.use(base).run('python',args=['-c',"import sys;sys.path.insert(0,'/opt/asterisk');from app.primitives import VERSION;print(VERSION)"],files=files,timeout=30,disposable=False).wait()
 if r.exit_code:raise SystemExit('Bake import check failed')
-env={'image':str(r.uuid),'base_image':base,'implementation_hash':implementation_hash(),'version':r.stdout.strip(),'inventory_hash':digest(inventory)}
+env={'image':str(r.uuid),'base_image':base,'implementation_hash':implementation_hash(),'version':r.stdout.strip(),'inventory_hash':digest(inventory),'driver_sha256':inventory['/opt/asterisk/primitive_main.py']['sha256']}
 with (DATA/('environment-'+str(r.uuid)+'.json')).open('x') as f:json.dump(env,f,indent=2)
 (DATA/'environment.json').write_text(json.dumps(env,indent=2));print(json.dumps(env,indent=2))

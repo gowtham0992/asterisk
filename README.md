@@ -1,12 +1,30 @@
 # Asterisk
 
+## Independence ladder
+
+**Clean by slide. Shared by patient.** Asterisk can now measure one split across multiple documented independence levels and identify the level your research claim requires.
+
+Open `/static/ladder.html` for the ladder workflow. NVIDIA Nemotron proposes a documented ladder; the deterministic engine measures it; you review the unit meanings. A zero-overlap claim remains pending until confirmed, and structural guards reject unsupported reassurance. The guided builder and advanced JSON spec work without a model call.
+
+After measuring, choose **Save to workspace**. Reopen it under **Independence ladders** in the workspace (`/#ladders`). Saved records retain the spec, inputs, full measurement, witness references and self-reported confirmations privately for that browser session. Download readable HTML or measurement JSON, or delete the saved record and inputs. These exports do not embed raw inputs or model proposal history and are not the single-binding evidence ZIP described below.
+
+An explicitly requested **Nebius Sandbox replay** compares the remote result with the local measurement and saves the matching result and provenance to the workspace. Local saved receipts clearly say no Sandbox replay is recorded. Saving, reopening and exporting do not call a model or Sandbox. A saved confirmation records its creator's assertion; it is not independent scientific verification.
+
+Run `.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8791` and open `http://127.0.0.1:8791/static/ladder.html`. Local measurement needs no provider credentials; model proposals and remote replay require your existing Nebius configuration. No baked primitive image is needed for the ladder's local path. The older single-binding workflow below has its own image requirements.
+
+See [the ladder handover](docs/submission/HANDOVER-ladder.md) and [submission draft](docs/submission/devpost-ladder-draft.md) for evaluation context. Native interpretation remains imperfect; preserve the published comparison with the stronger general-model baseline.
+
+For a hosted ladder preview, set `ASTERISK_HOSTED_WORKFLOW=ladder`; the legacy baked image is not required. The preview still needs Nebius credentials, Sandbox access, a protected hostname and persistent storage. See [release configuration](docs/release.md).
+
+## Single-binding split receipts
+
 A split receipt for a claim about unseen patients, subjects or specimens.
 
 NVIDIA Nemotron Super proposes a cited identity binding. A person reviews the columns, cardinalities and partition labels. A trusted checker in Nebius Token Factory Sandboxes measures exact identity overlap and produces witness rows; a fresh Sandbox repeats the measurement. The export retains the inputs, binding, assumptions, implementation and results.
 
 On a result, choose **Inspect witness** to compare the original training and evaluation rows and their identity mappings. The viewer verifies saved file hashes and checks the witness against both selected partitions before displaying it.
 
-**V4 is entity-only and still a research preview.** V3 acceptance failed (9/12 primary cases per trial; 4/6 defect–repair pairs). V4 does not erase that result. Human evidence review and practitioner comprehension remain unmeasured. A practical general-agent comparison matched all 18 authored variant labels; no correctness advantage is claimed. See [validation](evaluation/primitive-v4/protocol.md) and [v4 status](docs/reviews/v4-implementation.md).
+**V4 is entity-only and still a research preview.** V3 acceptance failed (9/12 primary cases per trial; 4/6 defect–repair pairs). V4 does not erase that result. Human evidence review and practitioner comprehension remain unmeasured. A practical general-agent comparison matched all 18 authored variant labels; no correctness advantage is claimed. See [validation](evaluation/primitive-v4/protocol.md) and [v4 status](docs/reviews/rc7-verification-wording.md).
 
 ## Review and revise
 
@@ -26,7 +44,7 @@ python3.14 -m venv .venv
 
 Copy `.env.example` to `.env` only if you do not already have one. Set `NEBIUS_API_KEY` and `NEBIUS_PROJECT_ID` locally; never commit credentials. Sandbox access must be active for that project.
 
-The application needs a baked image matching its trusted source. On an existing development workspace, `.data/primitive-v4/environment.json` records it. For a fresh installation, follow [the release instructions](docs/release.md) to prepare an image or configure `ASTERISK_PROBE_IMAGE` through the host environment.
+The application needs a baked image matching its trusted source. On an existing development workspace, `.data/primitive-v4/environment.json` records it. For a fresh installation, follow [the release instructions](docs/release.md) to prepare an image or configure `ASTERISK_PROBE_IMAGE` and its matching `ASTERISK_PROBE_DRIVER_SHA256` through the host environment.
 
 ```sh
 sh scripts/start_preview.sh
@@ -38,6 +56,24 @@ One new-workflow entry point is offered. Historical audit URLs and records remai
 
 ## Bring a split
 
+### Start from native metadata
+
+Open `/#prepare` to inspect CSV/JSON metadata locally and choose the fields that may leave your device. “Try a real public benchmark” downloads pinned DermaMNIST sources directly into the browser, checks their hashes and enters this same review flow. No model call occurs on load. Automatic extraction remains experimental.
+
+Native preparation is disabled by default, even when the general Nebius key is configured. For a **new installation**, initialize its estimated budget once:
+
+```sh
+mkdir -p .data
+.venv/bin/python -m app.preparation.init_budget --path "$PWD/.data/preparation-budget.json" --limit-usd 1
+export ASTERISK_PREPARATION_BUDGET="$PWD/.data/preparation-budget.json"
+export ASTERISK_PREPARATION_NEBIUS=1
+sh scripts/start_preview.sh
+```
+
+Stop an already-running preview before restarting with these variables. Keep `NEBIUS_API_KEY` in your existing local `.env`; never place it in a browser form or commit it. Initialization refuses an existing file. Reuse the existing ledger on later starts; never replace a spent, uncertain, missing or damaged live ledger with a fresh budget. The established development workspace continues using its existing shared ledger and cost baseline unless deliberately migrated without resetting commitments. Configuration performs no inference; each request still needs payload consent. Sandbox setup remains separate.
+
+### Start from a prepared split
+
 Supply a unique sample-ID column, partition labels, a mapping from samples to the generating entity, and documentation defining that identity. Select exact, case-sensitive labels. Rows outside those labels are excluded and counted. Surplus mapping rows do not create overlap; incomplete mapping cannot establish a clear split. A verified overlap can establish a violation even with other unmapped rows.
 
 The file-set intake accepts up to 80 files/16 MB; individual CSVs are bounded to 100,000 data rows, 80 columns and 2,000,000 cells (whichever bound is reached first). It does not execute uploaded repository code. Use only inputs authorized for provider upload; the Sandbox beta is not for personal or sensitive data.
@@ -46,16 +82,19 @@ The file-set intake accepts up to 80 files/16 MB; individual CSVs are bounded to
 
 - **Violation:** a verified recorded identity occurs in both selected partitions.
 - **Clear:** zero overlap and complete mapping under the human-confirmed binding.
+- **Pending confirmation:** zero recorded overlap with complete mapping, but the identity meaning still needs a person’s confirmation. An automated review cannot supply it.
 - **Insufficient:** the available evidence does not establish the condition.
 - **Incomplete:** execution or replay failed; no definitive verdict.
 
-Human confirmation records an assumption; it is not independent verification. Wrong scientific semantics can still produce an irrelevant check. The result says nothing about image duplicates, missing identity links, model accuracy or the entire experiment. Model prose is retained separately as unverified interpretation. Measurement facts and missing-evidence messages are harness-owned.
+Human confirmation records an assumption; it is not independent verification. Wrong scientific semantics can still produce an irrelevant check. The result says nothing about duplicate content, missing identity links, model accuracy or the entire experiment. Model prose is retained separately as unverified interpretation. Measurement facts and missing-evidence messages are harness-owned.
 
 ## Reproduce and test
 
-Run `.venv/bin/python -m pytest -q`. Scientific trace tests require a separate compatible scientific environment and may skip on the main host; these are retained development tests for disabled categories.
+The [published DermaMNIST example](static/published-example.html) reproduces a known 641-lesion overlap from pinned public metadata. Run `scripts/reproduce_dermamnist.py` with the two upstream CSVs as documented on that page. It runs locally without credentials or uploads, checks source hashes, and emits only aggregate results. This does not measure model accuracy or researcher benefit.
 
-An exported receipt includes `verify.py` for file integrity and the matching trusted primitive source and recorded arguments for isolated replay. Do not execute uploaded research scripts on your own machine. Hashes and repeatability are not proof of scientific truth.
+Run `.venv/bin/python -m pytest -q` from the project root. The combined suite includes local HTTP tests that need permission to bind `127.0.0.1`; provider calls in those tests are mocked. Scientific trace tests require a separate compatible scientific environment and may skip on the main host; these are retained development tests for disabled categories.
+
+An exported receipt includes `verify.py` for byte consistency against its unsigned manifest, plus measurement source and recorded arguments. A sender can replace the checker, inputs and manifest together; do not treat running that checker as independent verification. Do not execute uploaded research scripts on your own machine. Hashes and repeatability are not proof of scientific truth.
 
 V3's frozen source, original cases and attempts remain in the private development records. Any v4 evaluation uses a new freeze. Exposed cases are regression checks, never newly independent acceptance. Reviewer instructions are in [docs/validation](docs/validation/reviewer-a.md).
 
@@ -71,6 +110,8 @@ Download every affected or unmapped row from a completed receipt. Preview a grou
 
 The [controlled score experiment](docs/experiments/score-results.md) reports all five prescribed seeds, including the modest observed score difference and its limitations. This is development evidence, not unseen acceptance or researcher validation.
 
-## Feature-frozen release
+## Frozen fallback and current working tree
 
-Feature development is stopped for the human sessions and submission preparation. Current trusted implementation: `d718f875426d0ae9be9358e08c3c3e0a378c1e8dcc6ced0c7d989f3774d110e3`; the full release snapshot and superseded-hash status are documented in [v4 release status](docs/reviews/v4-implementation.md). Legacy audit mutations/examples return 404 by default; owner-scoped historical reads and exports remain available. Do not enable `ASTERISK_LEGACY_AUDITS=1` in the release preview.
+RC7 remains the frozen fallback. The working tree has subsequent guided-example and published-reproduction presentation changes; RC7 does not freeze those bytes. Native metadata extraction is an isolated experiment, not a supported feature. See [current readiness](docs/current-readiness.md) for evidence and outstanding gates. Current trusted implementation: `d718f875426d0ae9be9358e08c3c3e0a378c1e8dcc6ced0c7d989f3774d110e3`; the full release snapshot and superseded-hash status are documented in [v4 release status](docs/reviews/rc7-verification-wording.md). Legacy audit mutations/examples return 404 by default; owner-scoped historical reads and exports remain available. Do not enable `ASTERISK_LEGACY_AUDITS=1` in the release preview.
+
+Obtain and verify a matching Asterisk release separately from the received receipt. From that trusted installation directory—not from inside the received bundle—run `python -m asterisk verify /absolute/path/to/receipt`. This uses original files and installed measurement code without credentials or network access. Exit 0 means measurement and decision consistency; it does not authenticate the author or validate identity semantics.

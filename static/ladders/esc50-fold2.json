@@ -1,0 +1,203 @@
+{
+ "schema": "asterisk-ladder/1-result",
+ "claim": {
+  "text": "ESC-50 fold 2 contains no original recording used in the other folds.",
+  "level": "recording"
+ },
+ "finding": {
+  "status": "violation",
+  "level": "recording",
+  "reason": "2 recording value(s) occur in training and evaluation, affecting 2 of 400 evaluation rows."
+ },
+ "confirmed_levels": [],
+ "headline": "Held out: clip. Shared: recording (2 shared). Your claim needs recording.",
+ "levels": [
+  {
+   "name": "clip",
+   "kind": "observation",
+   "meaning": "One 5-second clip.",
+   "status": "measured",
+   "shared": 0,
+   "affected_test_rows": 0,
+   "train_rows": 1600,
+   "test_rows": 400,
+   "excluded_rows": 0,
+   "train_units": 1600,
+   "test_units": 400,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 0.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": []
+  },
+  {
+   "name": "recording",
+   "kind": "unit",
+   "meaning": "README: src_file identifies the original Freesound recording; fragments from the same original source file are contained in a single fold.",
+   "status": "measured",
+   "shared": 2,
+   "affected_test_rows": 2,
+   "train_rows": 1600,
+   "test_rows": 400,
+   "excluded_rows": 0,
+   "train_units": 1224,
+   "test_units": 302,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 0.66,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "131943",
+     "train": {
+      "sample": "3-131943-A-37.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 910"
+       }
+      ]
+     },
+     "test": {
+      "sample": "2-131943-A-38.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 548"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "134049",
+     "train": {
+      "sample": "3-134049-A-1.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 917"
+       }
+      ]
+     },
+     "test": {
+      "sample": "2-134049-A-6.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 553"
+       }
+      ]
+     }
+    }
+   ],
+   "nests_previous": {
+    "violations": 0,
+    "examples": []
+   }
+  },
+  {
+   "name": "category",
+   "kind": "attribute",
+   "meaning": "Class label; shared by design.",
+   "status": "measured",
+   "shared": 50,
+   "affected_test_rows": 400,
+   "train_rows": 1600,
+   "test_rows": 400,
+   "excluded_rows": 0,
+   "train_units": 50,
+   "test_units": 50,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 100.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "airplane",
+     "train": {
+      "sample": "1-11687-A-47.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 27"
+       }
+      ]
+     },
+     "test": {
+      "sample": "2-105270-A-47.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 434"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "breathing",
+     "train": {
+      "sample": "1-18631-A-23.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 78"
+       }
+      ]
+     },
+     "test": {
+      "sample": "2-50774-A-23.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 651"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "brushing_teeth",
+     "train": {
+      "sample": "1-17092-A-27.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 53"
+       }
+      ]
+     },
+     "test": {
+      "sample": "2-73544-A-27.wav",
+      "unit_source": [
+       {
+        "file": "esc50.csv",
+        "at": "line 716"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "population_consistent": true,
+ "population": {
+  "train": 1600,
+  "test": 400,
+  "excluded": 0
+ },
+ "agreements": [],
+ "spec_hash": "a3c2ab1f0ccd8567611857a5a561dbd2485c519da860caf4c85a74f32fdd4231",
+ "input_hashes": {
+  "docs/esc50.md": "8c8aa589ecfec080ffa2bf54b6a6fc0671640ea8f9fbdc6e42e3052b09e38206",
+  "esc50.csv": "ca660da60191a97de289983a05821c9382d852a38a2ba8428980816b68cf6246"
+ },
+ "scope": "Exact recorded identifiers under the stated derivations. A person must confirm what each level means before the claim level can count as held out. No content similarity, preprocessing or accuracy effect is measured.",
+ "source": {
+  "title": "ESC-50 · fold 2 held out",
+  "summary": "An environmental-sound benchmark whose README promises that fragments of one source recording stay in one fold.",
+  "url": "https://github.com/karolpiczak/ESC-50",
+  "licences": [
+   "CC BY-NC 3.0 per the ESC-50 README (ESC-10 subset CC BY)"
+  ],
+  "spec": "examples/ladders/esc50-fold2.json"
+ }
+}

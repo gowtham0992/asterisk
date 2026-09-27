@@ -5,7 +5,7 @@ from app.probes import Investigation
 from tests.test_primitives import FILES,ARGS,CITE,Trusted
 
 def confirmation(files=FILES,args=ARGS):
-    return {**preview('Specimens must be absent from training.',files,args),'confirmed':True,'confirmed_at':'2026-09-18T00:00:00+00:00'}
+    return {**preview('Specimens must be absent from training.',files,args),'confirmed':True,'origin':'human_preflight_review','confirmed_at':'2026-09-18T00:00:00+00:00'}
 
 def test_wrong_binding_reports_actual_column_and_cardinality():
     with pytest.raises(ValueError,match=r'split.csv.part has 2 distinct values across 3 rows'):
@@ -45,3 +45,33 @@ def test_replay_mismatch_suppresses_definitive():
             return r
     r=execute_receipt('Specimens must be absent from training.',FILES,{'citations':[CITE]},confirmation(),'test',Changed())
     assert r['status']=='incomplete' and r['verdict'] is None
+
+
+def test_agent_review_never_claims_human_validation_or_unlocks_clear():
+    files={**FILES,'map.csv':'image,subject_id\na,u\nb,v\nc,w\n'}
+    reviewed={**confirmation(files),'origin':'agent_developer_review'}
+    result=execute_receipt('Specimens must be absent from training.',files,
+                           {'citations':[CITE]},reviewed,'manual',Trusted())
+    assert result['verdict']['verdict']=='clear_pending_confirmation'
+    assert 'binding_confirmation' not in result
+    assert result['preflight_confirmation']['origin']=='agent_developer_review'
+    assert result['semantic_validation'].startswith('Non-human binding review')
+
+
+def test_agent_review_retains_verified_overlap_without_claiming_human_review():
+    reviewed={**confirmation(),'origin':'agent_developer_review'}
+    result=execute_receipt('Specimens must be absent from training.',FILES,
+                           {'citations':[CITE]},reviewed,'manual',Trusted())
+    assert result['verdict']['verdict']=='violation'
+    assert result['primitive_replays'][0]['matches'] is True
+    assert result['semantic_validation'].startswith('Non-human binding review')
+
+
+def test_missing_reviewer_cannot_default_to_human_clear():
+    files={**FILES,'map.csv':'image,subject_id\na,u\nb,v\nc,w\n'}
+    reviewed=confirmation(files)
+    reviewed.pop('origin')
+    result=execute_receipt('Specimens must be absent from training.',files,
+                           {'citations':[CITE]},reviewed,'manual',Trusted())
+    assert result['verdict']['verdict']=='clear_pending_confirmation'
+    assert 'binding_confirmation' not in result

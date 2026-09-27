@@ -46,16 +46,20 @@ def test_packet_uses_only_release_bytes_and_tests_elsewhere(tmp_path):
 def test_product_freeze_covers_cli_docs_and_refuses_drift(tmp_path,monkeypatch):
     import importlib.util,shutil
     from pathlib import Path
-    from app.primitive_runtime import FILES,implementation_hash
+    from app.primitive_runtime import FILES,DRIVER,implementation_hash
     root=Path(__file__).parents[1]
     spec=importlib.util.spec_from_file_location('product_freeze',root/'evaluation/primitive-v4/freeze.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
     (tmp_path/'app').mkdir()
     for name in FILES:shutil.copyfile(root/'app'/name,tmp_path/'app'/name)
     (tmp_path/'asterisk.py').write_text('pass\n');(tmp_path/'README.md').write_text('Frozen contract')
-    d=tmp_path/'.data/primitive-v4';d.mkdir(parents=True);(d/'environment.json').write_text(json.dumps({'image':'test-only','implementation_hash':implementation_hash()}))
+    d=tmp_path/'.data/primitive-v4';d.mkdir(parents=True);(d/'environment.json').write_text(json.dumps({'image':'test-only','implementation_hash':implementation_hash(),'driver_sha256':m.sha(DRIVER.encode())}))
     out=d/'freeze-rc1';monkeypatch.chdir(tmp_path);digest=m.freeze(tmp_path,Path('.data/primitive-v4/freeze-rc1'))
     assert m.verify(tmp_path,out)==digest
     snap=json.loads((out/'snapshot.json').read_text());assert {'asterisk.py','README.md'}<=snap['files'].keys()
+    environment=json.loads((d/'environment.json').read_text())
+    (d/'environment.json').write_text(json.dumps({**environment,'driver_sha256':'0'*64}))
+    with pytest.raises(ValueError,match='driver'):m.verify(tmp_path,out)
+    (d/'environment.json').write_text(json.dumps(environment))
     (tmp_path/'asterisk.py').write_text('changed')
     with pytest.raises(ValueError,match='differs'):m.verify(tmp_path,out)
     with pytest.raises(FileExistsError):m.freeze(tmp_path,out)

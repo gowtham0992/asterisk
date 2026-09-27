@@ -1,0 +1,52 @@
+{
+ "ladders": [
+  {
+   "key": "wsibench-report",
+   "title": "WSI-Bench · report task",
+   "summary": "A computational-pathology benchmark built from TCGA slides. No slide appears in both splits.",
+   "headline": "Held out: slide. Shared: patient (42 shared), site (141 shared). Your claim needs patient.",
+   "finding": "violation",
+   "claim_level": "patient"
+  },
+  {
+   "key": "wsibench-cross-task",
+   "title": "WSI-Bench · across tasks",
+   "summary": "Report-task test slides compared with the training files of four other WSI-Bench tasks.",
+   "headline": "Shared: slide (83 shared), patient (83 shared), site (71 shared). Your claim needs slide.",
+   "finding": "violation",
+   "claim_level": "slide"
+  },
+  {
+   "key": "ptbxl",
+   "title": "PTB-XL · recommended split",
+   "summary": "A 12-lead ECG benchmark whose documentation promises patient-disjoint folds.",
+   "headline": "Held out: ecg, patient. Shared: site (37 shared). Your claim needs patient.",
+   "finding": "held_out_pending_confirmation",
+   "claim_level": "patient"
+  },
+  {
+   "key": "esc50-fold2",
+   "title": "ESC-50 · fold 2 held out",
+   "summary": "An environmental-sound benchmark whose README promises that fragments of one source recording stay in one fold.",
+   "headline": "Held out: clip. Shared: recording (2 shared). Your claim needs recording.",
+   "finding": "violation",
+   "claim_level": "recording"
+  },
+  {
+   "key": "esc50-fold1",
+   "title": "ESC-50 · fold 1 held out",
+   "summary": "The same benchmark with a different held-out fold — a control where the promise holds.",
+   "headline": "Held out: clip, recording. Your claim needs recording.",
+   "finding": "held_out_pending_confirmation",
+   "claim_level": "recording"
+  },
+  {
+   "key": "urbansound8k-fold1",
+   "title": "UrbanSound8K · fold 1 held out",
+   "summary": "An urban-sound benchmark whose page warns against reshuffling related samples across folds.",
+   "headline": "Held out: slice. Shared: recording (4 shared). Your claim needs recording.",
+   "finding": "violation",
+   "claim_level": "recording"
+  }
+ ]
+}

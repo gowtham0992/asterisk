@@ -1,6 +1,11 @@
-import {createInvestigations} from './investigations.js';
+import {createLadderWorkspace} from './ladder-workspace.js?v=1';
+import {protectLocalDrafts} from './setup-reload-guard.js?v=1';
+import {mayLeavePreparation,createPreparationRouteGuard} from './preparation-unsaved.mjs';
+import {createPreparations} from './preparations.js?v=recorded-proposal-1';
+import {createInvestigations} from './investigations.js?v=backup-race-1';
 const $ = (s, root=document) => root.querySelector(s);
 const main = $('#main');
+const permitRoute=createPreparationRouteGuard({currentHash:()=>location.hash,restoreHash:hash=>window.history.replaceState(window.history.state,'',location.pathname+location.search+hash),mayLeave:mayLeavePreparation});
 let config = {}, files = [], current = null, busy = false, generation = 0, revisionSource = null;
 // All artifact/model text enters the DOM through textContent, never parsed markup.
 function el(tag, attrs={}, ...children) {
@@ -19,14 +24,14 @@ const btn=(text,fn,cls='primary')=>el('button',{class:cls,type:'button',onclick:
 function toast(text){$('#toast').textContent=text;$('#toast').hidden=false;setTimeout(()=>$('#toast').hidden=true,5000)}
 async function api(path,method='GET',body){
  const response=await fetch('/api'+path,{method,headers:{'Content-Type':'application/json','X-Asterisk-Request':'1'},...(body?{body:JSON.stringify(body)}:{})});
- if(!response.ok){let data;try{data=await response.json()}catch{data={detail:'The server did not respond. Check the connection and retry.'}}throw new Error(typeof data.detail==='string'?data.detail:'Check the input and try again.');}
- return response.json();
+ if(!response.ok){let data;try{data=await response.json()}catch{data={detail:'The server did not respond. Check the connection and retry.'}}const error=new Error(typeof data.detail==='string'?data.detail:'Check the input and try again.');error.preparationNotStarted=response.status===429&&response.headers.get('X-Asterisk-Rejection')==='preparation-capacity';throw error;}
+ return response.status===204?null:response.json();
 }
 async function history(){
  const rows=await api('/audits');$('#audit-count').textContent=rows.length;
  $('#history').replaceChildren(...(rows.length?rows.map(a=>el('button',{class:'history-item'+(current?.id===a.id?' selected':''),onclick:()=>navigate(a.id)},a.title,el('small',{},(a.revision_kind?(a.revision_kind==='rule'?'Rule revision · ':'Input revision · '):'')+(a.state==='complete'?'Evidence ready':a.state)))):[el('p',{class:'history-empty'},'Your work will appear here.')]));
 }
-function navigate(id=''){if(busy){toast('A check is running. Let it finish before changing audits.');return}location.hash=id?'audit/'+id:'';if(!id)investigations.route('#investigate');}
+function navigate(id=''){if(busy){toast('A check is running. Let it finish before changing audits.');return}const next=id?'#audit/'+id:'#investigate';if(location.hash===next)route();else location.hash=next;}
 function showError(error){let node=$('#form-error')||$('#audit-error');if(node){node.hidden=false;node.textContent=error.message}else toast(error.message)}
 function field(id,title,kind,placeholder,value='') {const input=el(kind,{id,name:id,placeholder,...(kind==='input'?{type:'text',maxlength:'120'}:{maxlength:'2000'}),required:'true'});input.value=value;return el('div',{class:'field'},el('label',{for:id},title),input)}
 function renderFiles(){const list=$('#files');if(!list)return;list.replaceChildren(...files.map((f,i)=>el('div',{class:'file-chip'},f.name,btn('×',()=>{files.splice(i,1);renderFiles()},'text-button'))));for(const b of list.querySelectorAll('button'))b.setAttribute('aria-label','Remove '+b.parentNode.firstChild.textContent)}
@@ -142,9 +147,14 @@ async function showComparison(a){
 async function proposeCurrent(){if(busy||!current)return;busy=true;const id=current.id;renderAudit(current,true);try{const data=await api('/audits/'+id+'/propose','POST',{});renderAudit(data)}catch(e){renderAudit(current);showError(e)}finally{busy=false;if(location.hash!=='#audit/'+id)await route()}}
 async function runCurrent(){if(busy)return;busy=true;const remote=!!$('#remote-consent')?.checked;const button=$('.rule-actions .primary');if(button){button.disabled=true;button.textContent='Checking all rows…'}try{renderAudit(await api('/audits/'+current.id+'/execute','POST',{remote,confirm_upload:remote}))}catch(e){showError(e);if(button){button.disabled=false;button.textContent='Accept rule & run check ↗'}}finally{busy=false}}
 async function deleteCurrent(){if(busy)return;if(!confirm('Delete this audit and its local input record? Export any evidence you want to keep first.'))return;try{await api('/audits/'+current.id,'DELETE');navigate();await history()}catch(e){showError(e)}}
-async function route(){const routeVersion=++generation;if(await investigations.route(location.hash))return;if(routeVersion!==generation)return;const revision=location.hash.match(/^#revise\/([a-f0-9]{24})$/);if(revision&&!config.legacy_audits_enabled){await investigations.route('#investigate');toast('Historical audits are read-only. Create a new split receipt.');return}if(revision){const g=++generation;try{const seed=await api('/audits/'+revision[1]+'/inputs');if(g===generation){renderNew(seed,revision[1]);$('#title').focus()}}catch(e){if(g===generation){renderNew();toast(e.message)}}return}const match=location.hash.match(/^#audit\/([a-f0-9]{24})$/);const g=++generation;if(match){try{const a=await api('/audits/'+match[1]);if(g===generation)renderAudit(a)}catch(e){if(g===generation){renderNew();toast(e.message)}}}else if(config.legacy_audits_enabled)renderNew();else await investigations.route('#investigate')}
-const investigations=createInvestigations({el,btn,api,main,label,toast});
+async function route(){const routeVersion=++generation;if(!await permitRoute()||routeVersion!==generation)return;preparations.stop();if(await ladders.route(location.hash))return;if(routeVersion!==generation)return;if(await investigations.route(location.hash))return;if(routeVersion!==generation)return;if(await preparations.route(location.hash)){if(routeVersion===generation)await investigations.history();return;}if(routeVersion!==generation)return;const revision=location.hash.match(/^#revise\/([a-f0-9]{24})$/);if(revision&&!config.legacy_audits_enabled){await investigations.route('#investigate');toast('Historical audits are read-only. Create a new split receipt.');return}if(revision){const g=++generation;try{const seed=await api('/audits/'+revision[1]+'/inputs');if(g===generation){renderNew(seed,revision[1]);$('#title').focus()}}catch(e){if(g===generation){renderNew();toast(e.message)}}return}const match=location.hash.match(/^#audit\/([a-f0-9]{24})$/);const g=++generation;if(match){try{const a=await api('/audits/'+match[1]);if(g===generation)renderAudit(a)}catch(e){if(g===generation){renderNew();toast(e.message)}}}else if(config.legacy_audits_enabled)renderNew();else await investigations.route('#investigate')}
+const ladders=createLadderWorkspace({el,btn,api,main,toast});
+const investigations=createInvestigations({el,btn,api,main,label,toast,onPrepare:seed=>preparations.queueIntake(seed)});
+protectLocalDrafts(window,()=>investigations.hasPendingSetup());
+const preparations=createPreparations({el,btn,api,main,toast,onContinue:seed=>investigations.queuePreparation(seed)});
+document.querySelector('#receipt-navigation').append(el('a',{class:'nav-button',href:'#ladders'},'Independence ladders'));
+document.querySelector('#receipt-navigation').append(el('a',{class:'nav-button preparation-nav',href:'#preparations'},'Preparation drafts'));
 $('#new-audit')?.addEventListener('click',()=>navigate());window.addEventListener('hashchange',()=>{if(!busy)route()});
 $('.brand').addEventListener('click',e=>{e.preventDefault();navigate()});
 document.addEventListener('keydown',e=>{if(e.key.toLowerCase()==='n'&&!e.ctrlKey&&!e.metaKey&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)){e.preventDefault();navigate()}});
-try{config=await api('/session');$('#connection').textContent=config.configured?'Nebius key configured':'Add a Nebius key';await route();await history()}catch(e){main.replaceChildren(el('div',{class:'error'},e.message),btn('Retry connection',()=>location.reload()));$('#connection').textContent='Connection unavailable'}
+try{config=await api('/session');$('#connection').textContent=config.configured?'Nebius key configured':'Add a Nebius key';await route()}catch(e){main.replaceChildren(el('div',{class:'error'},e.message),btn('Retry connection',()=>location.reload()));$('#connection').textContent='Connection unavailable'}

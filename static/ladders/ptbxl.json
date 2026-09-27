@@ -1,0 +1,284 @@
+{
+ "schema": "asterisk-ladder/1-result",
+ "claim": {
+  "text": "The recommended PTB-XL test fold contains no patient seen in training (folds 1-8).",
+  "level": "patient"
+ },
+ "finding": {
+  "status": "held_out_pending_confirmation",
+  "level": "patient",
+  "warning": "",
+  "confirmable": true,
+  "reason": "No recorded patient value occurs in both partitions. A person must still confirm what patient means."
+ },
+ "confirmed_levels": [],
+ "headline": "Held out: ecg, patient. Shared: site (37 shared). Your claim needs patient.",
+ "levels": [
+  {
+   "name": "ecg",
+   "kind": "observation",
+   "meaning": "One ECG record (ecg_id).",
+   "status": "measured",
+   "shared": 0,
+   "affected_test_rows": 0,
+   "train_rows": 17418,
+   "test_rows": 2198,
+   "excluded_rows": 2183,
+   "train_units": 17418,
+   "test_units": 2198,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 0.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": []
+  },
+  {
+   "name": "patient",
+   "kind": "unit",
+   "meaning": "PhysioNet: all records of a particular patient were assigned to the same fold.",
+   "status": "measured",
+   "shared": 0,
+   "affected_test_rows": 0,
+   "train_rows": 17418,
+   "test_rows": 2198,
+   "excluded_rows": 2183,
+   "train_units": 15023,
+   "test_units": 1904,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 0.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [],
+   "nests_previous": {
+    "violations": 0,
+    "examples": []
+   }
+  },
+  {
+   "name": "site",
+   "kind": "unit",
+   "meaning": "PhysioNet lists site only as recording metadata. Treating it as a unit to hold out is this ladder's interpretation, for claims about unseen recording sites.",
+   "status": "measured",
+   "shared": 37,
+   "affected_test_rows": 2195,
+   "train_rows": 17418,
+   "test_rows": 2198,
+   "excluded_rows": 2183,
+   "train_units": 50,
+   "test_units": 38,
+   "unmapped_rows": 16,
+   "test_units_seen_in_train_percent": 97.37,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "0.0",
+     "train": {
+      "sample": "1",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 2"
+       }
+      ]
+     },
+     "test": {
+      "sample": "9",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 10"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "1.0",
+     "train": {
+      "sample": "253",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 247"
+       }
+      ]
+     },
+     "test": {
+      "sample": "271",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 265"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "10.0",
+     "train": {
+      "sample": "1038",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 1027"
+       }
+      ]
+     },
+     "test": {
+      "sample": "3299",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 3286"
+       }
+      ]
+     }
+    }
+   ],
+   "nests_previous": {
+    "violations": 42,
+    "examples": [
+     {
+      "unit": "12101.0",
+      "parents": [
+       "0.0",
+       "47.0"
+      ]
+     },
+     {
+      "unit": "307.0",
+      "parents": [
+       "1.0",
+       "9.0"
+      ]
+     },
+     {
+      "unit": "309.0",
+      "parents": [
+       "1.0",
+       "9.0"
+      ]
+     },
+     {
+      "unit": "312.0",
+      "parents": [
+       "1.0",
+       "9.0"
+      ]
+     },
+     {
+      "unit": "334.0",
+      "parents": [
+       "1.0",
+       "32.0"
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "device",
+   "kind": "attribute",
+   "meaning": "Recording device; a property, not a unit to hold out.",
+   "status": "measured",
+   "shared": 11,
+   "affected_test_rows": 2198,
+   "train_rows": 17418,
+   "test_rows": 2198,
+   "excluded_rows": 2183,
+   "train_units": 11,
+   "test_units": 11,
+   "unmapped_rows": 0,
+   "test_units_seen_in_train_percent": 100.0,
+   "one_unit_per_sample": false,
+   "disjoint_namespaces": null,
+   "witnesses": [
+    {
+     "unit": "AT-6     6",
+     "train": {
+      "sample": "592",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 581"
+       }
+      ]
+     },
+     "test": {
+      "sample": "619",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 608"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "AT-6 C",
+     "train": {
+      "sample": "135",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 136"
+       }
+      ]
+     },
+     "test": {
+      "sample": "157",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 151"
+       }
+      ]
+     }
+    },
+    {
+     "unit": "AT-6 C 5.0",
+     "train": {
+      "sample": "102",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 103"
+       }
+      ]
+     },
+     "test": {
+      "sample": "382",
+      "unit_source": [
+       {
+        "file": "ptbxl_database.csv",
+        "at": "line 376"
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ],
+ "population_consistent": true,
+ "population": {
+  "train": 17418,
+  "test": 2198,
+  "excluded": 2183
+ },
+ "agreements": [],
+ "spec_hash": "b814bf8b2510301f2b856cf3492ce4dc301055cd6389422ad1611c5d5dc77099",
+ "input_hashes": {
+  "docs/ptbxl.md": "7e9a4ae3b0b1cc0d4f7bfff8c4578dae60af9f60e293cc2e245da7bce0adc8e3",
+  "ptbxl_database.csv": "7600de9c1b27d181d850b3c6038a35d7c3ddb6bb33b702e3a20252a6859d216b"
+ },
+ "scope": "Exact recorded identifiers under the stated derivations. A person must confirm what each level means before the claim level can count as held out. No content similarity, preprocessing or accuracy effect is measured.",
+ "source": {
+  "title": "PTB-XL · recommended split",
+  "summary": "A 12-lead ECG benchmark whose documentation promises patient-disjoint folds.",
+  "url": "https://physionet.org/content/ptb-xl/1.0.3/",
+  "licences": [
+   "CC BY 4.0 (PTB-XL 1.0.3, DOI 10.13026/kfzx-aw45)"
+  ],
+  "spec": "examples/ladders/ptbxl.json"
+ }
+}

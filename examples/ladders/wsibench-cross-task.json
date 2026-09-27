@@ -1,0 +1,97 @@
+{
+  "schema": "asterisk-ladder/1",
+  "claim": {
+    "text": "WSI-Bench report-task test slides are unseen in the training files of the other tasks.",
+    "level": "slide"
+  },
+  "sources": [
+    {
+      "file": "wsibench/Stage_all_type_all_train_single.json",
+      "format": "json",
+      "sample": {
+        "row": true
+      },
+      "partition": {
+        "value": "train"
+      }
+    },
+    {
+      "file": "wsibench/Subtype_all_type_all_train_single.json",
+      "format": "json",
+      "sample": {
+        "row": true
+      },
+      "partition": {
+        "value": "train"
+      }
+    },
+    {
+      "file": "wsibench/Treatment_all_type_all_train_single.json",
+      "format": "json",
+      "sample": {
+        "row": true
+      },
+      "partition": {
+        "value": "train"
+      }
+    },
+    {
+      "file": "wsibench/Prognosis_all_type_all_train_single.json",
+      "format": "json",
+      "sample": {
+        "row": true
+      },
+      "partition": {
+        "value": "train"
+      }
+    },
+    {
+      "file": "wsibench/Report_all_type_all_test_single.json",
+      "format": "json",
+      "sample": {
+        "row": true
+      },
+      "partition": {
+        "value": "test"
+      }
+    }
+  ],
+  "levels": [
+    {
+      "name": "slide",
+      "kind": "unit",
+      "expression": {
+        "column": "image",
+        "basename": true
+      },
+      "meaning": "One whole-slide image file. Each question-answer record is the observation; the same slide can back several records."
+    },
+    {
+      "name": "patient",
+      "kind": "unit",
+      "expression": {
+        "column": "image",
+        "basename": true,
+        "prefix": 12
+      },
+      "meaning": "GDC: the barcode prefix Project-TSS-Participant (12 characters) identifies the patient."
+    },
+    {
+      "name": "site",
+      "kind": "unit",
+      "expression": {
+        "column": "image",
+        "basename": true,
+        "prefix": 7
+      },
+      "meaning": "GDC: TSS (characters 6-7, with the TCGA- prefix) identifies the tissue source site."
+    }
+  ],
+  "citations": [
+    {
+      "file": "docs/tcga-barcode.md",
+      "start_line": 2,
+      "end_line": 4
+    }
+  ]
+}

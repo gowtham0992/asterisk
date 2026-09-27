@@ -1,3 +1,5 @@
+> Historical record. Current release and runtime configuration: [RC5 status](reviews/rc5-runtime-provenance.md). The older image IDs and test counts below do not configure the current release.
+
 # Current v2 verification — 18 September 2026 (Denver)
 
 Current release: primitive-v3. See [the 18 September v3 report](../evaluation/primitive-v3/REPORT.md) for the narrowed two-category scope, human binding confirmation, Gate A/B results and remaining acceptance work. Sections below retain earlier implementation history and do not supersede that report.

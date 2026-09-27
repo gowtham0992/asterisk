@@ -1,0 +1,64 @@
+{
+  "schema": "asterisk-ladder/1",
+  "claim": {
+    "text": "UrbanSound8K fold 9 contains no Freesound recording used in the other folds.",
+    "level": "recording"
+  },
+  "sources": [
+    {
+      "file": "UrbanSound8K.csv",
+      "format": "csv",
+      "sample": {
+        "column": "slice_file_name"
+      },
+      "partition": {
+        "column": "fold",
+        "map": {
+          "1": "train",
+          "2": "train",
+          "3": "train",
+          "4": "train",
+          "5": "train",
+          "6": "train",
+          "7": "train",
+          "8": "train",
+          "9": "test",
+          "10": "train"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "name": "slice",
+      "kind": "observation",
+      "expression": {
+        "column": "slice_file_name"
+      },
+      "meaning": "One slice."
+    },
+    {
+      "name": "recording",
+      "kind": "unit",
+      "expression": {
+        "column": "fsID"
+      },
+      "meaning": "The Freesound ID of the recording from which this excerpt (slice) is taken."
+    },
+    {
+      "name": "class",
+      "kind": "attribute",
+      "expression": {
+        "column": "class"
+      },
+      "meaning": "Sound class."
+    }
+  ],
+  "citations": [
+    {
+      "file": "docs/urbansound8k.md",
+      "start_line": 2,
+      "end_line": 4
+    }
+  ]
+}

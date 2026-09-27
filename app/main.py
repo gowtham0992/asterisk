@@ -1,4 +1,5 @@
 import io
+import csv
 import hashlib
 import json
 import os
@@ -36,8 +37,8 @@ for line in (ROOT / '.env').read_text().splitlines() if (ROOT / '.env').exists()
 MODEL = os.getenv('NEBIUS_MODEL', 'nvidia/nemotron-3-super-120b-a12b')
 BASE = os.getenv('NEBIUS_BASE_URL', 'https://api.tokenfactory.nebius.com/v1/')
 DB = Path(os.getenv('ASTERISK_DB', str(ROOT / '.data' / 'asterisk.sqlite')))
-DB.parent.mkdir(parents=True, exist_ok=True)
-DB.parent.chmod(0o700)
+from .storage import prepare_database_path
+prepare_database_path(DB)
 
 
 def connect():
@@ -74,17 +75,33 @@ async def boundaries(request: Request, call_next):
         data = bytearray()
         async for chunk in request.stream():
             data.extend(chunk)
-            limit = 18_000_000 if request.url.path.startswith('/api/investigations') else 4_200_000
+            preparation_path = request.url.path == '/api/preparations' or request.url.path.startswith('/api/preparations/')
+            if preparation_path:
+                from .preparation.api import REQUEST_LIMIT
+                limit = REQUEST_LIMIT
+            else:
+                limit = 18_000_000 if request.url.path.startswith('/api/investigations') or request.url.path.startswith('/api/ladder') else 4_200_000
             if len(data) > limit:
-                return JSONResponse({'detail': 'Request exceeds the investigation upload limit.' if limit == 18_000_000 else 'Upload exceeds the 4 MB limit.'}, status_code=413)
+                message = 'Preparation request exceeds 32.1 MB.' if preparation_path else ('Request exceeds the investigation upload limit.' if limit == 18_000_000 else 'Upload exceeds the 4 MB limit.')
+                return JSONResponse({'detail': message}, status_code=413)
         request._body = bytes(data)
     response = await call_next(request)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['Referrer-Policy'] = 'no-referrer'
-    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://raw.githubusercontent.com/kakumarabhishek/Corrected-Skin-Image-Datasets/ac655ac5a5b93264c57d69d6d520778d915bfc89/DermaMNIST/DermaMNIST_Analysis/; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
     if request.url.path.startswith('/api/'):
         response.headers['Cache-Control'] = 'no-store'
+    elif request.url.path == '/' or request.url.path.startswith('/static/'):
+        # Static filenames are mutable across releases (including module imports).
+        # Revalidate cached bytes rather than heuristically serving an older UI.
+        # ETags still allow an unchanged resource to return a bodyless 304.
+        response.headers['Cache-Control'] = 'no-cache'
     return response
+
+
+@app.exception_handler(csv.Error)
+async def csv_input_error(request, exc):
+    return JSONResponse({'detail': 'Malformed CSV. Check quotation marks, headers and row lengths.'}, status_code=422)
 
 
 @app.exception_handler(RequestValidationError)
@@ -366,4 +383,8 @@ def index():
 
 from .investigations import register as register_investigations
 register_investigations(app, connect, owner, ROOT)
+from .preparation.api import register as register_preparations
+register_preparations(app, connect, owner)
+from .ladder_api import register as register_ladder
+register_ladder(app, owner, connect=connect)
 app.mount('/static', StaticFiles(directory=ROOT/'static'), name='static')

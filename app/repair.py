@@ -52,8 +52,19 @@ def propose(a,policy,target_label):
         if sid in source and s['ids'][sid] in s['shared']:
             moves.append({'sample':sid,'entity':s['ids'][sid],'split_row':i,'before':row[args['partition_column']],'after':target_label})
             row[args['partition_column']]=target_label
-    if any(not any(r[args['partition_column']] in args[k] for r in rows) for k in ('train_values','test_values')):
-        raise ValueError('The proposed split must retain at least one training and one evaluation row. Choose another policy.')
+    remaining={side:sum(r[args['partition_column']] in args[key] for r in rows)
+               for side,key in (('training','train_values'),('evaluation','test_values'))}
+    if not all(remaining.values()):
+        emptied=' and '.join(side for side,count in remaining.items() if count==0)
+        raise ValueError(
+            f'This reassignment would leave {emptied} empty '
+            f'({remaining["training"]:,} training rows; {remaining["evaluation"]:,} evaluation rows). '
+            'A split must retain at least one training and one evaluation row. No revision was created. '
+            'Download the affected-row list to inspect the groups. Consider rebuilding the split '
+            'so each recorded identity stays entirely on one side, then check that both partitions '
+            'cover the populations and classes needed for your research question. '
+            'Another reassignment policy may preserve rows, but does not establish a suitable experiment. '
+            'After changing a split, retrain and evaluate again.')
     original=files[args['split_file']];reader=io.StringIO(original,newline='');next(csv.reader(reader));header=original[:reader.tell()]
     ending='\r\n' if header.endswith('\r\n') else '\r' if header.endswith('\r') else '\n'
     revised={**files,args['split_file']:csv_text(fields,rows,ending)}
@@ -62,6 +73,17 @@ def propose(a,policy,target_label):
     before=execute(args,files)
     if after['shared_entities']!=0:raise ValueError('The proposed reassignment did not remove recorded overlap.')
     summary=lambda o:{k:o[k] for k in ('shared_entities','affected_test_rows','train_rows','test_rows','ignored_rows')}
-    payload={'parent_id':a.get('id'),'input_hashes':s['hashes'],'arguments':args,'policy':policy,'target_label':target_label,'moves':moves,'before':summary(before),'after':summary(after),'csv_format':formatting,'scope':SCOPE+' '+formatting['notice']}
+    before_test=s['groups']['test']
+    after_test={r[args['sample_column']] for r in rows if r[args['partition_column']] in args['test_values']}
+    population={'evaluation_rows_retained':len(before_test & after_test),
+                'evaluation_rows_removed':len(before_test-after_test),
+                'evaluation_rows_added':len(after_test-before_test),
+                'evaluation_identities_before':len({s['ids'][sid] for sid in before_test}),
+                'evaluation_identities_after':len({s['ids'][sid] for sid in after_test})}
+    consequence=(f"Evaluation changes from {len(before_test)} to {len(after_test)} rows: "
+                 f"{population['evaluation_rows_removed']} removed and {population['evaluation_rows_added']} added. "
+                 f"Distinct evaluation identities change from {population['evaluation_identities_before']} to {population['evaluation_identities_after']}. "
+                 "This changes who is evaluated and the training data. Removing recorded overlap does not establish a better or representative experiment. Review whether the revised population still answers the original claim; retrain and evaluate again.")
+    payload={'evaluation_population':population,'scientific_consequence':consequence,'evaluation_intent':a['input'].get('evaluation_intent'),'original_claim':a['input']['claim'],'parent_id':a.get('id'),'input_hashes':s['hashes'],'arguments':args,'policy':policy,'target_label':target_label,'moves':moves,'before':summary(before),'after':summary(after),'csv_format':formatting,'scope':SCOPE+' '+formatting['notice']}
     payload['proposal_hash']=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(',',':')).encode()).hexdigest()
     return payload,revised

@@ -1,0 +1,59 @@
+{
+  "schema": "asterisk-ladder/1",
+  "claim": {
+    "text": "ESC-50 fold 1 contains no original recording used in the other folds.",
+    "level": "recording"
+  },
+  "sources": [
+    {
+      "file": "esc50.csv",
+      "format": "csv",
+      "sample": {
+        "column": "filename"
+      },
+      "partition": {
+        "column": "fold",
+        "map": {
+          "1": "test",
+          "2": "train",
+          "3": "train",
+          "4": "train",
+          "5": "train"
+        }
+      }
+    }
+  ],
+  "levels": [
+    {
+      "name": "clip",
+      "kind": "observation",
+      "expression": {
+        "column": "filename"
+      },
+      "meaning": "One 5-second clip."
+    },
+    {
+      "name": "recording",
+      "kind": "unit",
+      "expression": {
+        "column": "src_file"
+      },
+      "meaning": "README: src_file identifies the original Freesound recording; fragments from the same original source file are contained in a single fold."
+    },
+    {
+      "name": "category",
+      "kind": "attribute",
+      "expression": {
+        "column": "category"
+      },
+      "meaning": "Class label; shared by design."
+    }
+  ],
+  "citations": [
+    {
+      "file": "docs/esc50.md",
+      "start_line": 2,
+      "end_line": 4
+    }
+  ]
+}

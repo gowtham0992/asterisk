@@ -1,3 +1,5 @@
+> Historical record. Current release and runtime configuration: [RC5 status](reviews/rc5-runtime-provenance.md). The older image IDs and test counts below do not configure the current release.
+
 # Repair, reuse and measured consequences — 18 September 2026
 
 Implemented complete affected/unmapped exports; two explicit partition-reassignment policies; deterministic previews tied to original file hashes; owner-scoped, idempotent approval into a separate revision; and retained move/approval records. Missing identity mappings and empty resulting partitions are rejected. Approval of a proposal does not confirm the scientific identity binding or run a measurement.

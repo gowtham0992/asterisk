@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Measure one train/evaluation split at every level the data defines: image, recording, patient, site. See which level your claim needs and whether it is held out."><title>Asterisk — Independence ladder</title><link rel="stylesheet" href="/static/style.css?v=brand-1"><link rel="stylesheet" href="/static/product.css?v=identity-fields-2"><link rel="stylesheet" href="/static/ladder.css?v=ladder-16"><script type="module" src="/static/ladder.js?v=workspace-1-ladder-19"></script></head>
+<body class="product-page ladder-page">
+<a class="skip-link" href="#ladder-main">Skip to content</a>
+<header class="product-nav">
+ <div><a class="brand" href="/static/product.html" aria-label="Asterisk product home"><span class="brand-mark" aria-hidden="true">✱</span>Asterisk</a><div class="technology-credit"><span>Powered by</span><div class="technology-logos"><a href="https://nebius.com/"><img src="/static/brand/nebius.svg" alt="Nebius" width="84" height="23"></a><a href="https://www.nvidia.com/"><img src="/static/brand/nvidia.svg" alt="NVIDIA" width="100" height="30"></a></div></div></div>
+ <nav aria-label="Product navigation"><a href="#benchmarks">Benchmarks</a><a href="#propose">Propose</a><a href="#experiment">Evidence</a><a href="/static/about.html">Scope &amp; data</a><a class="product-button" href="/#investigate">Open workspace <span aria-hidden="true">↗</span></a></nav>
+</header>
+<main id="ladder-main" class="product-main">
+ <section class="ladder-hero">
+  <div class="hero-copy">
+   <p class="product-kicker">Independence ladder · for anyone reporting on a train/test split</p>
+   <h1>Held out<br>at which level<span class="accent-star">?</span></h1>
+   <p class="product-lede">A split can be clean by image and shared by patient. Asterisk measures the same split at every level your data defines—image, recording, patient, site—and tells you whether the level your claim depends on is really held out.</p>
+   <div class="product-actions"><a class="product-button" href="#propose">Propose a ladder with Nemotron <span aria-hidden="true">↓</span></a><a class="text-link" href="#benchmarks">Explore six public benchmarks</a></div>
+   <p class="hero-proof">Measured from published split files · no model decides the result</p>
+  </div>
+  <figure class="ladder-figure" id="hero-figure" aria-labelledby="hero-figure-caption">
+   <div class="figure-head"><span class="figure-label">Figure 1</span><span class="figure-source">WSI-Bench report task · TCGA pathology</span></div>
+   <ol class="figure-rungs" id="hero-rungs" aria-label="Levels, coarsest first"><li class="figure-loading">Loading the measured ladder…</li></ol>
+   <figcaption id="hero-figure-caption">No slide appears on both sides—but <strong>42 test patients</strong> and <strong>every test site</strong> do. A slide-level check says clean. A patient-level claim is not.</figcaption>
+  </figure>
+ </section>
+ <section id="benchmarks" class="product-section ladder-gallery" aria-labelledby="benchmarks-title">
+  <div class="section-intro"><p class="product-kicker">Public benchmarks · measured from pinned metadata</p><h2 id="benchmarks-title">Same split.<br>Different answers.</h2><p>Each ladder below was computed on this machine from the benchmark's own published split files, with every input pinned by SHA-256. No model was involved in the measurement.</p>
+   <dl class="ladder-key" aria-label="How to read a ladder">
+    <div><dt><span class="tone-chip tone-held">Held out</span></dt><dd>no value on both sides</dd></div>
+    <div><dt><span class="tone-chip tone-shared">Shared</span></dt><dd>open the witnesses for the rows</dd></div>
+    <div><dt><span class="tone-chip tone-unknown">Unknown</span></dt><dd>zero overlap would prove nothing</dd></div>
+    <div><dt><span class="tone-chip tone-attribute">Attribute</span></dt><dd>a property; sharing is expected</dd></div>
+   </dl></div>
+  <div class="gallery-layout">
+   <div class="gallery-list" id="gallery-list" role="tablist" aria-label="Benchmarks" aria-orientation="vertical"><p class="gallery-loading">Loading benchmark ladders…</p></div>
+   <div class="ladder-panel" id="gallery-panel" role="tabpanel" aria-live="polite"></div>
+  </div>
+ </section>
+ <section id="propose" class="product-section ladder-propose" aria-labelledby="propose-title">
+  <div class="section-intro"><p class="product-kicker">NVIDIA Nemotron on Nebius Token Factory · Nebius Sandboxes</p><h2 id="propose-title">Let Nemotron draft the ladder.<br>Check every step.</h2><p>Nemotron reads your documentation and proposes the levels. Asterisk validates and measures them on this machine, asks you to confirm what your claim's level means, and a Nebius Sandbox recomputes the result from the engine's own code.</p></div>
+  <ol class="chain-steps" aria-label="Chain">
+   <li id="step-input" class="is-active"><span>1</span>Claim &amp; files</li><li id="step-preview"><span>2</span>Preview</li><li id="step-propose"><span>3</span>Nemotron proposes</li><li id="step-measure"><span>4</span>Measure &amp; confirm</li><li id="step-replay"><span>5</span>Sandbox replay</li><li id="step-receipt"><span>6</span>Receipt</li>
+  </ol>
+  <form class="check-form propose-form" id="propose-form" novalidate>
+   <div class="check-field wide"><label for="propose-claim">Claim <small>what must be unseen in training</small></label><input id="propose-claim" type="text" maxlength="1000" placeholder="No test patient appears in the training data."></div>
+   <div class="check-field"><span class="field-label" id="propose-files-label">Split files and documentation <small>CSV, JSON, text lists, README</small></span><label class="dropzone" id="propose-drop" for="propose-files"><input id="propose-files" class="visually-hidden" type="file" multiple aria-labelledby="propose-files-label"><span class="dropzone-title">Drop files here or <u>choose files</u></span><span class="dropzone-hint" id="propose-drop-hint">Preview uploads your selected files to this Asterisk server. You review the smaller model payload before sending it to Nebius.</span></label></div>
+   <div class="check-field"><label for="propose-model">Model <small>via Nebius Token Factory</small></label><select id="propose-model"><option value="nvidia/nemotron-3-super-120b-a12b">Nemotron 3 Super</option><option value="nvidia/Nemotron-3-Ultra-550b-a55b">Nemotron 3 Ultra</option></select></div>
+   <div class="propose-inventory wide" id="propose-inventory" hidden></div>
+   <div class="check-actions"><button class="primary" type="button" id="propose-preview" disabled>Preview what will be sent</button><button class="secondary" type="button" id="propose-example">Try a synthetic example</button><span class="actions-hint">Preview sends files to Asterisk, not to Nebius.</span></div>
+   <p class="check-error" id="propose-error" role="alert" hidden></p>
+  </form>
+  <div class="chain-panel" id="propose-payload" hidden></div>
+  <div class="chain-panel" id="propose-result" hidden></div>
+  <div class="ladder-panel" id="propose-ladder" hidden></div>
+  <div class="chain-panel" id="propose-replay" hidden></div>
+ </section>
+ <section id="experiment" class="product-section ladder-experiment" aria-labelledby="experiment-title" hidden>
+  <div class="section-intro"><p class="product-kicker">Held-out experiment · who proposes the ladder</p><h2 id="experiment-title">The model proposes.<br>The engine decides.</h2><p id="experiment-lede"></p></div>
+  <div class="experiment-stats" id="experiment-stats"></div>
+  <div class="experiment-table-wrap"><table class="experiment-table" id="experiment-table"></table></div>
+  <p class="experiment-note" id="experiment-note"></p>
+ </section>
+ <section id="check" class="product-section ladder-check" aria-labelledby="check-title">
+  <details class="advanced">
+   <summary><span class="product-kicker">Advanced</span><span class="advanced-title" id="check-title">Measure a ladder spec you wrote yourself</span><span class="advanced-hint">asterisk-ladder/1 JSON plus the files it names · no model or Sandbox call</span></summary>
+
+  <form class="check-form" id="check-form" novalidate>
+   <div class="check-field"><label for="spec-file">Ladder spec <small>asterisk-ladder/1 JSON</small></label><input id="spec-file" type="file" accept=".json,application/json"><p class="check-hint" id="spec-status">No spec chosen.</p></div>
+   <div class="check-field"><label for="data-files">Files the spec names <small>CSV, JSON, lines or documentation</small></label><input id="data-files" type="file" multiple><p class="check-hint" id="files-status">The spec lists which files it needs. Measuring uploads them to this Asterisk server.</p></div>
+   <div class="check-actions"><button class="primary" type="submit" id="check-run" disabled>Measure on server</button><button class="text-button" type="button" id="load-example">Load a synthetic example</button></div>
+   <p class="check-error" id="check-error" role="alert" hidden></p>
+  </form>
+  <div class="ladder-panel" id="check-panel" aria-live="polite" hidden></div>
+   </details>
+ </section>
+ <section class="product-section product-boundary ladder-boundary">
+  <div><p class="product-kicker">A precise answer to a precise question</p><h2>What a ladder<br>can tell you.</h2></div>
+  <div><p><strong>At each level, do training and evaluation share a recorded value?</strong> That is what is measured, from exact identifiers under the derivations the spec states and the documentation it cites.</p><p>“Held out” stays pending until a person confirms what the level means: a column called <code>patient_id</code> can still hold image identifiers. Content similarity, preprocessing and the effect on accuracy are not measured.</p></div>
+ </section>
+</main>
+<footer class="product-footer"><span>✱ Asterisk · Research preview</span><span>Nemotron proposes · Asterisk measures · Nebius replays</span><a href="/static/product.html">About Asterisk</a></footer>
+</body></html>

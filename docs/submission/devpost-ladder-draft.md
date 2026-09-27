@@ -1,0 +1,92 @@
+# Asterisk: Devpost draft (Best Apps and Agents)
+
+*Draft for Gowtham to edit. Numbers link to `evaluation/ladder-proposal-v1` to `evaluation/ladder-proposal-v5` (including set D and the v4 prompt).*
+
+## Tagline
+
+Your test set can hold out images and still share patients. Asterisk shows which unit your split really holds out,
+with inspectable measurements.
+
+## Inspiration
+
+Published results keep being overturned because the split was clean at the wrong level: images separated but
+patients shared, patients separated but hospitals shared. A 2026 audit of TCGA pathology benchmarks found no shared
+cases but up to 100% shared tissue-source sites. Most leak checkers intersect one ID column. That answers the easy
+question and can quietly miss the one your claim depends on.
+
+## What it does
+
+Asterisk measures one train/test split at **every level the data defines**: observation, recording, patient, site. It
+marks the level your claim needs.
+
+1. **You state the claim** ("No test patient appears in training") and add the split files and the dataset's
+   documentation.
+2. **Preview.** Your selected files are uploaded to the Asterisk server. Before any model call, you see the exact
+   subset it would send to Nebius: documentation and column counts, plus example values only for the columns you approve.
+3. **NVIDIA Nemotron on Nebius Token Factory proposes the ladder.** It reads the documentation, derives units such as
+   "patient = first 12 characters of the barcode", cites the lines, and abstains when the documentation does not
+   define the unit.
+4. **The engine validates and measures on the Asterisk server.** It refuses anything that makes separation true by construction:
+   partitioning by the claim's own unit, binding the claim to the image itself, or one unit per sample. It shows
+   witnesses from the source rows.
+5. **You confirm what the claim level means.** Only then does a result read "held out". If Nemotron abstained, you
+   define the unit in a guided form with a live preview.
+6. **A fresh Nebius Sandbox recomputes the ladder** from the engine's own code. The result is kept only if it matches
+   exactly.
+7. **Save and reopen the receipt in your workspace.** Download readable HTML or JSON, with local execution distinguished from a matching Sandbox replay.
+
+**Real findings on public data (reproducible from pinned files):**
+- PTB-XL: 2,195 of 2,198 test ECGs come from recording sites seen in training.
+- WSI-Bench: 42 test patients are in training, with no shared slide.
+- ESC-50: 2 recordings break the README's same-fold promise.
+- MIT-BIH: the widely used de Chazal "inter-patient" split puts records 201 and 202 on opposite sides, and the
+  database's documentation says both came from the same subject.
+
+## How we built it
+
+- **Stack:** FastAPI, SQLite and vanilla JS.
+- **Engine:** the ladder engine reuses our frozen extraction language and overlap audit for every level.
+- **NVIDIA Nemotron 3 Super on Token Factory** proposes the ladder, with a strict JSON grammar, a worked example,
+  numbered documentation lines and one validator-guided repair turn. Nemotron 3 Ultra is available as an option.
+- **Nebius Sandboxes** (`python:3.12-slim`) replay the measurement. Inputs are uploaded gzip-compressed, which fits
+  multi-megabyte benchmark metadata.
+- **Tests:** the local source package passed 569 Python tests (9 skipped) and 164 JavaScript tests. A fresh Ubuntu installation passed 568 Python tests (10 skipped; Node is absent there). The hosted disclosure update additionally passed 12 focused Python and 9 JavaScript checks; its measurement program is unchanged.
+
+## What the recorded evaluation supports
+
+- **The protocol:** four frozen experiments with the hypotheses, thresholds and product decisions written before the
+  first call.
+- **The data:** 41 cases across four fresh PhysioNet case sets, including planted leaks. These are bounded development evaluations, not evidence that the models had never encountered the public datasets during training.
+- **Safety:** with Asterisk's guards, **no model proposal produced a false "held out"**. A single-column checker
+  produced 28.
+- **The guard earned its place:** on unseen data it stopped Nemotron Super from calling a real cross-database leak
+  "held out".
+- **Grammar matters.** Letting proposals say "characters 2–4" or "field 1 split on _" raised Nemotron Super from 3 to 5 of
+  10 on a fresh set, with no false reassurance, so it is now the default.
+- **Zero false reassurance does not mean every proposal was correct.** Nemotron Super scored 21/41 and Ultra 24/41 across the tested configurations; Claude Sonnet scored 36/41. Abstentions, invalid replies and provider failures are reported separately in the protocols and results. Super with the shipping v4 prompt still failed the set-D pass rule at 5/10. The guided definition step keeps the user involved when preparation is incomplete.
+
+## Challenges
+
+- Our first prompt described the output in prose, and 75% of model replies were malformed. We rebuilt the contract and
+  report the failed run.
+- Sandbox stdin is capped near 1 MB. We moved inputs to the file upload.
+- We had to tell the difference between "zero overlap" and "zero overlap by construction".
+
+## What we learned
+
+Separating model proposals from computed measurements makes mistakes inspectable; the observed zero-false-reassurance result is limited to the tested cases. Pre-registering the evaluation changed
+our pitch twice, and made it honest.
+
+## What's next
+
+- Record the end-to-end demo from the deployed workspace.
+- Measure whether researchers can understand and use the receipt without its author present.
+- Improve preparation on a new, frozen case set before claiming broader reliability.
+
+## Deployed demonstration
+
+Workspace: https://asterisk.gowthamsarveswaran.com/static/ladder.html#propose (reviewer credentials supplied separately).
+
+The 27 September hosted smoke test completed in 11.95 seconds: one Nemotron 3 Super call, deterministic measurement, one fresh Nebius Sandbox replay with exact match, saved receipt and HTML export. It used the shipped fictional example and found one shared patient affecting one of four evaluation rows. This verifies deployment integration on one example, not general accuracy or researcher benefit.
+
+Public introduction, public source URL and the under-three-minute video remain to be published. This document is a draft, not a submitted entry.

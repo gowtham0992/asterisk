@@ -3,8 +3,43 @@ import importlib.util,sys,copy
 from pathlib import Path
 import pytest
 ROOT=Path(__file__).parents[1]
-sys.path.insert(0,str(ROOT/'evaluation/primitive-pilot'))
-spec=importlib.util.spec_from_file_location('primitive_runner',ROOT/'evaluation/primitive-pilot/run.py');m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
+def load_runner():
+ # The frozen runner is a standalone script with bare sibling imports. Bind its
+ # own dependencies while loading it, then restore the process import state so
+ # collecting another historical harness cannot change which scorer it uses.
+ missing=object();names=('common','budget','freeze','scoring')
+ previous={name:sys.modules.get(name,missing) for name in names}
+ previous_path=sys.path[:]
+ def load(name,path):
+  spec=importlib.util.spec_from_file_location(name,path)
+  module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+  return module
+ try:
+  for name in names:
+   directory='probe-pilot' if name in ('common','budget') else 'primitive-pilot'
+   sys.modules[name]=load('primitive_freeze_test_'+name,ROOT/'evaluation'/directory/(name+'.py'))
+  return load('primitive_runner',ROOT/'evaluation/primitive-pilot/run.py')
+ finally:
+  sys.path[:]=previous_path
+  for name,value in previous.items():
+   if value is missing:sys.modules.pop(name,None)
+   else:sys.modules[name]=value
+m=load_runner()
+
+
+def test_runner_dependencies_are_isolated_from_other_harnesses():
+ assert m.score.__module__=='primitive_freeze_test_scoring'
+ assert m.check.__module__=='primitive_freeze_test_freeze'
+ sentinel=object();old=sys.modules.get('scoring')
+ try:
+  sys.modules['scoring']=sentinel
+  loaded=load_runner()
+  assert loaded.score.__module__=='primitive_freeze_test_scoring'
+  assert sys.modules['scoring'] is sentinel
+ finally:
+  if old is None:sys.modules.pop('scoring',None)
+  else:sys.modules['scoring']=old
+
 def manifest(tmp_path):
  frozen={'frozen_at':'2026-09-17T00:00:00+00:00'}
  (tmp_path/'readme.txt').write_text('protocol mechanics fixture only')
