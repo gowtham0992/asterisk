@@ -4,7 +4,7 @@ Asterisk checks whether a train/test split separates the identity level required
 
 **Hosted workspace:** https://asterisk.gowthamsarveswaran.com/static/ladder.html#propose (preview login required). Supply reviewer credentials separately in Devpost’s testing instructions, never in source. Repository: https://github.com/gowtham0992/asterisk. The owner is keeping it private until closer to submission. All published source is on `main`; the landing page is in `site/`. GitHub Pages is unavailable while the repository is private under the current plan. Use the hosted workspace directly.
 
-**Release status, 28 September:** the local hardening changes below are not yet deployed. The hosted release is still the 27 September build. Do not give these instructions to judges until deployment and version parity have been verified. The public video is still pending.
+**Release status, 28 September:** review hardening is deployed; the packaged source hashes match the installed runtime. The hosted fictional model → measurement → Sandbox replay → saved receipt/export smoke passed. The public repository and video are still pending.
 ## First look: a real finding without a model call
 
 Open **Benchmarks** in the hosted workspace. Its WSI-Bench figure is a saved measurement from pinned public files: zero shared slides but 42 shared patient identifiers, affecting 43 of 208 evaluation rows. The gallery shows recorded measurements and source-row witnesses. This is not a newly executed Sandbox receipt.
@@ -45,4 +45,4 @@ The recorded evaluation covers 41 cases across different tested configurations. 
 
 Local verification of the source archive at commit `1e2ab4c`: 569 Python tests passed, 9 skipped, and 164 JavaScript tests passed. The clean extraction reused installed dependencies. This does not establish cloud TLS, credential validity, service availability, or a successful live provider run of the final hosted build.
 
-Hosted checks on 27 September verified TLS, preview authentication, session isolation, fictional measurement/save/export, backup restore and restart persistence. AWS-to-Nebius catalog authentication passed. A subsequent shipped fictional example passed one live Nemotron call, one fresh Sandbox replay with exact match, saved receipt and HTML export in 11.95 seconds; this is one deployment smoke test, not an accuracy evaluation.
+Hosted checks on 27 September verified TLS, preview authentication, session isolation, fictional measurement/save/export, backup restore and restart persistence. AWS-to-Nebius catalog authentication passed. A subsequent shipped fictional example passed one live Nemotron call, one fresh Sandbox replay with exact match, saved receipt and HTML export in 11.95 seconds. The 28 September hardened build repeated that chain in 10.29 seconds, including recorded model provenance. These are deployment checks, not accuracy evaluations.
