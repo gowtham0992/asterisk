@@ -1,8 +1,9 @@
+import {inspectCSV} from './csv-projection.mjs';
 // Pure view model for an independence ladder result. No DOM, no network: tested in node.
 export const FINDINGS={
  violation:{tone:'shared',title:'Not held out'},
  held_out:{tone:'held',title:'Held out'},
- held_out_pending_confirmation:{tone:'held',title:'Held out, pending your confirmation'},
+ held_out_pending_confirmation:{tone:'held',title:'No shared values, pending your confirmation'},
  not_established:{tone:'unknown',title:'Not established'},
  insufficient:{tone:'unknown',title:'Insufficient evidence'},
 };
@@ -15,6 +16,8 @@ export function levelRow(level,claimLevel){
  const percent=level.test_units_seen_in_train_percent;
  const detail=`${plural(shared,'evaluation '+level.name)} of ${units.toLocaleString('en-US')} also in training · ${affected.toLocaleString('en-US')} of ${rows.toLocaleString('en-US')} evaluation rows affected`;
  const row={...base,percent,detail};
+ if(level.kind==='unit'&&level.evaluation_unit_ratio>=.95)row.notes.push('Nearly every evaluation row has its own unit value. Check that this is not a per-sample identifier.');
+ if(!shared&&level.folded_shared_units)row.notes.push(`${level.folded_shared_units} shared values when ignoring case and surrounding whitespace. Review their meaning; exact matching is unchanged.`);
  if(unmapped)row.notes.push(`${plural(unmapped,'selected row')} had no ${level.name} value and were left unmapped.`);
  if(level.one_unit_per_sample)row.notes.push(`Every sample has its own ${level.name}. Confirm this column really names a ${level.name}.`);
  if(level.nests_previous?.violations)row.notes.push(`${plural(level.nests_previous.violations,'finer unit')} map to more than one ${level.name}; the levels do not nest.`);
@@ -22,7 +25,7 @@ export function levelRow(level,claimLevel){
  if(shared)return {...row,tone:'shared',state:'Shared'};
  if(level.disjoint_namespaces)return {...row,tone:'unknown',state:'Not comparable',notes:[...row.notes,`Training and evaluation identifiers use different naming families (${level.disjoint_namespaces.train_tokens.join(', ')} vs ${level.disjoint_namespaces.test_tokens.join(', ')}).`]};
  if(unmapped)return {...row,tone:'unknown',state:'Incomplete'};
- return {...row,tone:'held',state:'Held out'};
+ return {...row,tone:'held',state:'No shared values'};
 }
 
 export function ladderView(result){
@@ -77,7 +80,7 @@ export const isDocumentation=name=>/\.(md|txt|rst)$/i.test(name);
 // Column names of a table the person chose, read locally so they can decide which example values may be shared.
 export function tableColumns(name,text){
  if(/\.json$/i.test(name)){try{const rows=JSON.parse(text);return Array.isArray(rows)&&rows[0]&&typeof rows[0]==='object'?Object.keys(rows[0]):[]}catch{return []}}
- if(/\.csv$/i.test(name)){const header=(text.split(/\r?\n/,1)[0]||'');return header?header.split(',').map(c=>c.replace(/^"|"$/g,'')):[]}
+ if(/\.csv$/i.test(name)){try{return inspectCSV(text).headers}catch{return []}}
  return ['value'];
 }
 
@@ -115,8 +118,10 @@ export function tableRows(name,text){
  const fmt=formatOf(name);
  if(fmt==='json'){try{const rows=JSON.parse(text);return Array.isArray(rows)?rows.filter(r=>r&&typeof r==='object'):[]}catch{return []}}
  if(fmt==='lines')return text.split('\n').filter(Boolean).map(value=>({value}));
- const lines=text.split(/\r?\n/).filter(Boolean),header=(lines.shift()||'').split(',');
- return lines.map(line=>{const cells=line.split(',');return Object.fromEntries(header.map((h,i)=>[h,cells[i]??'']))});
+ const table=inspectCSV(text);
+ const decode=value=>value.startsWith('"')?value.slice(1,-1).replaceAll('""','"'):value;
+ return table.rows.slice(1).map(row=>Object.fromEntries(table.headers.map((h,i)=>[h,decode(row.fields[i])])));
+
 }
 
 // Same order and rules as app/ladder.py: basename, field, characters or prefix. null = the level would be unavailable.

@@ -1,4 +1,4 @@
-import {renderLadder} from './ladder-render.mjs?v=workspace-1';
+import {renderLadder} from './ladder-render.mjs?v=partition-review-1';
 import {FINDINGS} from './ladder-view.mjs?v=ladder-6';
 
 export function createLadderWorkspace({el,btn,api,main,toast}){
@@ -32,9 +32,12 @@ export function createLadderWorkspace({el,btn,api,main,toast}){
    const panel=el('section',{class:'ladder-panel'});renderLadder(panel,r.result);
    // A saved record was confirmed by its creator, not necessarily the current reader.
    for(const note of panel.querySelectorAll('.finding-confirmed'))note.textContent='Recorded confirmation: '+(r.result.confirmed_levels||[]).join(', ');
-   const scope=r.execution.kind==='sandbox_replay'?'Matched a fresh Nebius Sandbox replay.':'Measured on the Asterisk server. No Sandbox replay is recorded.';
+   const origin=r.binding_origin;
+   const originText=origin?.kind==='recorded_model_proposal'?`Proposed by ${origin.model_name}, prompt ${origin.prompt_version}. Specification edited: ${origin.edited}; inputs changed: ${origin.inputs_changed}.`:(origin?.note||'This older receipt does not record proposal origin.');
+   const scope=r.execution.kind==='sandbox_replay'?'Matched a fresh Nebius Sandbox replay, as attested by this Asterisk server.':'Measured on the Asterisk server. No Sandbox replay is recorded.';
    main.replaceChildren(el('div',{class:'ladder-page'},link('← All saved ladders','#ladders'),panel,
-    el('section',{class:'panel ladder-saved-card'},el('h2',{},'Keep the evidence.'),el('p',{},scope),
+    el('section',{class:'panel ladder-saved-card'},el('h2',{},'Keep the evidence.'),el('p',{},scope),el('p',{},originText),
+     origin?.kind==='recorded_model_proposal'?el('details',{},el('summary',{},'Proposal origin'),el('pre',{},JSON.stringify(origin,null,2))):null,
      el('p',{class:'hint'},r.confirmation.scope+' Inputs are retained privately in this workspace; downloaded HTML and JSON include the measurement, not raw inputs or model proposal history.'),
      actions(r.id),el('details',{},el('summary',{},'Saved extraction specification'),el('pre',{},JSON.stringify(r.spec,null,2))),
      el('details',{},el('summary',{},'Execution provenance'),el('pre',{},JSON.stringify(r.execution,null,2))),

@@ -122,11 +122,29 @@ def test_a_txt_data_file_can_be_declared_data_and_citations_must_come_from_decla
         lp.parse(json.dumps({'status': 'ladder', 'spec': cited_data}), files, CLAIM, documentation=['README.md'])
 
 
-def test_split_labels_are_shared_without_opt_in_but_other_low_cardinality_columns_are_not():
-    files = {'split.csv': 'record,split,sex\na,train,F\nb,test,M\nc,train,F\n', 'README.md': 'record is one ECG.\n'}
-    cols = lp.payload(CLAIM, files)['tables']['split.csv']['columns']
-    assert cols['split']['values'] == ['test', 'train']
-    assert 'values' not in cols['sex'] and 'examples' not in cols['sex'] and 'values' not in cols['record']
+@pytest.mark.parametrize('column', ['split', 'patient_name_set', 'fold', 'subset'])
+def test_split_like_columns_require_explicit_value_sharing(column):
+    files = {'data.csv': f'record,{column}\na,Alice Example\nb,Bob Example\n'}
+    body = lp.payload(CLAIM, files)
+    assert 'Alice Example' not in json.dumps(body)
+    assert 'Bob Example' not in json.dumps(body)
+    selected = lp.payload(CLAIM, files, share_examples=[('data.csv', column)])
+    assert 'Alice Example' in json.dumps(selected)
+
+
+@pytest.mark.parametrize('citation', ['README.md:3', None, {},
+    {'file': [], 'start_line': 1, 'end_line': 2},
+    {'file': 'README.md', 'start_line': True, 'end_line': 2},
+    {'file': 'README.md', 'start_line': 3, 'end_line': 1},
+    {'file': 'README.md', 'start_line': 1, 'end_line': 41}])
+def test_malformed_citations_reach_validation_repair(citation):
+    bad = spec()
+    bad['citations'] = [citation]
+    replies = iter([json.dumps({'status': 'ladder', 'spec': bad}),
+                    json.dumps({'status': 'ladder', 'spec': spec()})])
+    got, attempts = lp.propose(CLAIM, FILES, lambda *args: next(replies))
+    assert got['status'] == 'ladder'
+    assert len(attempts) == 2 and attempts[0]['error'] and attempts[1]['error'] is None
 
 
 def test_v4_extends_only_the_grammar_and_its_examples_run_on_the_engine():

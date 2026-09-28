@@ -90,7 +90,8 @@ def replay(spec, files, confirmed, key, project, run=run_remote):
     if response['stdout'].strip() != canonical(local):
         raise SandboxError('The Sandbox result differs from the local measurement. Nothing was recorded.')
     sha = lambda text: hashlib.sha256(text.encode()).hexdigest()
-    provenance = {'runtime': 'nebius-sandbox', 'image': IMAGE, 'sdk_version': response.get('sdk_version'),
+    provenance = {'runtime': 'nebius-sandbox', 'attestation': 'Replay reported by this Asterisk server; not independently authenticated by the receipt.',
+                  'operation_id': None, 'operation_id_note': 'The installed SDK image run result does not expose the operation UUID.', 'image': IMAGE, 'sdk_version': response.get('sdk_version'),
                   'seconds': response.get('seconds'), 'exit_code': 0, 'matches_local': True,
                   'program_sha256': sha(code), 'payload_sha256': sha(payload), 'result_sha256': sha(canonical(local))}
     return local, provenance

@@ -1,0 +1,11 @@
+scan,split,scanner
+scan-001,train,model-x
+scan-002,train,model-x
+scan-003,train,model-y
+scan-004,train,model-y
+scan-005,train,model-x
+scan-006,train,model-y
+scan-007,test,model-x
+scan-008,test,model-y
+scan-009,test,model-x
+scan-010,test,model-y

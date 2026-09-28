@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,citedLines,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount} from './ladder-view.mjs?v=ladder-6';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,citedLines,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount} from './ladder-view.mjs?v=release-review-1';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,renderLadder} from './ladder-render.mjs?v=workspace-1';
+import {el,kicker,renderLadder,renderReviewContext} from './ladder-render.mjs?v=partition-review-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -10,9 +10,9 @@ async function gallery(){
  try{const response=await fetch('/static/ladders/index.json');if(!response.ok)throw new Error();entries=(await response.json()).ladders}
  catch{list.replaceChildren(el('p',{class:'gallery-loading'},'The benchmark ladders could not be loaded. Rebuild them with scripts/build_public_ladders.py.'));return}
  const tones={violation:'shared',held_out_pending_confirmation:'held'};
- const words={violation:'Not held out',held_out_pending_confirmation:'Held out · confirm meaning',not_established:'Not established',insufficient:'Insufficient'};
+ const words={violation:'Not held out',held_out_pending_confirmation:'No shared values · confirm meaning',not_established:'Not established',insufficient:'Insufficient'};
  const buttons=entries.map((entry,i)=>el('button',{class:'gallery-item',type:'button',role:'tab',id:`tab-${entry.key}`,'aria-controls':'gallery-panel','aria-selected':'false',tabindex:'-1',onclick:()=>select(i,false,true),onkeydown:event=>{const step={ArrowDown:1,ArrowUp:-1}[event.key];if(step){event.preventDefault();select((i+step+entries.length)%entries.length,true,true)}}},
-  el('span',{class:`tone-chip tone-${tones[entry.finding]||'unknown'}`},words[entry.finding]||entry.finding),el('strong',{},entry.title),el('span',{class:'gallery-line'},entry.headline)));
+  el('span',{class:`tone-chip tone-${tones[entry.finding]||'unknown'}`},words[entry.finding]||entry.finding),el('strong',{},entry.title),el('span',{class:'gallery-line'},entry.headline.replace(/Held out:/g,'No shared values:'))));
  list.replaceChildren(...buttons);
  async function select(i,focus=false,chosen=false){
   buttons.forEach((b,j)=>{b.setAttribute('aria-selected',String(i===j));b.tabIndex=i===j?0:-1});if(focus)buttons[i].focus();
@@ -50,11 +50,16 @@ function checker(){
  }
  specInput.addEventListener('change',()=>{if(specInput.files[0])useSpec(specInput.files[0])});
  dataInput.addEventListener('change',()=>{picked=[...dataInput.files];error.hidden=true;refresh()});
- $('#load-example').addEventListener('click',async()=>{
-  try{const texts=await Promise.all(EXAMPLE.map(async name=>{const r=await fetch(`/static/ladder-example/${name}`);if(!r.ok)throw new Error();return new File([await r.text()],name,{type:'text/plain'})}));
-   specInput.value='';dataInput.value='';picked=texts.slice(1);await useSpec(texts[0]);say($('#spec-status'),'Synthetic example loaded: a fictional scan study where subject identity lives in a separate mapping file.','ready');}
+ async function loadExample(clean){
+  try{const folder=clean?'ladder-example-clean':'ladder-example';
+   const texts=await Promise.all(EXAMPLE.map(async name=>{const r=await fetch(`/static/${folder}/${name}`);if(!r.ok)throw new Error();return new File([await r.text()],name,{type:'text/plain'})}));
+   specInput.value='';dataInput.value='';picked=texts.slice(1);await useSpec(texts[0]);
+   say($('#spec-status'),`Fictional ${clean?'subject-disjoint':'overlapping-subject'} example loaded. This is a supplied specification, not a model proposal.`,'ready');}
   catch{fail('The synthetic example could not be loaded.')}
- });
+ }
+ $('#load-example').addEventListener('click',()=>loadExample(false));
+ $('#load-clean-example').addEventListener('click',()=>loadExample(true));
+
  async function measure(body){
   const response=await fetch('/api/ladder',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Asterisk-Request':'1'},body:JSON.stringify(body)});
   const data=await response.json().catch(()=>({detail:'The server did not respond. Check the connection and retry.'}));
@@ -112,7 +117,8 @@ function proposer(){
  const body=()=>({claim:claimInput.value.trim(),files:Object.entries(state.files).map(([name,content])=>({name,content})),
   documentation:[...state.docs],share_examples:[...state.share].map(k=>JSON.parse(k)),model:model.value});
  const tableFiles=()=>Object.keys(state.files).filter(n=>!state.docs.has(n));
- function ready(){previewButton.disabled=!(claimInput.value.trim().length>=3&&state.docs.size>0&&tableFiles().length>0)}
+ function ready(){previewButton.disabled=!(claimInput.value.trim().length>=3&&state.docs.size>0&&tableFiles().length>0);$('#propose-manual').disabled=previewButton.disabled}
+ $('#propose-manual').addEventListener('click',()=>builder());
  function renderInventory(){
   inventory.replaceChildren(el('p',{},'Mark which files are documentation. For tables, tick only identifier columns whose example values may be sent; every other column is sent as counts only.'),
    ...Object.keys(state.files).map(name=>{
@@ -131,7 +137,7 @@ function proposer(){
   for(const file of list){if(file.size>16_000_000){fail(`${file.name} is larger than 16 MB.`);return}state.files[file.name]=await file.text();if(isDocumentation(file.name))state.docs.add(file.name)}
   renderInventory();ready();
   const names=Object.keys(state.files);
-  $('#propose-drop-hint').textContent=names.length?`${names.length} file${names.length>1?'s':''}: ${names.join(', ')}`:'Files stay on this machine until you preview and send.';
+  $('#propose-drop-hint').textContent=names.length?`${names.length} file${names.length>1?'s':''}: ${names.join(', ')}`:'Preview uploads files to the Asterisk server; sending to Nebius is a separate step.';
   drop.classList.toggle('has-files',names.length>0);
  }
  fileInput.addEventListener('change',()=>useFiles([...fileInput.files]));
@@ -155,7 +161,7 @@ function proposer(){
    const user=JSON.parse(data.messages[1].content);
    const send=el('button',{class:'primary',type:'button'},`Send to ${data.model_name} via Nebius Token Factory`);
    send.addEventListener('click',()=>propose(send));
-   panels.payload.replaceChildren(kicker('Step 2 · Exactly what would be sent'),el('h3',{},'Nothing has left this machine yet.'),
+   panels.payload.replaceChildren(kicker('Step 2 · Exactly what would be sent'),el('h3',{},'Not yet sent to Nebius. Your files are on the Asterisk server.'),
     el('div',{class:'chain-meta'},el('span',{},data.provider),el('span',{},data.model_name),el('span',{},`${data.characters.toLocaleString('en-US')} characters`),el('span',{},'SHA-256 '+data.payload_sha256.slice(0,16)+'…')),
     el('p',{},`Documentation text (${Object.keys(user.documentation).join(', ')}), column names with counts, and example values only for the ${state.share.size} column(s) you ticked. Other cell values are held by this Asterisk server and are not sent to the model. A Sandbox replay sends the supplied files separately, only when you request it.`),
     el('details',{},el('summary',{},'Show the full request'),el('pre',{},JSON.stringify(user,null,1))),
@@ -167,18 +173,20 @@ function proposer(){
   button.disabled=true;button.textContent='Nemotron is reading the documentation…';error.hidden=true;reset('result');
   try{
    const data=await post('/api/ladder/propose',body());state.proposal=data;
+   if(data.proposal_record_error)fail(data.proposal_record_error);
    const p=data.proposal,meta=el('div',{class:'chain-meta'},el('span',{},data.provider),el('span',{},data.model_name),el('span',{},`${data.seconds} s`),el('span',{},`${data.total_tokens.toLocaleString('en-US')} tokens`),data.attempts.length>1&&el('span',{},'repaired once after validation'));
    if(p.status==='abstain'){
     const define=el('button',{class:'primary',type:'button'},'Define the unit yourself');define.addEventListener('click',()=>builder());
     panels.result.replaceChildren(kicker('Step 3 · Nemotron abstained'),el('h3',{},'Nemotron would not guess this unit.'),meta,el('p',{},p.missing),
-     el('p',{},'If the documentation or your own knowledge defines it, say how. Asterisk validates and measures your definition exactly as it would a model proposal, and the receipt records that a person defined it.'),
+     el('p',{},'If the documentation or your own knowledge defines it, say how. Asterisk validates and measures your definition exactly as it would a model proposal, and the receipt records it as user-supplied or as an edit of the recorded proposal; authorship is not verified.'),
      el('div',{class:'chain-actions'},define));
    }else{
     state.spec=p.spec;
+    const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[]});
     const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
     panels.result.replaceChildren(el('div',{class:'panel-head'},kicker('Step 3 · Proposed ladder · validated and dry-run'),sponsors(true,true)),el('h3',{},`Claim bound to "${p.spec.claim.level}"`),meta,
      el('ol',{class:'proposal-levels'},p.spec.levels.map(l=>el('li',{class:l.name===p.spec.claim.level?'is-claim':''},el('b',{},l.name),l.kind+(l.name===p.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression)+(l.by_source?` (per-file overrides for ${Object.keys(l.by_source).join(', ')})`:'')+(l.missing?' · blanks counted as unmapped':''))))),
-     el('p',{},'Partition: '+p.spec.sources.map(src=>`${src.file} → ${src.partition.value||('by "'+src.partition.column+'"')}`).join('; ')),
+     renderReviewContext(review),
      ...citedLines(p.spec.citations,state.files).map(c=>el('blockquote',{class:'citation'},c.text,el('small',{},`${c.file}, lines ${c.start}–${c.end}`))),
      el('div',{class:'chain-actions'},measureButton,editButton()));
    }
@@ -187,16 +195,18 @@ function proposer(){
  }
  function editButton(){const b=el('button',{class:'text-button',type:'button'},'Define it differently');b.addEventListener('click',()=>builder());return b}
  function builder(){
+  try{
   reset('ladder');step('propose');
   const tables=tableFiles(),docs=[...state.docs];
   const cols=Object.fromEntries(tables.map(n=>[n,tableColumns(n,state.files[n])]));
-  const rows=Object.fromEntries(tables.map(n=>[n,tableRows(n,state.files[n]).slice(0,2000)]));
+  const rows=Object.fromEntries(tables.map(n=>[n,tableRows(n,state.files[n])]));
+  for(const n of tables){if(rows[n].length>100000)throw Error('The builder supports at most 100,000 rows per table.');const split=splitColumn(cols[n]);if(split&&new Set(rows[n].map(r=>String(r[split]))).size>12)throw Error('The guided builder supports at most 12 partition labels. Use an explicit JSON specification for this table.');}
   const select=(options,value)=>{const s=el('select',{},options.map(o=>el('option',{value:o,...(o===value?{selected:'true'}:{})},o)));return s};
   const sourceRows=tables.map(n=>{
    const split=splitColumn(cols[n]);
    const role=select(['observations','lookup table only','ignore'],'observations');
    const sample=select(cols[n],cols[n].find(c=>c!==split)||cols[n][0]);
-   const whole=select(['train','test','excluded'],/test|eval/i.test(n)?'test':'train');
+   const whole=select(['train','test'],/test|eval/i.test(n)?'test':'train');
    const mapping=split?[...new Set(rows[n].map(r=>String(r[split])))].slice(0,12).map(raw=>({raw,box:select(['train','test','excluded'],guessPartition(raw))})):[];
    return {name:n,split,role,sample,whole,mapping};
   });
@@ -208,7 +218,7 @@ function proposer(){
   const charFrom=el('input',{type:'number',min:'1',max:'512',placeholder:'from'}),charTo=el('input',{type:'number',min:'1',max:'512',placeholder:'to'});
   const lookTable=select(['— none —',...tables],'— none —'),lookKey=el('input',{type:'text',placeholder:'key column'}),lookValue=el('input',{type:'text',placeholder:'value column'});
   const meaning=el('input',{type:'text',maxlength:'400',placeholder:'e.g. Records from the same subject differ in the last digit only.'});
-  const docSel=select(docs,docs[0]),start=el('input',{type:'number',min:'1',value:'1'}),end=el('input',{type:'number',min:'1',value:String(Math.min(40,Math.max(1,lineCount(state.files[docs[0]]))))});
+  const docSel=select(['— choose documentation —',...docs],'— choose documentation —'),start=el('input',{type:'number',min:'1',placeholder:'first line'}),end=el('input',{type:'number',min:'1',placeholder:'last line'});
   const preview=el('div',{class:'builder-preview'});
   function unitSpec(){const u={column:unitCol.value,basename:base.checked,prefix:Number(prefix.value)||0,meaning:meaning.value,
     field:sep.value?{separator:sep.value,from:Number(fieldFrom.value)||1,to:Number(fieldTo.value)||Number(fieldFrom.value)||1}:null,
@@ -225,18 +235,24 @@ function proposer(){
   }
   [unitCol,base,prefix,sep,fieldFrom,fieldTo,charFrom,charTo,lookTable,lookKey,lookValue,unitName].forEach(x=>x.addEventListener('input',refresh));
   const use=el('button',{class:'primary',type:'button'},'Use this definition');
-  use.addEventListener('click',()=>{
+  use.addEventListener('click',async()=>{
+   use.disabled=true;
+   try{
    const sources=sourceRows.filter(r=>r.role.value==='observations').map(r=>({file:r.name,sample:{column:r.sample.value},
     partition:r.split?{column:r.split,map:Object.fromEntries(r.mapping.map(m=>[m.raw,m.box.value]))}:{value:r.whole.value}}));
    if(!sources.length){fail('Choose at least one table of observations.');return}
+   if(!docs.includes(docSel.value)||!Number(start.value)||!Number(end.value)){fail('Choose the documentation and line range you reviewed.');return}
    state.spec=buildSpec({claim:claimInput.value.trim(),unitName:unitName.value,sources,unit:unitSpec(),citation:{file:docSel.value,start:start.value,end:end.value}});
+   const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[]});
    state.proposal=state.proposal?{...state.proposal,defined_by:'person'}:null;
    const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
    panels.result.replaceChildren(kicker('Step 3 · Defined by you'),el('h3',{},`Claim bound to "${state.spec.claim.level}"`),
     el('ol',{class:'proposal-levels'},state.spec.levels.map(l=>el('li',{},el('b',{},l.name),l.kind+(l.name===state.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression))))),
+    renderReviewContext(review),
     ...citedLines(state.spec.citations,state.files).map(c=>el('blockquote',{class:'citation'},c.text,el('small',{},`${c.file}, lines ${c.start}–${c.end}`))),
     el('div',{class:'chain-actions'},measureButton,editButton()));
    step('propose');
+   }catch(e){fail(e.message)}finally{use.disabled=false}
   });
   panels.result.replaceChildren(kicker('Step 3 · Define the unit yourself'),el('h3',{},'How is the claim\'s unit written in your files?'),
    el('div',{class:'builder'},
@@ -251,6 +267,7 @@ function proposer(){
     preview),
    el('div',{class:'chain-actions'},use));
   panels.result.hidden=false;refresh();
+  }catch(e){fail(e.message)}
  }
  async function measure(confirmed){
   error.hidden=true;reset('ladder');state.confirmed=confirmed;
@@ -259,7 +276,7 @@ function proposer(){
    renderLadder(panels.ladder,data,level=>measure([...confirmed,level]));
    const replayButton=el('button',{class:'primary',type:'button'},'Replay in a Nebius Sandbox');replayButton.addEventListener('click',()=>replayChain(replayButton));
    panels.replay.replaceChildren(kicker('Step 5 · Independent recomputation'),el('h3',{},'Recompute in a fresh Nebius Sandbox.'),
-    el('p',{},'Sends the engine source, the spec, your confirmations and the files to a disposable python:3.12-slim Sandbox. A matching replay and its inputs are saved privately in your workspace.'),
+    el('p',{},'Sends the engine source, the spec, your confirmations and the files to a disposable python:3.12-slim Sandbox. A matching replay and its inputs are saved privately in your workspace. Do not send personal or sensitive data to the Sandbox beta.'),
     el('div',{class:'chain-actions'},replayButton,saveButton(),downloadButton()));
    panels.replay.hidden=false;step('measure');
   }catch(e){fail(e.message)}
@@ -267,7 +284,7 @@ function proposer(){
  async function replayChain(button){
   button.disabled=true;button.textContent='Replaying in the Sandbox…';error.hidden=true;
   try{
-   const data=await post('/api/ladder/replay',{spec:state.spec,files:body().files,confirmed:state.confirmed});state.replay=data;
+   const data=await post('/api/ladder/replay',{spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});state.replay=data;
    const p=data.provenance;
    panels.replay.replaceChildren(el('div',{class:'panel-head'},kicker('Step 5 · Replayed in a Nebius Sandbox'),sponsors(false,true)),el('h3',{},'Matched the Asterisk server measurement exactly.'),
     el('div',{class:'chain-meta'},el('span',{},p.image),el('span',{},`${Number(p.seconds).toFixed(2)} s in the Sandbox`),el('span',{},'program '+p.program_sha256.slice(0,12)+'…'),el('span',{},'result '+p.result_sha256.slice(0,12)+'…')),
@@ -283,7 +300,7 @@ function proposer(){
    if(state.replay?.receipt_id){location.href='/#ladder/'+state.replay.receipt_id;return}
    button.disabled=true;button.textContent='Saving…';
    try{
-    const saved=await post('/api/ladder/receipts',{spec:state.spec,files:body().files,confirmed:state.confirmed});
+    const saved=await post('/api/ladder/receipts',{spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});
     location.href='/#ladder/'+saved.id;
    }catch(e){fail(e.message);button.disabled=false;button.textContent='Save to workspace'}
   });return button;
@@ -331,4 +348,7 @@ async function experiment(){
  $('#experiment').hidden=false;
 }
 
-heroFigure($('#hero-rungs'));gallery();checker();proposer();experiment();
+heroFigure($('#hero-rungs'));checker();proposer();
+Promise.allSettled([gallery(),experiment()]).then(()=>{
+ const id=location.hash.slice(1);if(['propose','benchmarks','experiment'].includes(id))document.getElementById(id)?.scrollIntoView();
+});

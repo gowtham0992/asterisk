@@ -1,47 +1,33 @@
 # Asterisk current readiness
 
-Updated 26 September 2026, Denver. **Working local research preview. Automatic preparation remains experimental. Researcher productivity advantage is unproven.**
+Updated 28 September 2026, Denver. **Working hosted research preview; release hardening is local and not deployed yet. Researcher usefulness remains unmeasured.**
 
-This page is the current assessment. The previous 1,761-line accumulation is preserved unchanged in [readiness history](readiness-history-2026-09-26.md). Historical failures are not superseded by newer unit-test results.
+## Current product
 
-## What a researcher can do
+The independence ladder measures exact identifier overlap at observation, subject and other declared levels. NVIDIA Nemotron through Nebius Token Factory proposes supported extraction rules from documentation. People review the rules and partition mapping; application code measures. A separate optional Nebius Sandbox replay runs the same engine on the same inputs. It establishes same-code reproducibility, not independent scientific verification.
 
-Bring supported CSV, flat JSON or one-record-per-line metadata and source documentation. Inspect and project fields locally, approve a bounded NVIDIA Nemotron request through Nebius, review or edit observation identities, subject identities and split roles, then create an exact-ID split check. Application-owned code measures the accepted binding in Nebius Sandboxes and repeats it in a fresh Sandbox. The receipt contains counts, exclusions, coverage, witness rows, assumptions and verification instructions.
+The hosted application runs on AWS with HTTPS and preview authentication. GitHub is private at the owner's request, with one branch, `main`. Its last published snapshot predates the local hardening commits. GitHub Pages is unavailable under the current private-repository plan. Hosting records: [AWS deployment](submission/aws-deployment.md).
 
-Manual preparation remains available. A human-confirmed clear result requires an explicit person’s declaration; automated reviews remain visibly distinct. Neither declaration verifies scientific meaning independently. Repair creates a separate reviewed revision and does not inherit confirmation. The product does not measure predictive accuracy, detect all forms of leakage, execute arbitrary repositories or establish scientific validity.
+## Local hardening since the release review
 
-## Observed end-to-end evidence
+- Column values require explicit selection before inference, including split-like column names. Selected files first reach the Asterisk server; this is not browser-only processing.
+- Partition mappings, raw row counts, deduplicated populations, exclusions, derivation rules and documentation quotes are retained in results and readable receipts.
+- Confirmation names the derivation and evaluation labels. Proposer prose is marked unverified.
+- Saved receipts reference owner-scoped server proposal records, with model, prompt version, request hash, validation attempts and computed edit/input-change flags. User-supplied specs do not claim recorded model authorship.
+- Daily provider-call reservations are persisted and atomic, with one in-flight operation per session. Receipt writes enforce per-owner counts and a global payload-size cap.
+- Zero-overlap rows say no shared values. Near-unique IDs and case/whitespace-folded overlap carry warnings without changing the exact matching rule.
+- Manual setup is available before any model call. Citation selection is explicit. A fictional subject-disjoint example exercises pending confirmation, confirmation, save and export.
 
-| Case | Observed result | Limits |
-| --- | --- | --- |
-| DermaMNIST original split | Browser retrieval, identifier projection, model proposal, reviewed interpretation, remote check and fresh replay; 641 shared lesions, 693/2,005 affected evaluation rows, 1,003 excluded rows; exported bundle recomputes | Known exposed finding; developer corrected the citation before the completed run; no human validation |
-| Frog-call syllable split | One native browser proposal and remote receipt/replay; 56 shared recording identities, all 1,439 evaluation rows affected; local verification matches | Developer-created split of public data, not the published benchmark split; developer selected identifier projection |
-| Frog recording-group control | Product API check/replay; zero overlap, complete coverage, pending human confirmation | Manual input preparation, not a second autonomous model/browser journey |
+These are engineering fixes, not new held-out accuracy or user-benefit evidence. The latest local full run was 590 Python passes, 9 scientific-trace skips and 167 JavaScript passes. A fresh packaged-release check remains required before deployment.
 
-Details: [real benchmark audit](validation/product-finish-audit-2026-09-26.md) and [frog trial](../research/anuran-user-trial-2026-09-26/REPORT.md). These prose reports are included in the source package. Raw research data and private run records are not.
+## Reliability and evidence limits
 
-## Reliability findings
+Across retained configurations, Super scored 21/41, Ultra 24/41 and Sonnet 36/41. The shipping v4 Super prompt scored 5/10 on set D and failed its gate. Prompts differ across sets; guards were developed using exposed results, reference answers were developer-authored, and correction opportunities differ by model. Zero recorded false reassurance is not a guarantee on new files. See evaluation/ladder-proposal-v1 through v5.
 
-Fresh model preparation previously failed its acceptance gate. Subsequent prompt and correction experiments did not establish dependable extraction. The latest frozen routing comparison also failed: 3/8 valid repairs versus 7/8 for a single corrective request; one routed control changed documented observation IDs to row numbers and passed structural execution with the wrong meaning. That experimental loop was not integrated. See [routing report](../research/preparation-failure-routing/REPORT.md).
+Earlier extraction and routing failures remain failures. Historical real-data checks include the DermaMNIST and frog trials, documented in [the benchmark audit](validation/product-finish-audit-2026-09-26.md) and [frog report](../research/anuran-user-trial-2026-09-26/REPORT.md). They used earlier product paths and do not validate the latest ladder model on fresh datasets. The 27 September hosted fictional chain smoke used one real proposal and one Sandbox replay; it is a deployment check, not an accuracy study.
 
-The product preserves explicit review and original proposals. Preview now calls out changes to observation identity and repeated-record policy, including when the original extraction failed. A structurally valid table is not proof that its scientific interpretation is correct.
+## Remaining release work
 
-The ESC-50 development preflight found that the request builder omitted identity definitions after documentation line 100. Complete documentation now reaches the approved payload when it fits the existing request bounds; oversized documentation is rejected rather than truncated. Two subsequent live Nebius calls retained all seven metadata columns and chose the intended identity in both cases, reproducing zero overlap for the published fold and 121 shared recordings for an authored random split. One response cited the schema rather than the identity definition, so the precommitted evidence requirement failed. These were local extraction checks, not Sandbox receipts, held-out acceptance, a baseline comparison or human validation. See [the retained findings](../research/identity-choice-preflight/REPORT.md).
+Finish the outstanding review findings, verify a clean source package, test the current browser journey, deploy and confirm source/server parity. Keep the repository private until the owner chooses publication; public source, judge access, a real video and final submission remain pending. The canonical draft is [the ladder submission](submission/devpost-ladder-draft.md).
 
-## Current software verification
-
-- Current shipped Python suite: **478 passed, 9 disabled-category scientific-trace skips**, with three known deprecation warnings.
-- Current JavaScript suite: **155 passed**.
-- Latest clean extracted source check: 325 manifest entries matched; 473 Python tests passed at that earlier snapshot, before the capacity guard and latest observation-review changes. This is not a freeze of the current working tree.
-- Earlier same-day clean dependency installation from the locked requirements passed its then-current suite. The recent extraction check reused installed dependencies.
-- Browser verification covered the real result, witness rows, correction/discard, purpose handoff, model attribution, repeated evidence, observation-policy changes and the full-draft warning. Developer inspection does not establish independent usability.
-
-The latest capacity fix checks the owner’s draft count before creating a proposal preview and again before dispatching inference. It does not reserve a storage slot across multiple processes. Draft creation still enforces the database limit. No existing draft was deleted.
-
-## What remains unproven or deferred
-
-Dependable automatic interpretation across unfamiliar layouts; independent comprehension and time savings; adoption; superiority over a general coding agent; hackathon outcome. More synthetic tests cannot establish those human outcomes. No completed practitioner study is claimed.
-
-Hosting, repository publication, video and final submission remain later work under the user’s instructions. The local preview is not a public deployment. Historical RC releases remain fallbacks, not freezes covering later edits. The broad “make it awesome” goal remains active; these implementation checks do not establish that goal by themselves.
-
-[Detailed follow-up verification](validation/frog-trial-followups-2026-09-26.md)
+No independent researcher comprehension, time saving, adoption, general-agent superiority or hackathon outcome has been established. Tests and agent reviews cannot substitute for human evidence. Earlier readiness details remain in Git history and [the historical log](readiness-history-2026-09-26.md).

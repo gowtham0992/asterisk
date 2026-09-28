@@ -15,14 +15,14 @@ test('held out stays pending, unmapped rows are unknown, attributes are never le
  const view=ladderView(load('ptbxl'));
  assert.equal(view.finding.tone,'held');assert.match(view.finding.title,/pending your confirmation/);
  const rows=Object.fromEntries(view.rows.map(r=>[r.name,r]));
- assert.equal(rows.patient.state,'Held out');
+ assert.equal(rows.patient.state,'No shared values');
  assert.equal(rows.site.tone,'shared');assert.ok(rows.site.notes.some(n=>/16 selected rows had no site value/.test(n)));assert.ok(rows.site.notes.some(n=>/do not nest/.test(n)));
  assert.equal(rows.device.tone,'attribute');assert.ok(rows.device.notes.some(n=>/not a leak/.test(n)));
  assert.equal(view.population,'17,418 training · 2,198 evaluation · 2,183 excluded rows');
 });
 test('zero overlap is not called held out when it cannot be established',()=>{
  const base={name:'lesion',kind:'unit',status:'measured',shared:0,test_units:3,affected_test_rows:0,test_rows:3,unmapped_rows:0,test_units_seen_in_train_percent:0,one_unit_per_sample:false,disjoint_namespaces:null};
- assert.equal(levelRow(base,'lesion').state,'Held out');
+ assert.equal(levelRow(base,'lesion').state,'No shared values');
  assert.equal(levelRow({...base,unmapped_rows:2},'lesion').tone,'unknown');
  const families=levelRow({...base,disjoint_namespaces:{train_tokens:['HAM_'],test_tokens:['HAMTEST_']}},'lesion');
  assert.equal(families.state,'Not comparable');assert.match(families.notes.at(-1),/HAM_ vs HAMTEST_/);
@@ -101,4 +101,13 @@ test('field and characters derive and describe exactly like the engine',async()=
  const chars=v.buildSpec({claim:'c c c',unitName:'subject',sources:[{file:'a.csv',sample:{column:'f'},partition:{value:'train'}}],
   unit:{column:'f',characters:{from:4,to:5},prefix:5},citation:{file:'r.md',start:1,end:1}});
  assert.deepEqual(chars.levels.at(-1).expression,{column:'f',characters:{from:4,to:5}});
+});
+
+test('builder CSV parsing preserves quoted headers, commas, newlines and identifiers',async()=>{
+ const {tableRows,tableColumns}=await import('../static/ladder-view.mjs');
+ const csv='\uFEFF"sample,id",subject,split\r\n"a,b","P""1",train\r\n"line\nb",P2,test\r\n';
+ assert.deepEqual(tableColumns('x.csv',csv),['sample,id','subject','split']);
+ assert.deepEqual(tableRows('x.csv',csv),[{'sample,id':'a,b',subject:'P"1',split:'train'},{'sample,id':'line\nb',subject:'P2',split:'test'}]);
+ assert.throws(()=>tableRows('x.csv','id,id\na,b\n'));
+ assert.throws(()=>tableRows('x.csv','id,split\n"unclosed,test'));
 });

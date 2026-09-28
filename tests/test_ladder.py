@@ -44,14 +44,14 @@ def test_slide_disjoint_patient_shared_is_a_violation_with_native_witness():
     assert w['unit'] == 'TCGA-AB-0001'
     assert w['train']['unit_source'] == [{'file': 'train.json', 'at': '/0'}]
     assert w['test']['unit_source'] == [{'file': 'test.json', 'at': '/0'}]
-    assert r['headline'].startswith('Held out: slide. Shared: patient (1 shared), site (1 shared).')
+    assert r['headline'].startswith('No shared values: slide. Shared: patient (1 shared), site (1 shared).')
 
 
 def test_patient_disjoint_site_shared_holds_the_claim_but_shows_the_site():
     spec, files = tcga(['TCGA-AB-0001-01Z-DX1', 'TCGA-AB-0001-01Z-DX2'], ['TCGA-AB-0002-01Z-DX1'])
     r = measure(spec, files)
     assert r['finding']['status'] == 'held_out_pending_confirmation'
-    assert r['finding']['warning'] == ''
+    assert 'per-sample identifier' in r['finding']['warning']
     assert level(r, 'site')['shared'] == 1
     assert 'Shared: site (1 shared)' in r['headline']
 
@@ -323,6 +323,11 @@ def test_http_ladder_is_session_scoped_and_local(tmp_path, monkeypatch):
         r = c.post('/api/ladder', json=body, headers=headers)
         assert r.status_code == 200, r.text
         assert r.json()['finding']['status'] == 'violation'
+        review = c.post('/api/ladder/review', json=body, headers=headers)
+        assert review.status_code == 200
+        assert review.json()['population'] == {'train': 1, 'test': 1, 'excluded': 0}
+        assert 'finding' not in review.json()
+        assert c.post('/api/ladder/review', json=body).status_code == 403
         bad = c.post('/api/ladder', json={**body, 'spec': {**spec, 'schema': 'x'}}, headers=headers)
         assert bad.status_code == 422 and 'schema' in bad.json()['detail']
 
@@ -347,7 +352,7 @@ def test_the_headline_never_calls_a_guaranteed_zero_held_out():
               {'name': 'patient', 'kind': 'unit', 'expression': {'column': 'image'}}]
     spec, files = tcga(['TCGA-AB-0001-01Z-DX1'], ['TCGA-AB-0001-01Z-DX2'], levels=levels)
     headline = measure(spec, files)['headline']
-    assert 'Not established: patient.' in headline and 'Held out: slide.' in headline
+    assert 'Not established: patient.' in headline and 'No shared values: slide.' in headline
 
 
 def speech(train, test, expression, claim='speaker'):
@@ -393,3 +398,30 @@ def test_malformed_or_impossible_derivations_make_the_level_unavailable_not_gues
     r = measure(spec, files)
     assert level(r, 'speaker')['status'] == 'unavailable' and message in level(r, 'speaker')['reason']
     assert r['finding']['status'] == 'insufficient'
+
+
+def test_swapped_partition_is_visible_in_review_and_receipt():
+    spec, files = speech(['s1-a', 's1-b'], ['s1-c', 's2-a'], {'column': 'utterance', 'field': {'separator': '-', 'from': 1}})
+    files['split.csv'] += 's3-a,val\ns3-b,val\n'
+    spec['sources'][0]['partition']['map'] = {'train': 'train', 'test': 'excluded', 'val': 'test'}
+    result = measure(spec, files, ['speaker'])
+    assert result['finding']['status'] == 'held_out'
+    context = result['review_context']
+    assert {'file': 'split.csv', 'column': 'split', 'label': 'test', 'role': 'excluded', 'rows': 2} in context['partitions']
+    assert '"val"' in context['confirmation'] and 'evaluation' in context['confirmation']
+    page = render(result)
+    assert 'test → excluded' in page and 'val → test' in page
+    assert '2 excluded' in page and 'How each level was derived' in page
+    assert 'Files are named' in page
+
+
+def test_near_singleton_and_folded_identity_warnings_survive_outliers():
+    spec, files = speech(['p1-a', 'p1-b', 'p2-a'], ['P1-c', 'P2-b', 'p3-a'],
+                         {'column': 'utterance', 'field': {'separator': '-', 'from': 1}})
+    result = measure(spec, files)
+    row = level(result, 'speaker')
+    assert row['folded_shared_units'] == 2
+    assert row['evaluation_unit_ratio'] == 1
+    assert 'case' in result['finding']['warning']
+    assert 'No shared values' in render(result)
+    assert 'Held out:' not in result['headline']

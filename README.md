@@ -92,7 +92,7 @@ Human confirmation records an assumption; it is not independent verification. Wr
 
 The [published DermaMNIST example](static/published-example.html) reproduces a known 641-lesion overlap from pinned public metadata. Run `scripts/reproduce_dermamnist.py` with the two upstream CSVs as documented on that page. It runs locally without credentials or uploads, checks source hashes, and emits only aggregate results. This does not measure model accuracy or researcher benefit.
 
-Run `.venv/bin/python -m pytest -q` from the project root. The combined suite includes local HTTP tests that need permission to bind `127.0.0.1`; provider calls in those tests are mocked. Scientific trace tests require a separate compatible scientific environment and may skip on the main host; these are retained development tests for disabled categories.
+Run `.venv/bin/python -m pytest -q tests` from the project root. The combined suite includes local HTTP tests that need permission to bind `127.0.0.1`; provider calls in those tests are mocked. Scientific trace tests require a separate compatible scientific environment and may skip on the main host; these are retained development tests for disabled categories.
 
 An exported receipt includes `verify.py` for byte consistency against its unsigned manifest, plus measurement source and recorded arguments. A sender can replace the checker, inputs and manifest together; do not treat running that checker as independent verification. Do not execute uploaded research scripts on your own machine. Hashes and repeatability are not proof of scientific truth.
 

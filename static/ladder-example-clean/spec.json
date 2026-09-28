@@ -1,0 +1,15 @@
+{
+ "schema": "asterisk-ladder/1",
+ "claim": {"text": "Evaluation subjects were never seen in training.", "level": "subject"},
+ "sources": [{"file": "split.csv", "format": "csv", "sample": {"column": "scan"},
+              "partition": {"column": "split", "map": {"train": "train", "test": "test"}}}],
+ "levels": [
+  {"name": "scan", "kind": "observation", "expression": {"column": "scan"}, "meaning": "One scan."},
+  {"name": "subject", "kind": "unit", "meaning": "The person scanned, from subjects.csv.",
+   "expression": {"lookup": {"file": "subjects.csv", "format": "csv", "key_column": "scan", "value_column": "subject", "on": {"column": "scan"}}}},
+  {"name": "site", "kind": "unit", "meaning": "The clinic where the scan was taken.",
+   "expression": {"lookup": {"file": "subjects.csv", "format": "csv", "key_column": "scan", "value_column": "site", "on": {"column": "scan"}}}},
+  {"name": "scanner", "kind": "attribute", "expression": {"column": "scanner"}, "meaning": "Scanner model; a property, not a unit."}
+ ],
+ "citations": [{"file": "README.md", "start_line": 2, "end_line": 6}]
+}

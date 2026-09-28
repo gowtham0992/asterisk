@@ -103,6 +103,14 @@ def validate(spec):
             raise LadderError('Agreements compare two different declared levels')
     if not isinstance(spec['citations'], list) or len(spec['citations']) > 16:
         raise LadderError('A ladder carries at most 16 citations')
+    for citation in spec['citations']:
+        if not isinstance(citation, dict) or set(citation) != {'file', 'start_line', 'end_line'}:
+            raise LadderError('Each citation needs file, start_line and end_line')
+        start, end = citation['start_line'], citation['end_line']
+        if (not isinstance(citation['file'], str) or not citation['file']
+                or type(start) is not int or type(end) is not int
+                or not 1 <= start <= end or end - start >= 40):
+            raise LadderError('Invalid citation: use a file name and a 1-based range of at most 40 lines')
     return copy.deepcopy(spec)
 
 
@@ -133,6 +141,70 @@ def population(spec, files):
     base = {'status': 'extract', 'citations': copy.deepcopy(spec['citations']),
             'sources': [{**copy.deepcopy(s), 'entity': copy.deepcopy(s['sample'])} for s in spec['sources']]}
     return executor.extract(base, files)
+
+
+def describe_expression(expr):
+    try:
+        return _describe_expression(expr)
+    except (KeyError, TypeError, AttributeError):
+        return 'Unsupported or malformed expression; inspect the specification'
+
+
+def _describe_expression(expr):
+    if expr.get('row'):
+        return 'each source row'
+    if 'lookup' in expr:
+        q = expr['lookup']
+        return f"{q['value_column']} from {q['file']}, matched on {q['key_column']} = {describe_expression(q['on'])}"
+    text = f"column {json.dumps(expr.get('column'))}"
+    if expr.get('basename'):
+        text += ', file name after the last /'
+    if 'field' in expr:
+        f = expr['field']
+        text += f", fields {f['from']}–{f.get('to', f['from'])} split on {json.dumps(f['separator'])}"
+    if 'characters' in expr:
+        c = expr['characters']
+        text += f", characters {c['from']}–{c.get('to', c['from'])}"
+    if 'prefix' in expr:
+        text += f", first {expr['prefix']} characters"
+    return text
+
+
+def review_context(spec, files, base=None):
+    """Server-derived interpretation record, including every declared partition label.
+
+    Raw row counts are distinct from the deduplicated measurement population.
+    No overlap finding is computed here.
+    """
+    spec = validate(spec)
+    base = population(spec, files) if base is None else base
+    partitions, sources, evaluation = [], [], []
+    for src in spec['sources']:
+        p = src['partition']
+        records = executor.records(files[src['file']], src['format'], src['file'])
+        counts = {}
+        for row, ref in records:
+            label = row[p['column']] if 'column' in p else '(all rows)'
+            counts[label] = counts.get(label, 0) + 1
+        mapping = p.get('map', {'(all rows)': p.get('value')})
+        for label, role in mapping.items():
+            partitions.append({'file': src['file'], 'column': p.get('column'),
+                               'label': label, 'role': role, 'rows': counts.get(label, 0)})
+            if role == 'test':
+                evaluation.append(f"{src['file']}: {json.dumps(label)}")
+        sources.append({'file': src['file'], 'sample': describe_expression(src['sample']),
+                        'deduplicate': src.get('deduplicate', False)})
+    levels = [{'name': l['name'], 'rule': describe_expression(l['expression']),
+               'overrides': {f: describe_expression(e) for f, e in l.get('by_source', {}).items()}}
+              for l in spec['levels']]
+    target = next(l for l in levels if l['name'] == spec['claim']['level'])
+    rules = target['rule'] + ''.join(f"; {f}: {r}" for f, r in target['overrides'].items())
+    return {'partitions': partitions, 'sources': sources, 'levels': levels,
+            'citations': base['citations'],
+            'population': {side: sum(r['partition'] == side for r in base['lineage'])
+                           for side in ('train', 'test', 'excluded')},
+            'confirmation': f"I confirm that {rules} identifies {target['name']}, and that the evaluation set is "
+                            + '; '.join(evaluation) + '. I have reviewed the partition and exclusion table.'}
 
 
 def _record_index(files, spec):
@@ -318,6 +390,8 @@ def _measure(spec, level, files, base, index):
         'test_units': len(mapped['test']),
         'unmapped_rows': selected_missing,
         'test_units_seen_in_train_percent': round(100 * result['shared_entities'] / len(mapped['test']), 2) if mapped['test'] else None,
+        'evaluation_unit_ratio': len(mapped['test']) / result['test_rows'] if result['test_rows'] else 0,
+        'folded_shared_units': len({v.strip().casefold() for v in mapped['train']} & {v.strip().casefold() for v in mapped['test']}),
         'one_unit_per_sample': level['kind'] == 'unit' and not selected_missing and len(mapped['train'] | mapped['test']) == len(selected),
         'disjoint_namespaces': None if result['shared_entities'] or level['kind'] == 'observation' else _namespace_note(mapped['train'], mapped['test']),
         'witnesses': witnesses,
@@ -378,9 +452,10 @@ def measure(spec, files, confirmed=()):
         'claim': spec['claim'],
         'finding': claim,
         'confirmed_levels': sorted(confirmed),
-        'headline': _headline(rows, spec['claim']['level']),
+        'headline': _headline(rows, spec['claim']['level'], claim),
         'levels': rows,
         'population_consistent': consistent,
+        'review_context': review_context(spec, files, base),
         'population': {side: sum(1 for r in base['lineage'] if r['partition'] == side) for side in ('train', 'test', 'excluded')},
         'agreements': agreements,
         'spec_hash': digest(spec),
@@ -427,6 +502,10 @@ def _claim(spec, levels, consistent, confirmed=()):
     if target['one_unit_per_sample']:
         warning = (f'Every selected sample has its own {name} value, so separation follows automatically. '
                    f'Confirm that this column really names a {name} and is not an image, file or accession identifier.')
+    if target.get('evaluation_unit_ratio', 0) >= .95 and not target['one_unit_per_sample']:
+        warning += f' At least 95% as many distinct {name} values as evaluation rows: check that this is not a per-sample identifier.'
+    if target.get('folded_shared_units', 0):
+        warning += f" Ignoring case and surrounding whitespace yields {target['folded_shared_units']} shared values. This diagnostic does not establish that those values refer to the same identity."
     structural = _by_construction(spec, target)
     if structural:
         return {'status': 'not_established', 'level': name, 'reason': ' '.join(structural)}
@@ -447,7 +526,7 @@ def _claim(spec, levels, consistent, confirmed=()):
             'reason': f'No recorded {name} value occurs in both partitions. A person must still confirm what {name} means.'}
 
 
-def _headline(rows, claim_level):
+def _headline(rows, claim_level, finding):
     held, shared, unknown, unavailable = [], [], [], []
     for r in rows:
         if r['kind'] == 'attribute':
@@ -462,24 +541,48 @@ def _headline(rows, claim_level):
             unknown.append(r['name'])
     parts = []
     if held:
-        parts.append('Held out: ' + ', '.join(held) + '.')
+        parts.append('No shared values: ' + ', '.join(held) + '.')
     if shared:
         parts.append('Shared: ' + ', '.join(shared) + '.')
     if unknown:
         parts.append('Not established: ' + ', '.join(unknown) + '.')
     if unavailable:
         parts.append('Unavailable: ' + ', '.join(unavailable) + '.')
-    parts.append(f'Your claim needs {claim_level}.')
+    parts.append(f"Claim at {claim_level}: {STATUS_WORDS[finding['status']]}.")
     return ' '.join(parts)
 
 
 STATUS_WORDS = {
     'held_out': 'Held out (meaning confirmed)',
     'violation': 'Not held out',
-    'held_out_pending_confirmation': 'Held out, pending confirmation',
+    'held_out_pending_confirmation': 'No shared values; meaning and partition confirmation pending',
     'not_established': 'Not established',
     'insufficient': 'Insufficient evidence',
 }
+
+
+def render_review_context(context):
+    if not context:
+        return '<section><p>This older result does not retain derivation and partition review details.</p></section>'
+    e = lambda value: html.escape(str(value), quote=True)
+    pop = context['population']
+    out = '<section><h2>Population and partition rules</h2>'
+    out += f"<p>{pop['train']} training · {pop['test']} evaluation · {pop['excluded']} excluded observations after deduplication.</p>"
+    out += '<p>Partition counts below are raw source rows, before deduplication.</p><ul>'
+    for p in context['partitions']:
+        out += f"<li>{e(p['file'])} / {e(p['column'] or 'whole file')}: {e(p['label'])} → {e(p['role'])} ({p['rows']} rows)</li>"
+    out += '</ul><h2>How each level was derived</h2><ul>'
+    for src in context['sources']:
+        out += f"<li>Sample in {e(src['file'])}: {e(src['sample'])}; deduplicate: {e(src['deduplicate'])}</li>"
+    for level in context['levels']:
+        out += f"<li>{e(level['name'])}: {e(level['rule'])}"
+        for file, rule in level['overrides'].items():
+            out += f"; {e(file)}: {e(rule)}"
+        out += '</li>'
+    out += '</ul><h2>Cited documentation</h2><p>Supplied context, not automatic confirmation.</p>'
+    for c in context['citations']:
+        out += f"<blockquote><pre style='white-space:pre-wrap'>{e(c['quote'])}</pre><cite>{e(c['file'])}, lines {c['start_line']}–{c['end_line']}</cite></blockquote>"
+    return out + '</section>'
 
 
 def render(result):
@@ -505,6 +608,8 @@ def render(result):
         else:
             state = 'held'
             detail = f"0 of {e(r['test_units'])} evaluation {e(r['name'])} values in training"
+        if r['status'] == 'measured' and not r['shared']:
+            detail = 'No shared values · ' + detail
         nest = r.get('nests_previous')
         nest_note = (f"<small>{e(nest['violations'])} finer units split across several {e(r['name'])} values</small>"
                      if nest and nest['violations'] else '')
@@ -515,11 +620,12 @@ def render(result):
             witness = (f"<details><summary>Witness: {e(w['unit'])}</summary><p>Training <code>{e(w['train']['sample'])}</code> "
                        f"({src('train')})<br>Evaluation <code>{e(w['test']['sample'])}</code> ({src('test')})</p></details>")
         rows.append(f"<li class='level {state}{claim}'><span class='kind'>{e(r['kind'])}</span>"
-                    f"<strong>{e(r['name'])}</strong><span class='meaning'>{e(r.get('meaning', ''))}</span>"
+                    f"<strong>{e(r['name'])}</strong><span class='meaning'>{e('Proposer note (unverified): ' + r['meaning']) if r.get('meaning') else ''}</span>"
                     f"<span class='detail'>{detail}</span>{nest_note}{witness}</li>")
     agreements = ''.join(
         f"<li>{e(a['levels'][0])} vs {e(a['levels'][1])}: {e(a['disagreements'])} disagreements</li>"
         for a in result['agreements'])
+    context_html = render_review_context(result.get('review_context'))
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
@@ -543,9 +649,10 @@ small{{grid-column:2;color:#7a5a1a}} details{{grid-column:2;font-size:14px}}
 footer{{font-size:13px;color:#4d5e52;border-top:1px solid #d9d4c5;margin-top:32px;padding-top:12px}}
 </style></head><body><main>
 <p class="kicker">Asterisk · independence ladder</p>
-<h1>{e(result['headline'])}</h1>
+<h1>{e(STATUS_WORDS[finding['status']])}: {e(finding['level'])}</h1>
 <section class="finding"><p class="kicker">{e(STATUS_WORDS[finding['status']])} · claim level: {e(finding['level'])}</p>
 <p>{e(result['claim']['text'])}</p><p>{e(finding['reason'])}</p>{f"<p><strong>Check:</strong> {e(finding['warning'])}</p>" if finding.get('warning') else ''}</section>
+{context_html}
 <ol>{''.join(rows)}</ol>
 {f'<h2>Identifier agreement</h2><ul>{agreements}</ul>' if agreements else ''}
 <footer><p>{e(result['scope'])}</p><p>Ladder spec {e(result['spec_hash'][:16])}… · inputs: {e(', '.join(f"{k} {v[:12]}…" for k, v in result['input_hashes'].items()))}</p></footer>

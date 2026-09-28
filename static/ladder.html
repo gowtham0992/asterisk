@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Measure one train/evaluation split at every level the data defines: image, recording, patient, site. See which level your claim needs and whether it is held out."><title>Asterisk — Independence ladder</title><link rel="stylesheet" href="/static/style.css?v=brand-1"><link rel="stylesheet" href="/static/product.css?v=identity-fields-2"><link rel="stylesheet" href="/static/ladder.css?v=ladder-16"><script type="module" src="/static/ladder.js?v=workspace-1-ladder-19"></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Measure one train/evaluation split at every level the data defines: image, recording, patient, site. See which level your claim needs and whether it is held out."><title>Asterisk — Independence ladder</title><link rel="stylesheet" href="/static/style.css?v=brand-1"><link rel="stylesheet" href="/static/product.css?v=identity-fields-2"><link rel="stylesheet" href="/static/ladder.css?v=ladder-16"><script type="module" src="/static/ladder.js?v=release-review-1"></script></head>
 <body class="product-page ladder-page">
 <a class="skip-link" href="#ladder-main">Skip to content</a>
 <header class="product-nav">
  <div><a class="brand" href="/static/product.html" aria-label="Asterisk product home"><span class="brand-mark" aria-hidden="true">✱</span>Asterisk</a><div class="technology-credit"><span>Powered by</span><div class="technology-logos"><a href="https://nebius.com/"><img src="/static/brand/nebius.svg" alt="Nebius" width="84" height="23"></a><a href="https://www.nvidia.com/"><img src="/static/brand/nvidia.svg" alt="NVIDIA" width="100" height="30"></a></div></div></div>
- <nav aria-label="Product navigation"><a href="#benchmarks">Benchmarks</a><a href="#propose">Propose</a><a href="#experiment">Evidence</a><a href="/static/about.html">Scope &amp; data</a><a class="product-button" href="/#investigate">Open workspace <span aria-hidden="true">↗</span></a></nav>
+ <nav aria-label="Product navigation"><a href="#benchmarks">Benchmarks</a><a href="#propose">Propose</a><a href="#experiment">Evidence</a><a href="/static/about.html">Scope &amp; data</a><a class="product-button" href="/#ladders">Saved receipts <span aria-hidden="true">↗</span></a></nav>
 </header>
 <main id="ladder-main" class="product-main">
  <section class="ladder-hero">
@@ -23,9 +23,9 @@
   </figure>
  </section>
  <section id="benchmarks" class="product-section ladder-gallery" aria-labelledby="benchmarks-title">
-  <div class="section-intro"><p class="product-kicker">Public benchmarks · measured from pinned metadata</p><h2 id="benchmarks-title">Same split.<br>Different answers.</h2><p>Each ladder below was computed on this machine from the benchmark's own published split files, with every input pinned by SHA-256. No model was involved in the measurement.</p>
+  <div class="section-intro"><p class="product-kicker">Public benchmarks · measured from pinned metadata</p><h2 id="benchmarks-title">Same split.<br>Different answers.</h2><p>Each saved ladder below was previously computed from the benchmark's own published split files, with every input pinned by SHA-256. No model was involved in the measurement.</p>
    <dl class="ladder-key" aria-label="How to read a ladder">
-    <div><dt><span class="tone-chip tone-held">Held out</span></dt><dd>no value on both sides</dd></div>
+    <div><dt><span class="tone-chip tone-held">No shared values</span></dt><dd>no value on both sides</dd></div>
     <div><dt><span class="tone-chip tone-shared">Shared</span></dt><dd>open the witnesses for the rows</dd></div>
     <div><dt><span class="tone-chip tone-unknown">Unknown</span></dt><dd>zero overlap would prove nothing</dd></div>
     <div><dt><span class="tone-chip tone-attribute">Attribute</span></dt><dd>a property; sharing is expected</dd></div>
@@ -36,7 +36,7 @@
   </div>
  </section>
  <section id="propose" class="product-section ladder-propose" aria-labelledby="propose-title">
-  <div class="section-intro"><p class="product-kicker">NVIDIA Nemotron on Nebius Token Factory · Nebius Sandboxes</p><h2 id="propose-title">Let Nemotron draft the ladder.<br>Check every step.</h2><p>Nemotron reads your documentation and proposes the levels. Asterisk validates and measures them on this machine, asks you to confirm what your claim's level means, and a Nebius Sandbox recomputes the result from the engine's own code.</p></div>
+  <div class="section-intro"><p class="product-kicker">NVIDIA Nemotron on Nebius Token Factory · Nebius Sandboxes</p><h2 id="propose-title">Let Nemotron draft the ladder.<br>Check every step.</h2><p>Nemotron reads your documentation and proposes the levels. Asterisk validates and measures them on the Asterisk server, asks you to confirm what your claim's level means, and a Nebius Sandbox recomputes the result from the engine's own code.</p></div>
   <ol class="chain-steps" aria-label="Chain">
    <li id="step-input" class="is-active"><span>1</span>Claim &amp; files</li><li id="step-preview"><span>2</span>Preview</li><li id="step-propose"><span>3</span>Nemotron proposes</li><li id="step-measure"><span>4</span>Measure &amp; confirm</li><li id="step-replay"><span>5</span>Sandbox replay</li><li id="step-receipt"><span>6</span>Receipt</li>
   </ol>
@@ -45,7 +45,7 @@
    <div class="check-field"><span class="field-label" id="propose-files-label">Split files and documentation <small>CSV, JSON, text lists, README</small></span><label class="dropzone" id="propose-drop" for="propose-files"><input id="propose-files" class="visually-hidden" type="file" multiple aria-labelledby="propose-files-label"><span class="dropzone-title">Drop files here or <u>choose files</u></span><span class="dropzone-hint" id="propose-drop-hint">Preview uploads your selected files to this Asterisk server. You review the smaller model payload before sending it to Nebius.</span></label></div>
    <div class="check-field"><label for="propose-model">Model <small>via Nebius Token Factory</small></label><select id="propose-model"><option value="nvidia/nemotron-3-super-120b-a12b">Nemotron 3 Super</option><option value="nvidia/Nemotron-3-Ultra-550b-a55b">Nemotron 3 Ultra</option></select></div>
    <div class="propose-inventory wide" id="propose-inventory" hidden></div>
-   <div class="check-actions"><button class="primary" type="button" id="propose-preview" disabled>Preview what will be sent</button><button class="secondary" type="button" id="propose-example">Try a synthetic example</button><span class="actions-hint">Preview sends files to Asterisk, not to Nebius.</span></div>
+   <div class="check-actions"><button class="primary" type="button" id="propose-preview" disabled>Preview what will be sent</button><button class="secondary" type="button" id="propose-manual" disabled>Define the unit yourself</button><button class="secondary" type="button" id="propose-example">Try a synthetic example</button><span class="actions-hint">Preview sends files to Asterisk, not to Nebius.</span></div>
    <p class="check-error" id="propose-error" role="alert" hidden></p>
   </form>
   <div class="chain-panel" id="propose-payload" hidden></div>
@@ -66,7 +66,7 @@
   <form class="check-form" id="check-form" novalidate>
    <div class="check-field"><label for="spec-file">Ladder spec <small>asterisk-ladder/1 JSON</small></label><input id="spec-file" type="file" accept=".json,application/json"><p class="check-hint" id="spec-status">No spec chosen.</p></div>
    <div class="check-field"><label for="data-files">Files the spec names <small>CSV, JSON, lines or documentation</small></label><input id="data-files" type="file" multiple><p class="check-hint" id="files-status">The spec lists which files it needs. Measuring uploads them to this Asterisk server.</p></div>
-   <div class="check-actions"><button class="primary" type="submit" id="check-run" disabled>Measure on server</button><button class="text-button" type="button" id="load-example">Load a synthetic example</button></div>
+   <div class="check-actions"><button class="primary" type="submit" id="check-run" disabled>Measure on server</button><button class="text-button" type="button" id="load-example">Load overlapping-subject example</button><button class="text-button" type="button" id="load-clean-example">Load subject-disjoint example</button></div>
    <p class="check-error" id="check-error" role="alert" hidden></p>
   </form>
   <div class="ladder-panel" id="check-panel" aria-live="polite" hidden></div>

@@ -62,3 +62,11 @@ Focused checks: 12 Python and 9 JavaScript tests passed. All 422 new source mani
 A real version rollback was exercised: new release → retained `da4301f` → new release. Both versions read the same saved fictional receipt, and the restored new release served the corrected disclosure and export. The test receipt was then deleted. No additional inference or Sandbox calls were used for this update.
 
 Updated archive SHA-256: `03b88521089fd9a870e09d9f17a973850d9908ae88f2d6cc0603d3bd225d44f8`.
+
+## Pending local hardening: provider and receipt limits
+
+The release-hardening code reserves provider calls in the application SQLite database before external execution. Defaults are 10 calls per session and 100 globally per UTC day, configured with `ASTERISK_LADDER_SESSION_DAILY_CALLS` and `ASTERISK_LADDER_GLOBAL_DAILY_CALLS`. One proposal reserves two calls, including its possible repair; a replay reserves one. Failed and unused reservations remain counted. These are conservative call limits, not a provider-billing dollar guarantee. Manual measurement, exports and saved-receipt reads remain available at the cap.
+
+Only one provider operation may be in flight per owner. A crashed operation's lock expires after 30 minutes; daily usage is not refunded. Receipt writes atomically enforce 30 records per owner and 256 MiB of serialized receipt payloads globally. The latter excludes SQLite overhead, proposal metadata and backups. Users can export and delete their saved receipts to release capacity. A successful replay whose save fails still returns its result and warns against spending on another replay.
+
+These changes are local until a new hosted release is explicitly recorded below. Keep preview access protected while finishing the release review.

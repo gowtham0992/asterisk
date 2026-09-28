@@ -26,7 +26,7 @@ from .preparation.review import executor
 DOC_SUFFIXES = ('.md', '.txt', '.rst')
 DOC_LIMIT = 60_000
 EXAMPLES_PER_COLUMN = 4
-# Partition labels are shared by default: models otherwise guess the raw split values (evaluation v3, arm G3).
+# Selected partition columns include their bounded vocabulary; names never grant sharing consent.
 SPLIT_COLUMN = re.compile(r'(^|_)(split|fold|partition|subset|set)(_|$)', re.I)
 SPLIT_VALUES = 12
 MAX_COLUMNS = 80
@@ -196,8 +196,8 @@ def _column_profile(rows, share):
         }
         if key in share:
             profile[key]['examples'] = [v[:80] for v, _ in counts.most_common(EXAMPLES_PER_COLUMN)]
-        elif SPLIT_COLUMN.search(key) and len(counts) <= SPLIT_VALUES:
-            profile[key]['values'] = sorted(v[:40] for v in counts)
+            if SPLIT_COLUMN.search(key) and len(counts) <= SPLIT_VALUES:
+                profile[key]['values'] = sorted(v[:40] for v in counts)
     return profile
 
 

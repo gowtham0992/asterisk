@@ -10,9 +10,8 @@ with inspectable measurements.
 ## Inspiration
 
 Published results keep being overturned because the split was clean at the wrong level: images separated but
-patients shared, patients separated but hospitals shared. A 2026 audit of TCGA pathology benchmarks found no shared
-cases but up to 100% shared tissue-source sites. Most leak checkers intersect one ID column. That answers the easy
-question and can quietly miss the one your claim depends on.
+patients shared, patients separated but hospitals shared. Our retained WSI-Bench measurement shows zero shared slides
+and 42 shared patient identifiers. An intersection at only the slide level does not answer a patient-level claim.
 
 ## What it does
 
@@ -27,7 +26,7 @@ marks the level your claim needs.
    "patient = first 12 characters of the barcode", cites the lines, and abstains when the documentation does not
    define the unit.
 4. **The engine validates and measures on the Asterisk server.** It refuses anything that makes separation true by construction:
-   partitioning by the claim's own unit, binding the claim to the image itself, or one unit per sample. It shows
+   partitioning by the claim's own unit or binding the claim to the observation itself. Per-sample and near-per-sample identities instead receive explicit warnings and require meaning review. It shows
    witnesses from the source rows.
 5. **You confirm what the claim level means.** Only then does a result read "held out". If Nemotron abstained, you
    define the unit in a guided form with a live preview.
@@ -35,12 +34,10 @@ marks the level your claim needs.
    exactly.
 7. **Save and reopen the receipt in your workspace.** Download readable HTML or JSON, with local execution distinguished from a matching Sandbox replay.
 
-**Real findings on public data (reproducible from pinned files):**
-- PTB-XL: 2,195 of 2,198 test ECGs come from recording sites seen in training.
+**Retained measurements on public data (reproducible from pinned files):**
+- PTB-XL: 2,195 of 2,198 test ECGs come from recording sites seen in training. This is a site-overlap measurement, not a violation of its patient-disjoint split promise.
 - WSI-Bench: 42 test patients are in training, with no shared slide.
 - ESC-50: 2 recordings break the README's same-fold promise.
-- MIT-BIH: the widely used de Chazal "inter-patient" split puts records 201 and 202 on opposite sides, and the
-  database's documentation says both came from the same subject.
 
 ## How we built it
 

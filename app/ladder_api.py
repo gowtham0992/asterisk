@@ -5,12 +5,14 @@ import json
 import os
 import time
 import sqlite3
+from contextlib import nullcontext
+from .ladder_limits import Limits
 
 from fastapi import HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from . import ladder_proposal
-from .ladder import LadderError, measure
+from .ladder import LadderError, measure, review_context
 from .ladder_sandbox import replay
 from .preparation.review import executor
 from .sandbox import SandboxError
@@ -33,6 +35,7 @@ class LadderRequest(BaseModel):
     spec: dict
     files: list[LadderFile] = Field(min_length=1, max_length=80)
     confirmed: list[str] = Field(default_factory=list, max_length=8)
+    proposal_id: str | None = Field(default=None, pattern=r'^[a-f0-9]{24}$')
 
 
 class ProposalRequest(BaseModel):
@@ -80,6 +83,7 @@ def token_factory(model, key):
 
 
 def register(app, owner, completion=token_factory, sandbox=replay, connect=None):
+    limits = Limits(connect) if connect else None
     store = None
     if connect is not None:
         from .ladder_receipts import register as register_receipts
@@ -90,6 +94,14 @@ def register(app, owner, completion=token_factory, sandbox=replay, connect=None)
         try:
             return measure(body.spec, _files(body.files), body.confirmed)
         except LadderError as exc:
+            raise HTTPException(422, str(exc)) from None
+
+    @app.post('/api/ladder/review')
+    def review(body: LadderRequest, request: Request):
+        owner(request)
+        try:
+            return review_context(body.spec, _files(body.files))
+        except (LadderError, executor.ExtractionError) as exc:
             raise HTTPException(422, str(exc)) from None
 
     @app.post('/api/ladder/preview')
@@ -103,32 +115,49 @@ def register(app, owner, completion=token_factory, sandbox=replay, connect=None)
 
     @app.post('/api/ladder/propose')
     def propose(body: ProposalRequest, request: Request):
-        owner(request)
+        who = owner(request)
         files = _files(body.files)
         messages = _messages(body, files)
         key = os.getenv('NEBIUS_API_KEY')
         if not key:
             raise HTTPException(503, 'Add NEBIUS_API_KEY to the local .env file and restart Asterisk.')
+        reservation = limits.operation(who, 2) if limits else nullcontext()
         complete, usage = completion(body.model, key)
         start = time.monotonic()
         try:
-            proposal, attempts = ladder_proposal.propose(body.claim, files, complete, body.share_examples,
-                                                         documentation=body.documentation)
+            with reservation:
+                proposal, attempts = ladder_proposal.propose(body.claim, files, complete, body.share_examples,
+                                                             documentation=body.documentation)
         except LadderError as exc:
             raise HTTPException(422, f'Nemotron did not return a usable ladder after one repair: {exc}') from None
+        except HTTPException:
+            raise
         except Exception:
             raise HTTPException(502, 'Nebius Token Factory did not complete the request. Check credits and model access, then retry.') from None
-        return {'proposal': proposal, 'attempts': [{'error': a['error']} for a in attempts], 'model': body.model,
+        response = {'proposal': proposal, 'attempts': [{'error': a['error']} for a in attempts], 'model': body.model,
                 'model_name': MODELS[body.model], 'provider': 'Nebius Token Factory', 'calls': usage['calls'],
                 'total_tokens': usage['total_tokens'], 'seconds': round(time.monotonic() - start, 2),
                 'payload_sha256': hashlib.sha256(json.dumps(messages, ensure_ascii=False).encode()).hexdigest()}
 
+        response['proposal_id'] = None
+        if store:
+            try:
+                response['proposal_id'] = store.record_proposal(who, response, files, ladder_proposal.PROMPT_VERSION)
+            except (sqlite3.Error, OSError):
+                response['proposal_record_error'] = 'The proposal completed, but its origin could not be saved. Receipts will not claim a recorded model origin.'
+        return response
+
     @app.post('/api/ladder/replay')
     def replay_ladder(body: LadderRequest, request: Request):
         who = owner(request)
+        if body.proposal_id:
+            if store is None:
+                raise HTTPException(503, 'Proposal storage is unavailable.')
+            store.binding_origin(who, body.proposal_id, body.spec, _files(body.files))
         project = os.getenv('NEBIUS_PROJECT_ID') or os.getenv('NEBIUS_AI_PROJECT')
         try:
-            result, provenance = sandbox(body.spec, _files(body.files), body.confirmed, os.getenv('NEBIUS_API_KEY'), project)
+            with limits.operation(who, 1) if limits else nullcontext():
+                result, provenance = sandbox(body.spec, _files(body.files), body.confirmed, os.getenv('NEBIUS_API_KEY'), project)
         except LadderError as exc:
             raise HTTPException(422, str(exc)) from None
         except SandboxError as exc:
@@ -136,8 +165,8 @@ def register(app, owner, completion=token_factory, sandbox=replay, connect=None)
         response = {'result': result, 'provenance': provenance}
         if store is not None:
             try:
-                saved = store.save(who, body.spec, _files(body.files), result, provenance)
+                saved = store.save(who, body.spec, _files(body.files), result, provenance, proposal_id=body.proposal_id)
                 response['receipt_id'] = saved['id']
-            except (sqlite3.Error, OSError):
+            except (sqlite3.Error, OSError, HTTPException):
                 response['receipt_error'] = 'Replay matched, but workspace storage failed. Download the JSON receipt now; another replay is not needed.'
         return response

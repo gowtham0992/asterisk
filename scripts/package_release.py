@@ -55,6 +55,7 @@ DOCS += ['public_site/index.html', 'public_site/site.css', 'docs/submission/publ
 DOCS += ['static/ladders/'+name+'.json' for name in (
     'index','experiment','wsibench-report','wsibench-cross-task','ptbxl',
     'esc50-fold1','esc50-fold2','urbansound8k-fold1')]
+DOCS += ['static/ladder-example-clean/'+name for name in ('spec.json','split.csv','subjects.csv','README.md')]
 DOCS += ['static/ladder-example/'+name for name in ('spec.json','split.csv','subjects.csv','README.md')]
 DOCS += ['static/ladder-example-propose/'+name for name in ('train.json','test.json','README.md')]
 DOCS += ['examples/ladders/'+name+'.json' for name in (
