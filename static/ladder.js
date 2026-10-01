@@ -322,7 +322,7 @@ async function experiment(){
  try{const r=await fetch('/static/ladders/experiment.json');if(!r.ok)return;data=await r.json()}catch{return}
  const family=label=>/previous v2/.test(label)?null:/^Nemotron 3 Super/.test(label)?'super':/^Nemotron 3 Ultra/.test(label)?'ultra':/^Claude Sonnet/.test(label)?'sonnet':/^Single-column/.test(label)?'script':null;
  const names={super:'Nemotron 3 Super',ultra:'Nemotron 3 Ultra',sonnet:'Claude Sonnet',script:'Single-column script'};
- const notes={super:'ships in Asterisk',ultra:'option',sonnet:'general model, for comparison',script:'what most leak checkers do'};
+ const notes={super:'ships in Asterisk',ultra:'option',sonnet:'general model, for comparison',script:'specified single-column baseline'};
  const sets=[...new Set(data.rows.map(r=>r.set[0]))];
  const cell={};for(const r of data.rows){const f=family(r.label);if(f)cell[f+r.set[0]]=r}
  const models=['super','ultra','sonnet'].filter(f=>sets.some(x=>cell[f+x]));
@@ -332,7 +332,7 @@ async function experiment(){
  $('#experiment-lede').textContent=data.lede;
  const stat=(value,label,cls='')=>el('div',{class:'stat '+cls},el('span',{class:'stat-value'},value),el('span',{class:'stat-label'},label));
  $('#experiment-stats').replaceChildren(
-  stat(String(sum(models,'false_reassurance')),`false "held out" from any model, across ${cases} unseen cases`,'is-good'),
+  stat(String(sum(models,'false_reassurance')),`false "held out" from any model, across ${cases} evaluation cases`,'is-good'),
   stat(String(sum(['script'],'false_reassurance')),'false "held out" from a single-column check on the same cases','is-bad'),
   prev&&now?stat(`${prev.correct} → ${now.correct}`,`Nemotron Super on set ${sets.at(-1)} once proposals can say "characters 2–4" or "field 1"`):null);
  const head=el('tr',{},el('th',{scope:'col'},'Proposer'),...sets.map(x=>el('th',{scope:'col',class:'num'},`Set ${x}`)),el('th',{scope:'col',class:'num'},'Correct'),el('th',{scope:'col',class:'num'},'False “held out”'));

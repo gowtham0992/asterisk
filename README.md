@@ -16,6 +16,26 @@ See [the ladder handover](docs/submission/HANDOVER-ladder.md) and [submission dr
 
 For a hosted ladder preview, set `ASTERISK_HOSTED_WORKFLOW=ladder`; the legacy baked image is not required. The preview still needs Nebius credentials, Sandbox access, a protected hostname and persistent storage. See [release configuration](docs/release.md).
 
+## First run from a fresh clone
+
+Use Python 3.14 with the locked dependencies:
+
+```sh
+python3.14 -m venv .venv
+.venv/bin/python -m pip install -r requirements.lock.txt
+.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 8791
+```
+
+Open `http://127.0.0.1:8791/static/ladder.html`. Expand **Advanced**, choose **Load subject-disjoint example**, and select **Measure on server**. Review the partition mapping, identity definition and cited documentation, then confirm and measure again. Save and reopen the receipt. This fictional local example needs no credentials, model call, Sandbox or baked image.
+
+For model proposals or Sandbox replay, copy `.env.example` to `.env` only if you do not already have one, and configure your Nebius API key and project ID. Use **Propose → Try a synthetic example**, inspect the outbound preview, and request the model call. Review the returned rules and measure before requesting replay. The hosted launcher is documented in [release configuration](docs/release.md).
+
+Saved ladder receipts retain owner-scoped proposal provenance when linked to a server-recorded proposal: model, prompt version, request hash, validation-attempt metadata and edit/input-change flags. They do not retain full model reasoning. User-supplied specs are identified separately. HTML and JSON exports contain measurements, definitions and provenance, with raw inputs retained privately in workspace storage.
+
+## Historical single-binding workflow
+
+The sections below document the earlier single-binding product, its native-preparation experiment and evidence ZIP. They remain for existing users and reproducibility; new ladder users should follow the first-run steps above. The ladder export is a different artifact format and does not contain `verify.py`.
+
 ## Single-binding split receipts
 
 A split receipt for a claim about unseen patients, subjects or specimens.

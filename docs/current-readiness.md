@@ -18,7 +18,7 @@ The hosted application runs on AWS with HTTPS and preview authentication. GitHub
 - Zero-overlap rows say no shared values. Near-unique IDs and case/whitespace-folded overlap carry warnings without changing the exact matching rule.
 - Manual setup is available before any model call. Citation selection is explicit. A fictional subject-disjoint example exercises pending confirmation, confirmation, save and export.
 
-These are engineering fixes, not new held-out accuracy or user-benefit evidence. The clean packaged release passed 590 Python tests (9 scientific-trace skips) and 167 JavaScript tests. Its 433-file manifest was verified again as the hosted service user.
+These are engineering fixes, not new held-out accuracy or user-benefit evidence. The clean packaged release passed 590 Python tests (9 scientific-trace skips) and 167 JavaScript tests. The final 434-file manifest was verified again as the hosted service user.
 
 ## Reliability and evidence limits
 

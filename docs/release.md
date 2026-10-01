@@ -1,6 +1,6 @@
 # Release and rollback
 
-This is an invitation-only, single-process research preview. Human utility and fresh v4 acceptance remain unmeasured. A public deployment has not happened; provide a hosting destination and public repository owner before claiming otherwise.
+This is an invitation-only, single-process research preview. Human utility and fresh v4 acceptance remain unmeasured. The AWS hosted preview was deployed and checked on 28 September; see [deployment records](submission/aws-deployment.md). The source repository remains private at the owner’s request.
 
 ## Current ladder deployment
 
@@ -35,7 +35,7 @@ Use one worker and one replica, an HTTPS reverse proxy, a persistent SQLite disk
 
 Use `sh scripts/start_hosted.sh`. The platform must terminate HTTPS, preserve scheme/host, and restrict direct ingress to its proxy. Configure `FORWARDED_ALLOW_IPS` with the actual proxy addresses; never blindly trust arbitrary forwarding headers. Public mode uses Secure, HttpOnly, SameSite Strict session cookies, exact host validation and shared preview authentication. This is not a multi-tenant production identity system.
 
-The `/healthz` endpoint checks the database without paid inference. Keep an uptime check on it and monitor failed/stuck receipts and provider usage. Evaluation-ledger limits do not automatically cap interactive preview usage. Configure provider spending limits before opening judge access.
+The `/healthz` endpoint checks the database without paid inference. Keep an uptime check on it and monitor failed/stuck receipts and provider usage. Interactive ladder calls have persisted daily call reservations and an in-flight session limit; saved receipts have count and payload-size limits. These are not a dollar-cost guarantee. See [AWS configuration](submission/aws-deployment.md) before final judge access.
 
 ## Same artifact and tested rollback
 
@@ -45,7 +45,7 @@ Stop new work and wait for in-flight jobs before deployment. Back up SQLite usin
 
 Release checks: healthy database; correct auth/host behavior; isolation between two sessions; fresh-browser synthetic receipt from proposal through confirmed binding, result and export; byte verification; recorded matching Sandbox replay; refresh during and after execution. Rollback checks must load the same records before and after code reversal. A local compatibility check does not prove the host's proxy, disk or deployment mechanism.
 
-Hosting, proxy configuration, public-domain TLS, judge access and production rollback remain pending a destination. Keep the service available through the judging period; verify the event's schedule discrepancy before release and plan conservatively for access starting 2 November.
+Hosting, proxy configuration, TLS and tested rollback are established for the AWS preview. Final judge access remains pending. Keep the service available through the judging period; verify the event's schedule discrepancy before release and plan conservatively for access starting 2 November.
 
 ## Rights and public source
 

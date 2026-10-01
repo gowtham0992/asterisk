@@ -15,7 +15,7 @@ and 42 shared patient identifiers. An intersection at only the slide level does 
 
 ## What it does
 
-Asterisk measures one train/test split at **every level the data defines**: observation, recording, patient, site. It
+Asterisk measures one train/test split at **the declared levels supported by its extraction rules**: observation, recording, patient, site. It
 marks the level your claim needs.
 
 1. **You state the claim** ("No test patient appears in training") and add the split files and the dataset's
@@ -23,16 +23,15 @@ marks the level your claim needs.
 2. **Preview.** Your selected files are uploaded to the Asterisk server. Before any model call, you see the exact
    subset it would send to Nebius: documentation and column counts, plus example values only for the columns you approve.
 3. **NVIDIA Nemotron on Nebius Token Factory proposes the ladder.** It reads the documentation, derives units such as
-   "patient = first 12 characters of the barcode", cites the lines, and abstains when the documentation does not
-   define the unit.
-4. **The engine validates and measures on the Asterisk server.** It refuses anything that makes separation true by construction:
+   "patient = first 12 characters of the barcode", cites the lines, and can abstain when it cannot establish the unit. Proposals still require review.
+4. **The engine validates and measures on the Asterisk server.** It rejects two structural sources of misleading separation:
    partitioning by the claim's own unit or binding the claim to the observation itself. Per-sample and near-per-sample identities instead receive explicit warnings and require meaning review. It shows
    witnesses from the source rows.
-5. **You confirm what the claim level means.** Only then does a result read "held out". If Nemotron abstained, you
+5. **You confirm the claim-level meaning and evaluation partition.** Only then does a result read "held out". If Nemotron abstained, you
    define the unit in a guided form with a live preview.
 6. **A fresh Nebius Sandbox recomputes the ladder** from the engine's own code. The result is kept only if it matches
    exactly.
-7. **Save and reopen the receipt in your workspace.** Download readable HTML or JSON, with local execution distinguished from a matching Sandbox replay.
+7. **Save and reopen the receipt in your workspace.** Download readable HTML or JSON with partition mappings, derivations, citations, witnesses and recorded proposal origin. Edits to a recorded proposal are identified. Local execution is distinguished from a matching, server-attested Sandbox replay.
 
 **Retained measurements on public data (reproducible from pinned files):**
 - PTB-XL: 2,195 of 2,198 test ECGs come from recording sites seen in training. This is a site-overlap measurement, not a violation of its patient-disjoint split promise.
@@ -47,7 +46,7 @@ marks the level your claim needs.
   numbered documentation lines and one validator-guided repair turn. Nemotron 3 Ultra is available as an option.
 - **Nebius Sandboxes** (`python:3.12-slim`) replay the measurement. Inputs are uploaded gzip-compressed, which fits
   multi-megabyte benchmark metadata.
-- **Tests:** the local source package passed 569 Python tests (9 skipped) and 164 JavaScript tests. A fresh Ubuntu installation passed 568 Python tests (10 skipped; Node is absent there). The hosted disclosure update additionally passed 12 focused Python and 9 JavaScript checks; its measurement program is unchanged.
+- **Tests:** the clean source package passed 590 Python tests (9 scientific-trace skips) and 167 JavaScript tests. Hosted checks covered confirmation, save/export, secure sessions, CSRF, ownership isolation and restart persistence. The final deployed 434-file manifest matches the source archive.
 
 ## What the recorded evaluation supports
 
@@ -84,6 +83,6 @@ our pitch twice, and made it honest.
 
 Workspace: https://asterisk.gowthamsarveswaran.com/static/ladder.html#propose (reviewer credentials supplied separately).
 
-The 27 September hosted smoke test completed in 11.95 seconds: one Nemotron 3 Super call, deterministic measurement, one fresh Nebius Sandbox replay with exact match, saved receipt and HTML export. It used the shipped fictional example and found one shared patient affecting one of four evaluation rows. This verifies deployment integration on one example, not general accuracy or researcher benefit.
+The 28 September hosted smoke completed in 10.29 seconds: one Nemotron 3 Super call (3,162 tokens), deterministic measurement, one fresh Nebius Sandbox replay with exact match, saved receipt and HTML export. It used the shipped fictional example and found one shared patient affecting one of four evaluation rows. The saved record retained the actual proposal origin and unchanged-binding flags. This verifies integration on one example, not general accuracy or researcher benefit.
 
 Public introduction, public source URL and the under-three-minute video remain to be published. This document is a draft, not a submitted entry.

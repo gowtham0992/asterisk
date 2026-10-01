@@ -1,34 +1,41 @@
 # Asterisk recording script — target 2:50
 
-Show the difference between a split that separates images and one that separates the unit the researcher claims. Saved gallery findings, a fictional live example, and recorded evaluation results must be labeled separately. This is a recording plan, not a claim that a new live recording has been completed.
+Show one question: **new images, or new patients?** The viewer should leave knowing what Asterisk measured, why Nemotron helped, and what the receipt cannot prove. This is a recording script, not a finished video.
 
-| Time | Screen | Voice-over |
+## Recording sequence
+
+| Time | Show | Say |
 |---|---|---|
-| 0:00–0:15 | Ladder page, then WSI-Bench gallery card | “A test set can contain new slides from patients the model has already seen. Asterisk asks: new at which level?” |
-| 0:15–0:40 | Saved WSI-Bench finding and one witness | “This saved measurement of public WSI-Bench files has no shared slides, but 42 test patients also occur in training. These rows explain the difference. Whether that violates the experiment depends on its claim.” |
-| 0:40–0:55 | Propose with Nemotron; load fictional example; preview | “Now a fictional example, live. I state the claim and upload the files to Asterisk. Then I preview the documentation, counts and approved examples before sending that subset to the model.” |
-| 0:55–1:25 | Send to Nemotron; show real response and cited source | “NVIDIA Nemotron on Nebius Token Factory proposes how to recover each identity level from the README. It proposes the question; it does not write the verdict.” If the response abstains, follow the refusal path below. |
-| 1:25–1:50 | Review proposal, measure, open witness | “In this example the README defines the patient as the first 11 characters. The application checks that extraction and measures the actual rows. Different slides still map to one shared patient.” Say the observed count, not a scripted count. |
-| 1:50–2:15 | Replay in Nebius Sandbox; actual result | “A fresh Nebius Sandbox runs the checker again. Asterisk records the replay only when its result matches.” Say “matched” only after the actual success response. |
-| 2:15–2:35 | Open saved workspace receipt; HTML export | “The result survives this session. A second reader can inspect the claim, identity definitions and witness rows. A local-only run is labeled differently from a matched Sandbox replay. This is an unsigned record, not a certificate of scientific independence.” |
-| 2:35–2:50 | Evaluation scoreboard and close | “Across 41 evaluated cases, the guarded model runs gave no false reassurance. Super still got only 21 ladders correct; the general-model baseline got 36. We show those misses. Asterisk: the model proposes, the engine decides, you confirm.” |
+| 0:00–0:15 | WSI-Bench saved gallery result, slide and patient rows together | “New images do not necessarily mean new patients. In these public benchmark files, the slides are separate—but 42 test patients also appear in training.” |
+| 0:15–0:30 | Expand one patient witness; keep the saved-result label visible | “This is a saved measurement, not a live run. The same patient identifier connects these different slides. A patient-level claim needs a patient-level check.” |
+| 0:30–0:50 | Propose form → Load fictional example → outbound preview | “Now a small fictional example, end to end. The files first reach our app server. I choose which column examples Nebius may receive and inspect the exact model request.” |
+| 0:50–1:15 | Actual Nemotron call, returned proposal and documentation citation | “NVIDIA Nemotron on Nebius Token Factory reads the README and proposes the extraction rules. Here the first eleven characters identify the patient. It proposes an interpretation; application code computes the result.” |
+| 1:15–1:40 | Partition mapping and row counts, patient derivation, source quotation → measure → witness | “Before running it, I can inspect which labels mean training, evaluation or excluded, and where the patient definition came from. This result shows one shared patient and the rows behind it.” Say the actual observed count if different. |
+| 1:40–2:00 | Actual fresh Sandbox replay and match | “Nebius Sandboxes reruns the same checker in a separate execution. This run matched. That checks reproducibility under these rules; it does not prove the rules describe the science correctly.” Say matched only after success. |
+| 2:00–2:30 | Open saved receipt → proposal origin → readable export | “The handover preserves the model and prompt version, whether the proposal was edited, the partition choices, derivations, exclusions and witnesses. A second reader can inspect the assumptions—not just accept an AI verdict.” |
+| 2:30–2:50 | Receipt scope and closing title | “A script can do the join once the identities are prepared. Asterisk helps make that preparation and its consequences inspectable. Nemotron still misses cases, and researcher usefulness is unmeasured. The model proposes. Code measures. You review the meaning.” |
 
-## Refusal and failure paths
+The scripted narration is about 240 words, leaving time for clicks and inspection. Use readable close-ups rather than rushing through the entire page. If real waits make the take too long, remove only waiting and label the cut; never substitute a result from another attempt.
 
-- If the model abstains or returns an unusable proposal, show that state. Explain that a researcher must supply the missing definition; do not label a manually completed ladder as model success.
-- If Sandbox replay fails, save the local result and identify it as local-only. Do not substitute a saved success while narrating a live run.
-- If a call takes too long for the video, disclose an edit that removes waiting. Keep the real request and result together. Do not splice results from different runs.
-- If replay succeeds but storage fails, download the returned result. The UI explicitly says another paid replay is unnecessary.
+## What must stay distinguishable
 
-## Recording preflight
+- **Saved public finding:** WSI-Bench report task, zero shared slides, 42 of 207 test patient identifiers shared; 43 of 208 evaluation rows affected. This is not proof of accuracy inflation or an allegation about the authors' intended claim.
+- **Live fictional workflow:** the shipped `static/ladder-example-propose` files. Its definition uses an eleven-character prefix; the public WSI-Bench definition uses twelve. Never mix those definitions or witnesses.
+- **Model origin:** the saved receipt must show `recorded_model_proposal`, the actual model and prompt, and computed edit/input-change flags. A manual repair must remain visible as an edit, not be presented as an untouched model success.
+- **Replay:** server-attested, same-code reproducibility. The installed SDK does not expose its operation UUID. The receipt is unsigned and does not independently authenticate the remote provider.
+- **Export:** readable HTML and measurement JSON contain the spec, measurements and retained provenance. They do not include the raw input files or full model reasoning. Do not demonstrate the legacy evidence-ZIP verifier as though it verifies this ladder export.
 
-1. Use the tested release and a clean owner session; keep the release commit visible in the recording notes.
-2. The WSI-Bench gallery is a saved result. Verify the displayed count and source provenance before narrating it. It is not a newly executed replay.
-3. Use the shipped fictional example for the live chain. Review the outbound preview; record the selected model. A warm-up or recording involving providers is a paid run and must follow the applicable approval and budget.
-4. Show at least one witness and one source definition large enough to read. Hide keys and unrelated browser tabs.
-5. After recording, confirm that the saved receipt opens and that the downloaded HTML matches the demonstrated result.
-6. Keep the full attempt record privately, including failure or repair. The exported workspace receipt does not itself retain upstream model proposal history.
+## If the run does not succeed
 
-## Evidence boundaries
+If the model abstains or returns an unusable proposal, show that state and the manual recovery option. Do not secretly switch to a supplied spec. If the Sandbox fails, save the local measurement and call it local-only. If replay matches but storage fails, retain the returned result; another paid replay is unnecessary. Preserve failed takes privately when interpreting reliability.
 
-The 41-case scoreboard combines the configurations tested on sets A–D; it is not 41 cases run under the shipping v4 prompt. Set D tested v4, where Super scored 5/10 and failed its pre-registered pass rule. No result establishes demand, time saved, or reliability on arbitrary datasets. Real researcher comprehension remains unmeasured.
+The recorded evaluation stays available in the written entry: the combined Super configurations scored 21/41, Ultra 24/41 and Sonnet 36/41; shipping prompt v4 scored 5/10 on set D and failed its gate. These are bounded development results, not a general reliability promise. Do not spend the closing seconds implying that zero observed false reassurance makes the tool infallible.
+
+## Preflight and completion evidence
+
+1. Use the hosted release corresponding to GitHub main; record its commit and manifest hash privately. Use a fresh owner session, only fictional inputs for live calls, and no visible credentials.
+2. Confirm the WSI-Bench saved card's counts and citation before narrating. Keep the saved-example disclosure visible.
+3. Preview the live payload, select Nemotron Super, and perform one genuine proposal and replay. Keep the exact request/result and receipt together. The 28 September smoke passed this chain, but is not video footage.
+4. Record the video, then open the saved receipt and downloaded HTML. Check every narrated count and provenance statement against that attempt.
+5. Save the final video path, duration, receipt ID, execution record locations and wait edits. Review readable text, audio, captions and absence of secrets.
+6. Publishing the video, verifying its viewer access, making the repository public and final submission remain separate unfinished actions. This script does not satisfy them.
