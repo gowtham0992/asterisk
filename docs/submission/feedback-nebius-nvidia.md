@@ -1,62 +1,43 @@
 # Feedback on Nebius Token Factory, Sandboxes and NVIDIA Nemotron
 
-Drawn from building Asterisk and from pre-registered, frozen experiments with about 1.95 million Token Factory tokens on
-Nemotron 3 Nano, Super and Ultra, 26–27 September 2026. Every claim below links to a reproducible artifact in
-`evaluation/ladder-proposal-v1` to `evaluation/ladder-proposal-v5` (including set D and the v4 prompt).
+Draft for the feedback submission; not sent. The most useful improvement for Asterisk is better conversion of explicit documentation into a bounded extraction rule. Our current implementation uses Nemotron 3 Super through Token Factory, validates the proposed JSON, permits one repair, then measures with application code and optionally replays in a Nebius Sandbox.
 
-## Nebius Sandboxes
+## 1. Explicit identity rules are often declined
 
-1. **Stdin appears to be capped just under 1 MB, and the failure is opaque.**
-   - **What we saw:** a 1,000,000-byte stdin payload ran. Payloads of 1,048,576 bytes and larger were rejected with a
-     generic `ApiStatusCodeError` from `POST /sandboxes/v1/instances`, with no size stated.
-   - **What we did:** uploading the same data through `run(..., files={path: bytes})` worked. A 6.6 MB PTB-XL metadata
-     table, uploaded gzip-compressed at 980 KB, ran in 1.7 s.
-   - **Ask:** document the stdin and upload limits, and return a 413-style error naming the limit.
-2. **Error objects include request and response detail.** That is useful for debugging, but applications must scrub
-   them before showing users, because payloads can contain research data. We wrap every SDK exception.
-   **Ask:** a `safe_message` field.
-3. **What worked well:** disposable runs of `python:3.12-slim` start fast (0.1–1.7 s of compute in our replays), and the
-   `files` upload made byte-exact replays of multi-megabyte inputs easy. The input SHA-256 inside the Sandbox matched
-   the local pin.
+In [set A](../../evaluation/ladder-proposal-v2/RESULTS.md), Super abstained on 30 of 33 replies, including documentation that states how subject numbers appear in filenames. Across the four development sets, tested Super configurations scored 21/41, Ultra 24/41 and the Sonnet comparison 36/41. These are bounded, developer-authored evaluations with differing prompts and correction opportunities—not an overall model ranking or a claim about private training data.
 
-## Token Factory
+**Request:** add evaluation and training examples where a model must translate an explicit naming convention into typed extraction: basename, delimiter field, character range or a provided lookup. Include exceptions requiring a mapping table or refusal. Correct JSON alone does not establish the right grouping.
 
-4. **Model ID casing is inconsistent.** The same model list mixes `nvidia/nemotron-3-super-120b-a12b`,
-   `nvidia/Nemotron-3-Ultra-550b-a55b` and `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B`. These are easy to mistype, and a
-   wrong ID fails at request time. **Ask:** case-insensitive IDs or stable aliases (`nemotron-3-ultra`).
-5. **`response_format: json_object` was reliable.** Once our schema was stated exactly, Super returned structurally
-   valid JSON on 33 of 33 first attempts on one fresh set. The earlier failures were ours: a prompt that described the
-   schema in prose.
-6. **Deprecations need a pointer.** Nemotron-3-Nano-Omni left Serverless on 31 August 2026. A deprecation notice that
-   names the recommended replacement ID saves a failed deploy.
+## 2. The output language changes what the model can solve
 
-## Nemotron 3 models, for our task (proposing a data hierarchy from documentation)
+Our initial prompt left the grammar implicit. Super returned 40 invalid replies out of 54 in [the first development run](../../evaluation/ladder-proposal-v1/RESULTS.md). That result primarily tested our underspecified contract.
 
-7. **Nemotron is cautious to a fault under explicit abstention rules.**
-   - **Over-abstention:** on fresh set A, Super abstained on 30 of 33 replies. That included cases where the
-     documentation states the unit ("Files are named SC4ssNEO-PSG.edf where ss is the subject number").
-   - **Safe misses:** its misses were almost all abstentions or "not established", not confident errors.
-   - For a safety-critical checker that is the right *direction* of error, but it limits usefulness.
-8. **Ultra beat Super slightly but did not replicate a pass.**
-   - **Set B:** Ultra scored 9 against Super's 8 of 10 with the same prompt, and all 3 of its repaired replies became valid.
-   - **Set C (pre-registered replication):** Ultra scored 4 of 10 and Super 3 of 10.
-   - **Totals across 31 fresh cases:** Ultra 18, Super 16.
-9. **A general model (Claude Sonnet) did better** on all four fresh sets: 36 of 41 against Super's 21, on first
-   attempts. We report this because it is what we measured, and because the gap concentrates in one skill:
-   deriving a unit from a documented naming rule ("Records obtained from the same subject have names that differ in the last digit only" was declined in all 3 Super replies on one case). That seems addressable in training
-   data or in guidance.
-10. **Grammar matters as much as the model.** When we let proposals express "characters 2–4" and "field 1 split on _",
-    Super's score on a fresh set rose from 3 to 5 of 10, with no false reassurance. Before that, Nemotron declined units
-    it could see but could not express.
-11. **Provider reliability.** Ultra returned `APIConnectionError` on 3 of about 35 calls in one run, each after about
-    270 s, and one request stalled for about 25 minutes. **Ask:** a server-side timeout that returns an error quickly.
-12. **Prose-only exceptions were handled perfectly by every Nemotron model.** An example is "Records 201 and 202 came
-    from the same male subject", in MIT-BIH, whose widely used inter-patient split puts 201 in training and 202 in test.
-    Every Nemotron model abstained rather than pretend the records were separable.
+Later, adding character-range and delimiter-field expressions increased Super from 3/10 to 5/10 on set D. The shipping v4 prompt still failed its pass rule. [Set-D results](../../evaluation/ladder-proposal-v5/RESULTS.md) also record seven invalid first attempts, six due to out-of-range citations; one repair fixed six of the seven.
 
-## What we would like
+**Request:** provide a worked documentation-to-JSON example that includes exact field types, line-range validation, missing-definition behavior and one repair using the validator's actual error. Include guidance on completion-token budgets for this pattern. Our app uses a fixed maximum and disables SDK automatic retries so application behavior stays bounded.
 
-- **A documented `max_tokens` guidance** for reasoning-heavy JSON tasks on Super and Ultra. Completion lengths varied
-  from about 350 to about 2,700 tokens for similar inputs.
-- **A worked example in the Token Factory docs** of a bounded tool loop: propose, validate, one repair with the
-  validator's error. That is the pattern that turned 40 of 54 invalid replies into 0 of 33.
+## 3. Provider delays need a bounded failure mode
+
+[Set D](../../evaluation/ladder-proposal-v5/RESULTS.md) records three Ultra connection-error attempts lasting about 270 seconds each, plus an earlier request that stalled for about 25 minutes before the process was stopped. Failures remained failures under the protocol. Those evaluation settings and observed durations are not the hosted app's current timeout settings.
+
+**Request:** return an actionable bounded timeout with a correlation identifier, and document how client timeouts interact with server work. A research workflow must be able to say execution is incomplete rather than leave the user guessing whether it finished or will be billed.
+
+## 4. Sandbox provenance should retain the operation identifier
+
+The installed `contree-sdk` 0.3.6 implementation starts an operation and waits using its UUID, but the returned image-run object does not retain that UUID. We inspected the installed SDK, not a guarantee about every SDK version. Our 28 September hosted replay matched the local checker on a fictional example; the receipt explicitly describes that as server-attested reproducibility.
+
+**Request:** expose the operation UUID in the successful run result, alongside the image and execution metadata, and document its retrieval/verification lifetime. That would improve traceability. It would not, by itself, authenticate an unsigned receipt or establish the scientific meaning of an identity column.
+
+## What worked
+
+Token Factory made the actual Nemotron proposal available through the OpenAI-compatible client, and a fresh Sandbox ran the same checker for exact-result comparison. The hosted fictional proposal → measurement → replay → saved/exported receipt chain completed in 10.29 seconds on 28 September, using one Super call and one Sandbox run. That is integration evidence on one example; researcher usefulness and general preparation reliability remain unmeasured.
+
+## Evidence inventory
+
+- [Initial malformed-reply run](../../evaluation/ladder-proposal-v1/RESULTS.md).
+- [Set A and abstentions](../../evaluation/ladder-proposal-v2/RESULTS.md).
+- [Set D, repairs, timeouts and combined scores](../../evaluation/ladder-proposal-v5/RESULTS.md).
+- [Hosted smoke and scope](release-review-resolution-2026-09-28.md).
+- Installed-code paths: `app/ladder_api.py` (bounded client call), `app/ladder_proposal.py` (validator and repair), `app/ladder_sandbox.py` (replay attestation).
+
+The source release includes reports and application code. Private run packets, full model replies and provider credentials remain excluded. These observations describe the recorded versions and runs; they do not assert that today’s provider documentation lacks every requested feature.

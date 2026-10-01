@@ -1,12 +1,12 @@
 # Asterisk current readiness
 
-Updated 28 September 2026, Denver. **Working hosted research preview; release-review hardening deployed and checked on 28 September. Researcher usefulness remains unmeasured.**
+Updated 30 September 2026, Denver. **Working hosted research preview; release-review hardening deployed and checked on 28 September. Researcher usefulness remains unmeasured.**
 
 ## Current product
 
 The independence ladder measures exact identifier overlap at observation, subject and other declared levels. NVIDIA Nemotron through Nebius Token Factory proposes supported extraction rules from documentation. People review the rules and partition mapping; application code measures. A separate optional Nebius Sandbox replay runs the same engine on the same inputs. It establishes same-code reproducibility, not independent scientific verification.
 
-The hosted application runs on AWS with HTTPS and preview authentication. GitHub is private at the owner's request, with one branch, `main`. The review fixes are on GitHub main and the AWS workspace. GitHub Pages is unavailable under the current private-repository plan. Hosting records: [AWS deployment](submission/aws-deployment.md).
+The hosted application runs on AWS with HTTPS and preview authentication. GitHub is private at the owner's request, with one branch, `main`. The review fixes and supported-scope/setup corrections are on GitHub main and the AWS workspace (release dab958b). GitHub Pages is unavailable under the current private-repository plan. Hosting records: [AWS deployment](submission/aws-deployment.md).
 
 ## Hardening since the release review
 
@@ -28,6 +28,6 @@ Earlier extraction and routing failures remain failures. Historical real-data ch
 
 ## Remaining release work
 
-The review fixes, clean-package tests, fictional browser journey and hosted model-to-receipt smoke are complete; see [the resolution record](submission/release-review-resolution-2026-09-28.md). Keep the repository private until the owner chooses publication; public source, final judge access arrangements, a real video and final submission remain pending. The canonical draft is [the ladder submission](submission/devpost-ladder-draft.md).
+The review fixes, clean-package tests, fictional browser journey and hosted model-to-receipt smoke are complete; see [the resolution record](submission/release-review-resolution-2026-09-28.md). Keep the repository private until the owner chooses publication; public source, final judge access arrangements, a real video and final submission remain pending. The daily live-call caps leave unrestricted judge testing unresolved; see [the current submission gates](submission/submission-gates-2026-09-30.md). The canonical draft is [the ladder submission](submission/devpost-ladder-draft.md).
 
 No independent researcher comprehension, time saving, adoption, general-agent superiority or hackathon outcome has been established. Tests and agent reviews cannot substitute for human evidence. Earlier readiness details remain in Git history and [the historical log](readiness-history-2026-09-26.md).

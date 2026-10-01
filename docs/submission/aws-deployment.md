@@ -63,10 +63,14 @@ A real version rollback was exercised: new release → retained `da4301f` → ne
 
 Updated archive SHA-256: `03b88521089fd9a870e09d9f17a973850d9908ae88f2d6cc0603d3bd225d44f8`.
 
-## Pending local hardening: provider and receipt limits
+## Deployed hardening: provider and receipt limits
 
 The release-hardening code reserves provider calls in the application SQLite database before external execution. Defaults are 10 calls per session and 100 globally per UTC day, configured with `ASTERISK_LADDER_SESSION_DAILY_CALLS` and `ASTERISK_LADDER_GLOBAL_DAILY_CALLS`. One proposal reserves two calls, including its possible repair; a replay reserves one. Failed and unused reservations remain counted. These are conservative call limits, not a provider-billing dollar guarantee. Manual measurement, exports and saved-receipt reads remain available at the cap.
 
 Only one provider operation may be in flight per owner. A crashed operation's lock expires after 30 minutes; daily usage is not refunded. Receipt writes atomically enforce 30 records per owner and 256 MiB of serialized receipt payloads globally. The latter excludes SQLite overhead, proposal metadata and backups. Users can export and delete their saved receipts to release capacity. A successful replay whose save fails still returns its result and warns against spending on another replay.
 
-These changes are local until a new hosted release is explicitly recorded below. Keep preview access protected while finishing the release review.
+These limits were deployed with the 28 September hardening and remain in the 30 September release. Their compatibility with unrestricted judge testing is unresolved; see [submission gates](submission-gates-2026-09-30.md).
+
+## Source and presentation sync — 30 September 2026
+
+Hosted release `/opt/asterisk/releases/20260930-dab958b` includes the supported-scope copy, evaluation labels, current first-run instructions and aligned judge materials from GitHub main `dab958b`. All 434 installed hashes were checked as the service user. HTTPS checks compared the three changed product assets with the archive and exercised the fictional pending → confirmed measurement. No additional model or Sandbox calls occurred. Database backup preceded deployment; the previous 28 September release remains available for rollback. Asterisk was active and the backup timer enabled after deployment.
