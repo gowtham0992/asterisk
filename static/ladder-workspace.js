@@ -1,4 +1,4 @@
-import {renderLadder} from './ladder-render.mjs?v=partition-review-1';
+import {renderLadder} from './ladder-render.mjs?v=quiet-1';
 import {FINDINGS} from './ladder-view.mjs?v=ladder-6';
 
 export function createLadderWorkspace({el,btn,api,main,toast}){

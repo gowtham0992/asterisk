@@ -6,7 +6,7 @@ Updated 30 September 2026, Denver. **Working hosted research preview; release-re
 
 The independence ladder measures exact identifier overlap at observation, subject and other declared levels. NVIDIA Nemotron through Nebius Token Factory proposes supported extraction rules from documentation. People review the rules and partition mapping; application code measures. A separate optional Nebius Sandbox replay runs the same engine on the same inputs. It establishes same-code reproducibility, not independent scientific verification.
 
-The hosted application runs on AWS with HTTPS and preview authentication. GitHub is private at the owner's request, with one branch, `main`. The review fixes and supported-scope/setup corrections are on GitHub main and the AWS workspace (release dab958b). GitHub Pages is unavailable under the current private-repository plan. Hosting records: [AWS deployment](submission/aws-deployment.md).
+The hosted application runs on AWS with HTTPS and preview authentication. GitHub is private at the owner's request, with one branch, `main`. The review fixes and supported-scope/setup corrections are on GitHub main and the AWS workspace. GitHub Pages is unavailable under the current private-repository plan. Hosting records: [AWS deployment](submission/aws-deployment.md).
 
 ## Hardening since the release review
 
@@ -23,6 +23,10 @@ These are engineering fixes, not new held-out accuracy or user-benefit evidence.
 ## Recovery fixes, 2 October
 
 The guided builder preserves transformations before lookup, supports different observation column names across sources, exposes any partition column with explicit assignment of unknown labels, and displays numbered documentation before citation selection. Duplicate filenames and oversized total selections are refused before file reads; input and workflow revisions discard obsolete responses. Unicode previews count code points consistently with Python. These changes were verified with failing regression tests, the full suite, a JavaScript-to-Python measurement, and a scratch browser journey. See [the recovery record](submission/recovery-fixes-2026-10-02.md). They do not change the retained model accuracy scores.
+
+## Quiet workspace redesign, 2 October
+
+The new-check screen now uses Define, Review and Inspect stages, with separate benchmark/evaluation views and preserved drafts. Results lead with the finding, and binding details remain expanded while meaning confirmation is required. The product and saved workspace share a neutral system-type design, with responsive layout and AA contrast checks. See [the design verification](submission/quiet-ui-2026-10-02.md). Model prompts and measurement rules are unchanged.
 
 ## Reliability and evidence limits
 

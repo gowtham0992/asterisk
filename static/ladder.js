@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
 import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,citedLines,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels} from './ladder-view.mjs?v=recovery-2';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,renderLadder,renderReviewContext} from './ladder-render.mjs?v=partition-review-1';
+import {el,kicker,renderLadder,renderReviewContext} from './ladder-render.mjs?v=quiet-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -110,9 +110,14 @@ function proposer(){
  const claimInput=$('#propose-claim'),fileInput=$('#propose-files'),model=$('#propose-model'),previewButton=$('#propose-preview');
  const error=$('#propose-error'),inventory=$('#propose-inventory');
  const panels={payload:$('#propose-payload'),result:$('#propose-result'),ladder:$('#propose-ladder'),replay:$('#propose-replay')};
- const steps=['input','preview','propose','measure','replay','receipt'];
- const step=(active)=>steps.forEach((name,i)=>{const node=$('#step-'+name);node.className=i<steps.indexOf(active)?'is-done':i===steps.indexOf(active)?'is-active':''});
- const fail=text=>{error.textContent=text;error.hidden=false};
+ const stageNames=['claim','review','result'];
+ const step=active=>{
+  const stage=['input','preview'].includes(active)?0:active==='propose'?1:2;
+  stageNames.forEach((name,i)=>{const node=$('#journey-'+name);node.className=i<stage?'is-done':i===stage?'is-active':'';if(i===stage)node.setAttribute('aria-current','step');else node.removeAttribute('aria-current')});
+  $('#input-disclosure').open=stage===0;
+  $('#input-summary').textContent=Object.keys(state.files).length?`${Object.keys(state.files).length} files · ${claimInput.value.trim()||'Add a claim'}`:'Start a new check';
+ };
+ const fail=text=>{error.textContent=text;error.hidden=false;$('#input-disclosure').open=true;error.scrollIntoView({block:'nearest'})};
  const reset=(from)=>{const order=['payload','result','ladder','replay'];order.slice(order.indexOf(from)).forEach(k=>{panels[k].hidden=true;panels[k].replaceChildren()})};
  let inputRevision=0,workflowRevision=0;
  const invalidate=()=>{inputRevision++;workflowRevision++;state.spec=null;state.proposal=null;state.result=null;state.replay=null;state.confirmed=[];reset('payload');step('input')};
@@ -169,7 +174,7 @@ function proposer(){
    const user=JSON.parse(data.messages[1].content);
    const send=el('button',{class:'primary',type:'button'},`Send to ${data.model_name} via Nebius Token Factory`);
    send.addEventListener('click',()=>propose(send));
-   panels.payload.replaceChildren(kicker('Step 2 · Exactly what would be sent'),el('h3',{},'Not yet sent to Nebius. Your files are on the Asterisk server.'),
+   panels.payload.replaceChildren(kicker('Define · Review the outbound request'),el('h3',{},'Not yet sent to Nebius. Your files are on the Asterisk server.'),
     el('div',{class:'chain-meta'},el('span',{},data.provider),el('span',{},data.model_name),el('span',{},`${data.characters.toLocaleString('en-US')} characters`),el('span',{},'SHA-256 '+data.payload_sha256.slice(0,16)+'…')),
     el('p',{},`Documentation text (${Object.keys(user.documentation).join(', ')}), column names with counts, and example values only for the ${state.share.size} column(s) you ticked. Other cell values are held by this Asterisk server and are not sent to the model. A Sandbox replay sends the supplied files separately, only when you request it.`),
     el('details',{},el('summary',{},'Show the full request'),el('pre',{},JSON.stringify(user,null,1))),
@@ -183,23 +188,23 @@ function proposer(){
   try{
    const data=await post('/api/ladder/propose',request);if(revision!==inputRevision||operation!==workflowRevision)return;state.proposal=data;
    if(data.proposal_record_error)fail(data.proposal_record_error);
-   const p=data.proposal,meta=el('div',{class:'chain-meta'},el('span',{},data.provider),el('span',{},data.model_name),el('span',{},`${data.seconds} s`),el('span',{},`${data.total_tokens.toLocaleString('en-US')} tokens`),data.attempts.length>1&&el('span',{},'repaired once after validation'));
+   panels.payload.hidden=true;const p=data.proposal,meta=el('div',{class:'chain-meta'},el('span',{},data.provider),el('span',{},data.model_name),el('span',{},`${data.seconds} s`),el('span',{},`${data.total_tokens.toLocaleString('en-US')} tokens`),data.attempts.length>1&&el('span',{},'repaired once after validation'));
    if(p.status==='abstain'){
     const define=el('button',{class:'primary',type:'button'},'Define the unit yourself');define.addEventListener('click',()=>builder());
-    panels.result.replaceChildren(kicker('Step 3 · Nemotron abstained'),el('h3',{},'Nemotron would not guess this unit.'),meta,el('p',{},p.missing),
+    panels.result.replaceChildren(kicker('Review · Nemotron abstained'),el('h3',{},'Nemotron would not guess this unit.'),meta,el('p',{},p.missing),
      el('p',{},'If the documentation or your own knowledge defines it, say how. Asterisk validates and measures your definition exactly as it would a model proposal, and the receipt records it as user-supplied or as an edit of the recorded proposal; authorship is not verified.'),
      el('div',{class:'chain-actions'},define));
    }else{
     state.spec=p.spec;
     const review=await post('/api/ladder/review',{spec:state.spec,files:request.files,confirmed:[]});if(revision!==inputRevision||operation!==workflowRevision)return;
     const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
-    panels.result.replaceChildren(el('div',{class:'panel-head'},kicker('Step 3 · Proposed ladder · validated and dry-run'),sponsors(true,true)),el('h3',{},`Claim bound to "${p.spec.claim.level}"`),meta,
+    panels.result.replaceChildren(el('div',{class:'panel-head'},kicker('Review · Proposed ladder · validated and dry-run'),sponsors(true,true)),el('h3',{},`Claim bound to "${p.spec.claim.level}"`),meta,
      el('ol',{class:'proposal-levels'},p.spec.levels.map(l=>el('li',{class:l.name===p.spec.claim.level?'is-claim':''},el('b',{},l.name),l.kind+(l.name===p.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression)+(l.by_source?` (per-file overrides for ${Object.keys(l.by_source).join(', ')})`:'')+(l.missing?' · blanks counted as unmapped':''))))),
      renderReviewContext(review),
      ...citedLines(p.spec.citations,state.files).map(c=>el('blockquote',{class:'citation'},c.text,el('small',{},`${c.file}, lines ${c.start}–${c.end}`))),
      el('div',{class:'chain-actions'},measureButton,editButton()));
    }
-   panels.result.hidden=false;step('propose');button.textContent='Sent';
+   panels.result.hidden=false;step('propose');panels.result.setAttribute('tabindex','-1');panels.result.focus({preventScroll:true});panels.result.scrollIntoView({behavior:'smooth',block:'start'});button.textContent='Sent';
   }catch(e){if(revision===inputRevision&&operation===workflowRevision){fail(e.message);button.disabled=false;button.textContent='Send again'}}
  }
  function editButton(){const b=el('button',{class:'text-button',type:'button'},'Define it differently');b.addEventListener('click',()=>builder());return b}
@@ -280,7 +285,7 @@ function proposer(){
    const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[]});if(revision!==inputRevision||operation!==workflowRevision)return;
    state.proposal=state.proposal?{...state.proposal,defined_by:'person'}:null;
    const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
-   panels.result.replaceChildren(kicker('Step 3 · Defined by you'),el('h3',{},`Claim bound to "${state.spec.claim.level}"`),
+   panels.result.replaceChildren(kicker('Review · Defined by you'),el('h3',{},`Claim bound to "${state.spec.claim.level}"`),
     el('ol',{class:'proposal-levels'},state.spec.levels.map(l=>el('li',{},el('b',{},l.name),l.kind+(l.name===state.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression))))),
     renderReviewContext(review),
     ...citedLines(state.spec.citations,state.files).map(c=>el('blockquote',{class:'citation'},c.text,el('small',{},`${c.file}, lines ${c.start}–${c.end}`))),
@@ -288,7 +293,7 @@ function proposer(){
    step('propose');
    }catch(e){fail(e.message)}finally{use.disabled=false}
   });
-  panels.result.replaceChildren(kicker('Step 3 · Define the unit yourself'),el('h3',{},'How is the claim\'s unit written in your files?'),
+  panels.result.replaceChildren(kicker('Review · Define the unit yourself'),el('h3',{},'How is the claim\'s unit written in your files?'),
    el('div',{class:'builder'},
     el('fieldset',{},el('legend',{},'Tables'),...sourceRows.map(r=>el('div',{class:'builder-row'},el('strong',{},r.name),el('label',{},'Role ',r.role),el('label',{},'One observation = ',r.sample),
      el('label',{},'Partition column ',r.partition),el('label',{},'Whole-file role ',r.whole),r.mappingPanel))),
@@ -300,7 +305,7 @@ function proposer(){
     el('fieldset',{},el('legend',{},'Evidence'),el('label',{},'Documentation ',docSel),el('label',{},'lines ',start,' to ',end)),
     documentPanel,preview),
    el('div',{class:'chain-actions'},use));
-  panels.result.hidden=false;refresh();
+  panels.result.hidden=false;refresh();panels.result.setAttribute('tabindex','-1');panels.result.focus({preventScroll:true});panels.result.scrollIntoView({behavior:'smooth',block:'start'});
   }catch(e){fail(e.message)}
  }
  async function measure(confirmed){
@@ -308,8 +313,10 @@ function proposer(){
   try{
    const data=await post('/api/ladder',{spec:state.spec,files:body().files,confirmed});if(revision!==inputRevision||operation!==workflowRevision)return;state.result=data;state.replay=null;
    renderLadder(panels.ladder,data,level=>measure([...confirmed,level]));
+   if(!panels.result.querySelector('.completed-review')){const content=[...panels.result.childNodes];panels.result.replaceChildren(el('details',{class:'completed-review'},el('summary',{},'Reviewed definition · '+state.spec.claim.level),...content))}
+   panels.ladder.scrollIntoView({behavior:'smooth',block:'start'});
    const replayButton=el('button',{class:'primary',type:'button'},'Replay in a Nebius Sandbox');replayButton.addEventListener('click',()=>replayChain(replayButton));
-   panels.replay.replaceChildren(kicker('Step 5 · Independent recomputation'),el('h3',{},'Recompute in a fresh Nebius Sandbox.'),
+   panels.replay.replaceChildren(kicker('Inspect · Independent recomputation'),el('h3',{},'Recompute in a fresh Nebius Sandbox.'),
     el('p',{},'Sends the engine source, the spec, your confirmations and the files to a disposable python:3.12-slim Sandbox. A matching replay and its inputs are saved privately in your workspace. Do not send personal or sensitive data to the Sandbox beta.'),
     el('div',{class:'chain-actions'},replayButton,saveButton(),downloadButton()));
    panels.replay.hidden=false;step('measure');
@@ -320,7 +327,7 @@ function proposer(){
   try{
    const data=await post('/api/ladder/replay',{spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});if(revision!==inputRevision||operation!==workflowRevision)return;state.replay=data;
    const p=data.provenance;
-   panels.replay.replaceChildren(el('div',{class:'panel-head'},kicker('Step 5 · Replayed in a Nebius Sandbox'),sponsors(false,true)),el('h3',{},'Matched the Asterisk server measurement exactly.'),
+   panels.replay.replaceChildren(el('div',{class:'panel-head'},kicker('Inspect · Replayed in a Nebius Sandbox'),sponsors(false,true)),el('h3',{},'Matched the Asterisk server measurement exactly.'),
     el('div',{class:'chain-meta'},el('span',{},p.image),el('span',{},`${Number(p.seconds).toFixed(2)} s in the Sandbox`),el('span',{},'program '+p.program_sha256.slice(0,12)+'…'),el('span',{},'result '+p.result_sha256.slice(0,12)+'…')),
     el('p',{},'Same code, same inputs, independent infrastructure. This is evidence of reproducibility, not tamper-proofing.'),
     data.receipt_error&&el('p',{class:'check-error'},data.receipt_error),
@@ -382,6 +389,12 @@ async function experiment(){
  $('#experiment').hidden=false;
 }
 
+function updateView(){
+ const hash=location.hash.slice(1),view=hash==='experiment'?'evidence':hash==='benchmarks'||/^(wsibench-|ptbxl|esc50-|urbansound8k-)/.test(hash)?'benchmarks':'workspace';
+ document.body.dataset.view=view;
+ for(const link of document.querySelectorAll('.product-nav nav a')){const selected=link.getAttribute('href')===(view==='workspace'?'#propose':view==='benchmarks'?'#benchmarks':'#experiment');if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current')}
+}
+updateView();window.addEventListener('hashchange',updateView);
 heroFigure($('#hero-rungs'));checker();proposer();
 Promise.allSettled([gallery(),experiment()]).then(()=>{
  const id=location.hash.slice(1);if(['propose','benchmarks','experiment'].includes(id))document.getElementById(id)?.scrollIntoView();

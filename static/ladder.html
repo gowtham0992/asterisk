@@ -1,11 +1,11 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Measure recorded overlap at documented levels of a research split: image, recording, patient and site. Inspect the level your claim needs."><title>Asterisk — Independence ladder</title><link rel="stylesheet" href="/static/style.css?v=brand-1"><link rel="stylesheet" href="/static/product.css?v=identity-fields-2"><link rel="stylesheet" href="/static/ladder.css?v=ladder-16"><script type="module" src="/static/ladder.js?v=recovery-2"></script></head>
-<body class="product-page ladder-page">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Measure recorded overlap at documented levels of a research split: image, recording, patient and site. Inspect the level your claim needs."><title>Asterisk — Independence ladder</title><link rel="stylesheet" href="/static/style.css?v=brand-1"><link rel="stylesheet" href="/static/product.css?v=identity-fields-2"><link rel="stylesheet" href="/static/ladder.css?v=ladder-16"><script type="module" src="/static/ladder.js?v=quiet-1"></script><link rel="stylesheet" href="/static/quiet-ui.css?v=1"></head>
+<body class="product-page ladder-page quiet-ui">
 <a class="skip-link" href="#ladder-main">Skip to content</a>
 <header class="product-nav">
  <div><a class="brand" href="/static/product.html" aria-label="Asterisk product home"><span class="brand-mark" aria-hidden="true">✱</span>Asterisk</a><div class="technology-credit"><span>Powered by</span><div class="technology-logos"><a href="https://nebius.com/"><img src="/static/brand/nebius.svg" alt="Nebius" width="84" height="23"></a><a href="https://www.nvidia.com/"><img src="/static/brand/nvidia.svg" alt="NVIDIA" width="100" height="30"></a></div></div></div>
- <nav aria-label="Product navigation"><a href="#benchmarks">Benchmarks</a><a href="#propose">Propose</a><a href="#experiment">Evidence</a><a href="/static/about.html">Scope &amp; data</a><a class="product-button" href="/#ladders">Saved receipts <span aria-hidden="true">↗</span></a></nav>
+ <nav aria-label="Product navigation"><a href="#propose">New check</a><a href="#benchmarks">Benchmarks</a><a href="#experiment">Evidence</a><a href="/static/about.html">Scope &amp; data</a><a class="product-button" href="/#ladders">Saved receipts <span aria-hidden="true">↗</span></a></nav>
 </header>
 <main id="ladder-main" class="product-main">
  <section class="ladder-hero">
@@ -36,10 +36,13 @@
   </div>
  </section>
  <section id="propose" class="product-section ladder-propose" aria-labelledby="propose-title">
-  <div class="section-intro"><p class="product-kicker">NVIDIA Nemotron on Nebius Token Factory · Nebius Sandboxes</p><h2 id="propose-title">Let Nemotron draft the ladder.<br>Check every step.</h2><p>Nemotron reads your documentation and proposes the levels. Asterisk validates and measures them on the Asterisk server, asks you to confirm what your claim's level means, and a Nebius Sandbox recomputes the result from the engine's own code.</p></div>
-  <ol class="chain-steps" aria-label="Chain">
-   <li id="step-input" class="is-active"><span>1</span>Claim &amp; files</li><li id="step-preview"><span>2</span>Preview</li><li id="step-propose"><span>3</span>Nemotron proposes</li><li id="step-measure"><span>4</span>Measure &amp; confirm</li><li id="step-replay"><span>5</span>Sandbox replay</li><li id="step-receipt"><span>6</span>Receipt</li>
+  <div class="section-intro workspace-intro"><p class="product-kicker">Asterisk · New research check</p><h1 id="propose-title">Check your split.</h1><p>Start with your claim. Review how your files identify the subject. Keep the rows behind the result.</p><p class="workflow-credit">NVIDIA Nemotron proposes on Nebius · Asterisk measures · Sandboxes replay</p></div>
+  <ol class="journey-steps" aria-label="Check progress">
+   <li id="journey-claim" aria-current="step"><span>1</span><div><strong>Define</strong><small>Your claim and files</small></div></li>
+   <li id="journey-review"><span>2</span><div><strong>Review</strong><small>What the identifiers mean</small></div></li>
+   <li id="journey-result"><span>3</span><div><strong>Inspect</strong><small>The finding and evidence</small></div></li>
   </ol>
+  <details id="input-disclosure" class="input-disclosure" open><summary><span>Claim and files</span><small id="input-summary">Start a new check</small></summary>
   <form class="check-form propose-form" id="propose-form" novalidate>
    <div class="check-field wide"><label for="propose-claim">Claim <small>what must be unseen in training</small></label><input id="propose-claim" type="text" maxlength="1000" placeholder="No test patient appears in the training data."></div>
    <div class="check-field"><span class="field-label" id="propose-files-label">Split files and documentation <small>CSV, JSON, text lists, README</small></span><label class="dropzone" id="propose-drop" for="propose-files"><input id="propose-files" class="visually-hidden" type="file" multiple aria-labelledby="propose-files-label"><span class="dropzone-title">Drop files here or <u>choose files</u></span><span class="dropzone-hint" id="propose-drop-hint">Preview uploads your selected files to this Asterisk server. You review the smaller model payload before sending it to Nebius.</span></label></div>
@@ -47,7 +50,7 @@
    <div class="propose-inventory wide" id="propose-inventory" hidden></div>
    <div class="check-actions"><button class="primary" type="button" id="propose-preview" disabled>Preview what will be sent</button><button class="secondary" type="button" id="propose-manual" disabled>Define the unit yourself</button><button class="secondary" type="button" id="propose-example">Try a synthetic example</button><span class="actions-hint">Preview sends files to Asterisk, not to Nebius.</span></div>
    <p class="check-error" id="propose-error" role="alert" hidden></p>
-  </form>
+  </form></details>
   <div class="chain-panel" id="propose-payload" hidden></div>
   <div class="chain-panel" id="propose-result" hidden></div>
   <div class="ladder-panel" id="propose-ladder" hidden></div>

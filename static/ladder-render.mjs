@@ -1,5 +1,5 @@
 import {plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,confirmable} from './ladder-view.mjs?v=release-review-1';
+import {ladderView,confirmable} from './ladder-view.mjs?v=recovery-2';
 // Every value from a ladder or a file enters the DOM through textContent, never parsed markup.
 function el(tag,attrs={},...children){
  const node=document.createElement(tag);
@@ -66,8 +66,7 @@ function renderLadder(panel,result,onConfirm){
   source&&el('div',{class:'panel-source'},kicker('Benchmark'),el('h3',{},source.title),el('p',{},source.summary),
    el('div',{class:'source-links'},el('a',{href:source.url,target:'_blank',rel:'noopener noreferrer'},'Dataset source ↗'),el('span',{},'Spec: ',el('code',{},source.spec)),source.licences.length>0&&el('span',{},source.licences.join(' · ')))),
   el('div',{class:'panel-claim'},kicker(`Claim · needs ${view.claimLevel} held out`),el('blockquote',{},view.claim)),
-  renderReviewContext(result.review_context),
-  el('div',{class:`panel-finding tone-${view.finding.tone}`},el('span',{class:'finding-label'},'Finding at '+view.claimLevel),el('h4',{},view.finding.title),el('p',{},view.finding.reason),view.finding.warning&&el('p',{class:'finding-warning'},view.finding.warning),(result.confirmed_levels||[]).length>0&&el('p',{class:'finding-confirmed'},'Confirmed by you: '+result.confirmed_levels.join(', ')),confirmBox(result,onConfirm)),
+  el('div',{class:`panel-finding tone-${view.finding.tone}`},el('span',{class:'finding-label'},'Finding at '+view.claimLevel),el('h4',{},view.finding.title),el('p',{},view.finding.reason),el('details',{class:'result-assumptions',...(confirmable(result)?{open:'true'}:{})},el('summary',{},'Review the binding and partition assumptions'),renderReviewContext(result.review_context)),view.finding.warning&&el('p',{class:'finding-warning'},view.finding.warning),(result.confirmed_levels||[]).length>0&&el('p',{class:'finding-confirmed'},'Confirmed by you: '+result.confirmed_levels.join(', ')),confirmBox(result,onConfirm)),
   el('div',{class:'ladder-axis','aria-hidden':'true'},el('span',{},'Level · finer to coarser'),el('span',{},'Evaluation units also in training')),
   el('ol',{class:'ladder-rows','aria-label':'Ladder levels, finest first'},view.rows.map(row=>levelItem(row,result.levels.find(l=>l.name===row.name)))),
   el('div',{class:'panel-meta'},el('p',{},view.population),...view.agreements.map(a=>el('p',{},a)),el('p',{},view.scope),

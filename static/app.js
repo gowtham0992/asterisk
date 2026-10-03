@@ -1,4 +1,4 @@
-import {createLadderWorkspace} from './ladder-workspace.js?v=1';
+import {createLadderWorkspace} from './ladder-workspace.js?v=quiet-1';
 import {protectLocalDrafts} from './setup-reload-guard.js?v=1';
 import {mayLeavePreparation,createPreparationRouteGuard} from './preparation-unsaved.mjs';
 import {createPreparations} from './preparations.js?v=recorded-proposal-1';
