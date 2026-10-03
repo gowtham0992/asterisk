@@ -1,5 +1,5 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,citedLines,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount} from './ladder-view.mjs?v=release-review-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,citedLines,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels} from './ladder-view.mjs?v=recovery-2';
 const $=(s,root=document)=>root.querySelector(s);
 import {el,kicker,renderLadder,renderReviewContext} from './ladder-render.mjs?v=partition-review-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
@@ -114,6 +114,8 @@ function proposer(){
  const step=(active)=>steps.forEach((name,i)=>{const node=$('#step-'+name);node.className=i<steps.indexOf(active)?'is-done':i===steps.indexOf(active)?'is-active':''});
  const fail=text=>{error.textContent=text;error.hidden=false};
  const reset=(from)=>{const order=['payload','result','ladder','replay'];order.slice(order.indexOf(from)).forEach(k=>{panels[k].hidden=true;panels[k].replaceChildren()})};
+ let inputRevision=0,workflowRevision=0;
+ const invalidate=()=>{inputRevision++;workflowRevision++;state.spec=null;state.proposal=null;state.result=null;state.replay=null;state.confirmed=[];reset('payload');step('input')};
  const body=()=>({claim:claimInput.value.trim(),files:Object.entries(state.files).map(([name,content])=>({name,content})),
   documentation:[...state.docs],share_examples:[...state.share].map(k=>JSON.parse(k)),model:model.value});
  const tableFiles=()=>Object.keys(state.files).filter(n=>!state.docs.has(n));
@@ -123,30 +125,36 @@ function proposer(){
   inventory.replaceChildren(el('p',{},'Mark which files are documentation. For tables, tick only identifier columns whose example values may be sent; every other column is sent as counts only.'),
    ...Object.keys(state.files).map(name=>{
     const doc=el('input',{type:'checkbox',id:'doc-'+name,...(state.docs.has(name)?{checked:'true'}:{})});
-    doc.addEventListener('change',()=>{doc.checked?state.docs.add(name):state.docs.delete(name);reset('payload');step('input');renderInventory();ready()});
+    doc.addEventListener('change',()=>{doc.checked?state.docs.add(name):state.docs.delete(name);invalidate();renderInventory();ready()});
     const cols=state.docs.has(name)?null:el('div',{class:'inventory-columns'},tableColumns(name,state.files[name]).slice(0,60).map(col=>{
      const key=JSON.stringify([name,col]),box=el('input',{type:'checkbox',...(state.share.has(key)?{checked:'true'}:{})});
-     box.addEventListener('change',()=>{box.checked?state.share.add(key):state.share.delete(key);reset('payload');step('input')});
+     box.addEventListener('change',()=>{box.checked?state.share.add(key):state.share.delete(key);invalidate()});
      return el('label',{},box,' ',col);}));
     return el('div',{class:'inventory-file'},el('strong',{},name),el('label',{for:'doc-'+name},doc,' documentation'),cols);
    }));
   inventory.hidden=false;
  }
+ let selectionGeneration=0;
  async function useFiles(list){
-  state.files={};state.docs=new Set();state.share=new Set();reset('payload');step('input');error.hidden=true;
-  for(const file of list){if(file.size>16_000_000){fail(`${file.name} is larger than 16 MB.`);return}state.files[file.name]=await file.text();if(isDocumentation(file.name))state.docs.add(file.name)}
-  renderInventory();ready();
-  const names=Object.keys(state.files);
-  $('#propose-drop-hint').textContent=names.length?`${names.length} file${names.length>1?'s':''}: ${names.join(', ')}`:'Preview uploads files to the Asterisk server; sending to Nebius is a separate step.';
-  drop.classList.toggle('has-files',names.length>0);
+  const generation=++selectionGeneration;
+  previewButton.disabled=true;$('#propose-manual').disabled=true;error.hidden=true;
+  try{
+   const files=await readSelectedFiles(list);
+   if(generation!==selectionGeneration)return;
+   state.files=files;state.docs=new Set(Object.keys(files).filter(isDocumentation));state.share=new Set();
+   invalidate();renderInventory();ready();
+   const names=Object.keys(files);
+   $('#propose-drop-hint').textContent=names.length?`${names.length} file${names.length>1?'s':''}: ${names.join(', ')}`:'Preview uploads files to the Asterisk server; sending to Nebius is a separate step.';
+   drop.classList.toggle('has-files',names.length>0);
+  }catch(e){if(generation===selectionGeneration){fail(e.message);ready()}}
  }
  fileInput.addEventListener('change',()=>useFiles([...fileInput.files]));
  const drop=$('#propose-drop');
  ['dragenter','dragover'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.add('is-over')}));
  ['dragleave','drop'].forEach(t=>drop.addEventListener(t,e=>{e.preventDefault();drop.classList.remove('is-over')}));
  drop.addEventListener('drop',e=>{if(e.dataTransfer?.files?.length)useFiles([...e.dataTransfer.files])});
- claimInput.addEventListener('input',()=>{reset('payload');step('input');ready()});
- model.addEventListener('change',()=>{reset('payload');step('input')});
+ claimInput.addEventListener('input',()=>{invalidate();ready()});
+ model.addEventListener('change',()=>{invalidate()});
  $('#propose-example').addEventListener('click',async()=>{
   try{const names=['README.md','train.json','test.json'];
    const files=await Promise.all(names.map(async n=>{const r=await fetch('/static/ladder-example-propose/'+n);if(!r.ok)throw new Error();return new File([await r.text()],n)}));
@@ -155,9 +163,9 @@ function proposer(){
   }catch{fail('The synthetic example could not be loaded.')}
  });
  previewButton.addEventListener('click',async()=>{
-  error.hidden=true;reset('payload');
+  error.hidden=true;reset('payload');const revision=inputRevision,operation=++workflowRevision,request=body();previewButton.disabled=true;
   try{
-   const data=await post('/api/ladder/preview',body());
+   const data=await post('/api/ladder/preview',request);if(revision!==inputRevision||operation!==workflowRevision)return;
    const user=JSON.parse(data.messages[1].content);
    const send=el('button',{class:'primary',type:'button'},`Send to ${data.model_name} via Nebius Token Factory`);
    send.addEventListener('click',()=>propose(send));
@@ -167,12 +175,13 @@ function proposer(){
     el('details',{},el('summary',{},'Show the full request'),el('pre',{},JSON.stringify(user,null,1))),
     el('div',{class:'chain-actions'},send));
    panels.payload.hidden=false;step('preview');
-  }catch(e){fail(e.message)}
+  }catch(e){if(revision===inputRevision&&operation===workflowRevision)fail(e.message)}finally{ready()}
  });
  async function propose(button){
+  const revision=inputRevision,operation=++workflowRevision,request=body();
   button.disabled=true;button.textContent='Nemotron is reading the documentation…';error.hidden=true;reset('result');
   try{
-   const data=await post('/api/ladder/propose',body());state.proposal=data;
+   const data=await post('/api/ladder/propose',request);if(revision!==inputRevision||operation!==workflowRevision)return;state.proposal=data;
    if(data.proposal_record_error)fail(data.proposal_record_error);
    const p=data.proposal,meta=el('div',{class:'chain-meta'},el('span',{},data.provider),el('span',{},data.model_name),el('span',{},`${data.seconds} s`),el('span',{},`${data.total_tokens.toLocaleString('en-US')} tokens`),data.attempts.length>1&&el('span',{},'repaired once after validation'));
    if(p.status==='abstain'){
@@ -182,7 +191,7 @@ function proposer(){
      el('div',{class:'chain-actions'},define));
    }else{
     state.spec=p.spec;
-    const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[]});
+    const review=await post('/api/ladder/review',{spec:state.spec,files:request.files,confirmed:[]});if(revision!==inputRevision||operation!==workflowRevision)return;
     const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
     panels.result.replaceChildren(el('div',{class:'panel-head'},kicker('Step 3 · Proposed ladder · validated and dry-run'),sponsors(true,true)),el('h3',{},`Claim bound to "${p.spec.claim.level}"`),meta,
      el('ol',{class:'proposal-levels'},p.spec.levels.map(l=>el('li',{class:l.name===p.spec.claim.level?'is-claim':''},el('b',{},l.name),l.kind+(l.name===p.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression)+(l.by_source?` (per-file overrides for ${Object.keys(l.by_source).join(', ')})`:'')+(l.missing?' · blanks counted as unmapped':''))))),
@@ -191,24 +200,34 @@ function proposer(){
      el('div',{class:'chain-actions'},measureButton,editButton()));
    }
    panels.result.hidden=false;step('propose');button.textContent='Sent';
-  }catch(e){fail(e.message);button.disabled=false;button.textContent='Send again'}
+  }catch(e){if(revision===inputRevision&&operation===workflowRevision){fail(e.message);button.disabled=false;button.textContent='Send again'}}
  }
  function editButton(){const b=el('button',{class:'text-button',type:'button'},'Define it differently');b.addEventListener('click',()=>builder());return b}
  function builder(){
   try{
-  reset('ladder');step('propose');
+  const revision=inputRevision,operation=++workflowRevision;reset('ladder');step('propose');
   const tables=tableFiles(),docs=[...state.docs];
   const cols=Object.fromEntries(tables.map(n=>[n,tableColumns(n,state.files[n])]));
   const rows=Object.fromEntries(tables.map(n=>[n,tableRows(n,state.files[n])]));
-  for(const n of tables){if(rows[n].length>100000)throw Error('The builder supports at most 100,000 rows per table.');const split=splitColumn(cols[n]);if(split&&new Set(rows[n].map(r=>String(r[split]))).size>12)throw Error('The guided builder supports at most 12 partition labels. Use an explicit JSON specification for this table.');}
+  for(const n of tables){if(rows[n].length>100000)throw Error('The builder supports at most 100,000 rows per table.');}
   const select=(options,value)=>{const s=el('select',{},options.map(o=>el('option',{value:o,...(o===value?{selected:'true'}:{})},o)));return s};
   const sourceRows=tables.map(n=>{
    const split=splitColumn(cols[n]);
    const role=select(['observations','lookup table only','ignore'],'observations');
    const sample=select(cols[n],cols[n].find(c=>c!==split)||cols[n][0]);
-   const whole=select(['train','test'],/test|eval/i.test(n)?'test':'train');
-   const mapping=split?[...new Set(rows[n].map(r=>String(r[split])))].slice(0,12).map(raw=>({raw,box:select(['train','test','excluded'],guessPartition(raw))})):[];
-   return {name:n,split,role,sample,whole,mapping};
+   const whole=select(['train','test','excluded'],/test|eval/i.test(n)?'test':'train');
+   const partition=select(['— whole file —',...cols[n]],split||'— whole file —');
+   const mappingPanel=el('span',{class:'builder-map'});
+   const source={name:n,split:null,role,sample,whole,partition,mapping:[],mappingPanel,mappingError:null};
+   function updatePartition(){
+    source.split=partition.value==='— whole file —'?null:partition.value;source.mappingError=null;source.mapping=[];
+    try{
+     source.mapping=source.split?partitionLabels(rows[n],source.split).map(({raw,count})=>({raw,count,box:select(['— choose role —','train','test','excluded'],/^(train|training|learn|learning|dev|val|valid|validation|test|testing|eval|evaluation)$/i.test(raw.trim())?guessPartition(raw):'— choose role —')})):[];
+     mappingPanel.replaceChildren(...source.mapping.map(m=>el('label',{},`${JSON.stringify(m.raw)} (${m.count} rows) → `,m.box)));
+    }catch(e){source.mappingError=e.message;mappingPanel.replaceChildren(el('span',{},e.message))}
+    whole.disabled=!!source.split;
+   }
+   partition.addEventListener('change',updatePartition);updatePartition();return source;
   });
   const first=sourceRows[0];
   const unitName=el('input',{type:'text',value:(claimInput.value.match(/\b(patient|subject|person|recording|site|case|lesion|frog|study)\b/i)||['','subject'])[1].toLowerCase(),maxlength:'40'});
@@ -219,6 +238,20 @@ function proposer(){
   const lookTable=select(['— none —',...tables],'— none —'),lookKey=el('input',{type:'text',placeholder:'key column'}),lookValue=el('input',{type:'text',placeholder:'value column'});
   const meaning=el('input',{type:'text',maxlength:'400',placeholder:'e.g. Records from the same subject differ in the last digit only.'});
   const docSel=select(['— choose documentation —',...docs],'— choose documentation —'),start=el('input',{type:'number',min:'1',placeholder:'first line'}),end=el('input',{type:'number',min:'1',placeholder:'last line'});
+  const documentPanel=el('div',{class:'builder-preview'});let documentPage=0;
+  function showDocument(){
+   const text=state.files[docSel.value];
+   if(text===undefined){documentPanel.replaceChildren(el('p',{},'Choose a document to read its numbered lines before citing it.'));return}
+   const lines=text.split('\n').slice(0,lineCount(text)),pages=Math.max(1,Math.ceil(lines.length/40));
+   documentPage=Math.min(documentPage,pages-1);
+   const previous=el('button',{type:'button',class:'secondary',...(documentPage===0?{disabled:'true'}:{})},'Previous lines');
+   const next=el('button',{type:'button',class:'secondary',...(documentPage===pages-1?{disabled:'true'}:{})},'Next lines');
+   previous.addEventListener('click',()=>{documentPage--;showDocument()});next.addEventListener('click',()=>{documentPage++;showDocument()});
+   documentPanel.replaceChildren(el('p',{},`${docSel.value} · ${lines.length} lines · page ${documentPage+1} of ${pages}. Choose the lines defining the unit and partition; no meaning is confirmed automatically.`),
+    el('pre',{},lines.slice(documentPage*40,(documentPage+1)*40).map((line,i)=>`${documentPage*40+i+1}  ${line}`).join('\n')),
+    el('div',{class:'chain-actions'},previous,next));
+  }
+  docSel.addEventListener('change',()=>{documentPage=0;showDocument()});showDocument();
   const preview=el('div',{class:'builder-preview'});
   function unitSpec(){const u={column:unitCol.value,basename:base.checked,prefix:Number(prefix.value)||0,meaning:meaning.value,
     field:sep.value?{separator:sep.value,from:Number(fieldFrom.value)||1,to:Number(fieldTo.value)||Number(fieldFrom.value)||1}:null,
@@ -238,12 +271,13 @@ function proposer(){
   use.addEventListener('click',async()=>{
    use.disabled=true;
    try{
+   for(const r of sourceRows.filter(r=>r.role.value==='observations')){if(r.mappingError)throw Error(r.mappingError);if(r.mapping.some(m=>m.box.value==='— choose role —'))throw Error(`Choose training, evaluation or excluded for every label in ${r.name}.`)}
    const sources=sourceRows.filter(r=>r.role.value==='observations').map(r=>({file:r.name,sample:{column:r.sample.value},
     partition:r.split?{column:r.split,map:Object.fromEntries(r.mapping.map(m=>[m.raw,m.box.value]))}:{value:r.whole.value}}));
    if(!sources.length){fail('Choose at least one table of observations.');return}
    if(!docs.includes(docSel.value)||!Number(start.value)||!Number(end.value)){fail('Choose the documentation and line range you reviewed.');return}
    state.spec=buildSpec({claim:claimInput.value.trim(),unitName:unitName.value,sources,unit:unitSpec(),citation:{file:docSel.value,start:start.value,end:end.value}});
-   const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[]});
+   const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[]});if(revision!==inputRevision||operation!==workflowRevision)return;
    state.proposal=state.proposal?{...state.proposal,defined_by:'person'}:null;
    const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
    panels.result.replaceChildren(kicker('Step 3 · Defined by you'),el('h3',{},`Claim bound to "${state.spec.claim.level}"`),
@@ -257,34 +291,34 @@ function proposer(){
   panels.result.replaceChildren(kicker('Step 3 · Define the unit yourself'),el('h3',{},'How is the claim\'s unit written in your files?'),
    el('div',{class:'builder'},
     el('fieldset',{},el('legend',{},'Tables'),...sourceRows.map(r=>el('div',{class:'builder-row'},el('strong',{},r.name),el('label',{},'Role ',r.role),el('label',{},'One observation = ',r.sample),
-     r.split?el('span',{class:'builder-map'},`Partition by "${r.split}": `,...r.mapping.map(m=>el('label',{},`${m.raw} → `,m.box))):el('label',{},'All rows are ',r.whole)))),
+     el('label',{},'Partition column ',r.partition),el('label',{},'Whole-file role ',r.whole),r.mappingPanel))),
     el('fieldset',{},el('legend',{},'The unit'),el('label',{},'Name ',unitName),el('label',{},'From column ',unitCol),el('label',{},base,' file name after the last /'),
      el('label',{},'split on ',sep,' and keep field ',fieldFrom,' to ',fieldTo),
      el('label',{},'then characters ',charFrom,' to ',charTo),
      el('label',{},'or the first ',prefix,' characters (0 = all)'),
      el('label',{},'then look it up in ',lookTable,lookKey,lookValue),el('label',{class:'wide'},'Why (optional) ',meaning)),
     el('fieldset',{},el('legend',{},'Evidence'),el('label',{},'Documentation ',docSel),el('label',{},'lines ',start,' to ',end)),
-    preview),
+    documentPanel,preview),
    el('div',{class:'chain-actions'},use));
   panels.result.hidden=false;refresh();
   }catch(e){fail(e.message)}
  }
  async function measure(confirmed){
-  error.hidden=true;reset('ladder');state.confirmed=confirmed;
+  const revision=inputRevision,operation=++workflowRevision;error.hidden=true;reset('ladder');state.confirmed=confirmed;
   try{
-   const data=await post('/api/ladder',{spec:state.spec,files:body().files,confirmed});state.result=data;state.replay=null;
+   const data=await post('/api/ladder',{spec:state.spec,files:body().files,confirmed});if(revision!==inputRevision||operation!==workflowRevision)return;state.result=data;state.replay=null;
    renderLadder(panels.ladder,data,level=>measure([...confirmed,level]));
    const replayButton=el('button',{class:'primary',type:'button'},'Replay in a Nebius Sandbox');replayButton.addEventListener('click',()=>replayChain(replayButton));
    panels.replay.replaceChildren(kicker('Step 5 · Independent recomputation'),el('h3',{},'Recompute in a fresh Nebius Sandbox.'),
     el('p',{},'Sends the engine source, the spec, your confirmations and the files to a disposable python:3.12-slim Sandbox. A matching replay and its inputs are saved privately in your workspace. Do not send personal or sensitive data to the Sandbox beta.'),
     el('div',{class:'chain-actions'},replayButton,saveButton(),downloadButton()));
    panels.replay.hidden=false;step('measure');
-  }catch(e){fail(e.message)}
+  }catch(e){if(revision===inputRevision&&operation===workflowRevision)fail(e.message)}
  }
  async function replayChain(button){
-  button.disabled=true;button.textContent='Replaying in the Sandbox…';error.hidden=true;
+  const revision=inputRevision,operation=++workflowRevision;button.disabled=true;button.textContent='Replaying in the Sandbox…';error.hidden=true;
   try{
-   const data=await post('/api/ladder/replay',{spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});state.replay=data;
+   const data=await post('/api/ladder/replay',{spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});if(revision!==inputRevision||operation!==workflowRevision)return;state.replay=data;
    const p=data.provenance;
    panels.replay.replaceChildren(el('div',{class:'panel-head'},kicker('Step 5 · Replayed in a Nebius Sandbox'),sponsors(false,true)),el('h3',{},'Matched the Asterisk server measurement exactly.'),
     el('div',{class:'chain-meta'},el('span',{},p.image),el('span',{},`${Number(p.seconds).toFixed(2)} s in the Sandbox`),el('span',{},'program '+p.program_sha256.slice(0,12)+'…'),el('span',{},'result '+p.result_sha256.slice(0,12)+'…')),
@@ -292,7 +326,7 @@ function proposer(){
     data.receipt_error&&el('p',{class:'check-error'},data.receipt_error),
     el('div',{class:'chain-actions'},saveButton(),downloadButton()));
    step('replay');
-  }catch(e){fail(e.message);button.disabled=false;button.textContent='Retry the replay'}
+  }catch(e){if(revision===inputRevision&&operation===workflowRevision){fail(e.message);button.disabled=false;button.textContent='Retry the replay'}}
  }
  function saveButton(){
   const button=el('button',{class:'secondary',type:'button'},state.replay?.receipt_id?'Open saved receipt':'Save to workspace');
@@ -300,8 +334,8 @@ function proposer(){
    if(state.replay?.receipt_id){location.href='/#ladder/'+state.replay.receipt_id;return}
    button.disabled=true;button.textContent='Saving…';
    try{
-    const saved=await post('/api/ladder/receipts',{spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});
-    location.href='/#ladder/'+saved.id;
+    const revision=inputRevision,operation=++workflowRevision;const saved=await post('/api/ladder/receipts',{spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});
+    if(revision===inputRevision&&operation===workflowRevision)location.href='/#ladder/'+saved.id;
    }catch(e){fail(e.message);button.disabled=false;button.textContent='Save to workspace'}
   });return button;
  }

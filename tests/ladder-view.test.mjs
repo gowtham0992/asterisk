@@ -111,3 +111,50 @@ test('builder CSV parsing preserves quoted headers, commas, newlines and identif
  assert.throws(()=>tableRows('x.csv','id,id\na,b\n'));
  assert.throws(()=>tableRows('x.csv','id,split\n"unclosed,test'));
 });
+
+test('lookup bindings retain the derivation shown in the preview',async()=>{
+ const {buildSpec}=await import('../static/ladder-view.mjs');
+ const spec=buildSpec({claim:'No test donor is in training.',unitName:'donor',
+ sources:[{file:'split.csv',sample:{column:'image'},partition:{column:'split',map:{train:'train',test:'test'}}}],
+ unit:{column:'image',basename:true,field:{separator:'_',from:2},characters:{from:1,to:3},lookup:{file:'mapping.csv',key:'code',value:'donor'}},
+ citation:{file:'README.md',start:1,end:2}});
+ assert.deepEqual(spec.levels[1].expression.lookup.on,{column:'image',basename:true,field:{separator:'_',from:2},characters:{from:1,to:3}});
+});
+
+test('observation levels use each source own sample column',async()=>{
+ const {buildSpec}=await import('../static/ladder-view.mjs');
+ const spec=buildSpec({claim:'No test donor is in training.',unitName:'donor',
+ sources:[{file:'train.csv',sample:{column:'scan'},partition:{value:'train'}},{file:'test.csv',sample:{column:'image'},partition:{value:'test'}}],
+ unit:{column:'donor'},citation:{file:'README.md',start:1,end:2}});
+ assert.equal(spec.levels[0].kind,'observation');
+ assert.deepEqual(spec.levels[0].by_source,{'test.csv':{column:'image'}});
+});
+
+test('duplicate chosen filenames are rejected rather than silently choosing the last',()=>{
+ const spec={sources:[{file:'split.csv'}],levels:[],citations:[]};
+ assert.deepEqual(matchFiles(spec,[{name:'split.csv'},{name:'split.csv'}]).ambiguous,['split.csv']);
+});
+
+test('file selections reject duplicates and total size before reading any file',async()=>{
+ const {readSelectedFiles}=await import('../static/ladder-view.mjs');let reads=0;
+ const file=(name,size=1)=>({name,size,text:async()=>{reads++;return name}});
+ await assert.rejects(readSelectedFiles([file('x.csv'),file('x.csv')]),/Two files/);
+ await assert.rejects(readSelectedFiles([file('x.csv',9000000),file('y.csv',9000000)]),/16 MB/);
+ assert.equal(reads,0);
+ assert.deepEqual(await readSelectedFiles([file('x.csv'),file('README.md')]),{'x.csv':'x.csv','README.md':'README.md'});
+ await assert.rejects(readSelectedFiles([{name:'x.csv',size:1,text:async()=>{throw Error('read failed')}}]),/read failed/);
+});
+
+test('partition review supports arbitrary column names, exact labels and all rows',async()=>{
+ const {partitionLabels}=await import('../static/ladder-view.mjs');
+ assert.deepEqual(partitionLabels([{arm:' A '},{arm:'A'},{arm:' A '}],'arm'),[{raw:' A ',count:2},{raw:'A',count:1}]);
+ assert.throws(()=>partitionLabels([{}],'arm'),/missing/);
+ assert.throws(()=>partitionLabels(Array.from({length:13},(_,i)=>({arm:i})),'arm'),/12 partition labels/);
+});
+
+test('identifier previews count Unicode characters like the Python engine',async()=>{
+ const {deriveValue}=await import('../static/ladder-view.mjs');
+ assert.equal(deriveValue('🧪AB-01',{prefix:3}),'🧪AB');
+ assert.equal(deriveValue('🧪AB-01',{characters:{from:2,to:3}}),'AB');
+ assert.equal(deriveValue('🧪A',{characters:{from:1,to:3}}),null);
+});

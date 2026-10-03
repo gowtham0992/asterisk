@@ -18,7 +18,11 @@ The hosted application runs on AWS with HTTPS and preview authentication. GitHub
 - Zero-overlap rows say no shared values. Near-unique IDs and case/whitespace-folded overlap carry warnings without changing the exact matching rule.
 - Manual setup is available before any model call. Citation selection is explicit. A fictional subject-disjoint example exercises pending confirmation, confirmation, save and export.
 
-These are engineering fixes, not new held-out accuracy or user-benefit evidence. The clean packaged release passed 590 Python tests (9 scientific-trace skips) and 167 JavaScript tests. The final 434-file manifest was verified again as the hosted service user.
+These are engineering fixes, not new held-out accuracy or user-benefit evidence. The clean packaged release passed 590 Python tests (9 scientific-trace skips) and 173 JavaScript tests. The final 434-file manifest was verified again as the hosted service user.
+
+## Recovery fixes, 2 October
+
+The guided builder preserves transformations before lookup, supports different observation column names across sources, exposes any partition column with explicit assignment of unknown labels, and displays numbered documentation before citation selection. Duplicate filenames and oversized total selections are refused before file reads; input and workflow revisions discard obsolete responses. Unicode previews count code points consistently with Python. These changes were verified with failing regression tests, the full suite, a JavaScript-to-Python measurement, and a scratch browser journey. See [the recovery record](submission/recovery-fixes-2026-10-02.md). They do not change the retained model accuracy scores.
 
 ## Reliability and evidence limits
 

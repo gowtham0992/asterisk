@@ -55,11 +55,14 @@ export function referencedFiles(spec){
 
 // Match chosen files to the names a spec expects; a spec may name "dir/file.csv" and the person picks "file.csv".
 export function matchFiles(spec,picked){
- const byName=new Map(picked.map(f=>[f.name,f]));
+ const byName=new Map(),duplicates=new Set();
+ for(const file of picked){if(byName.has(file.name))duplicates.add(file.name);else byName.set(file.name,file)}
  const files=[],missing=[],ambiguous=[];
  for(const name of referencedFiles(spec)){
   const base=name.split('/').pop();
-  const hit=byName.get(name)||byName.get(base);
+  const selectedName=byName.has(name)?name:base;
+  if(duplicates.has(selectedName)){ambiguous.push(name);continue}
+  const hit=byName.get(selectedName);
   if(!hit){missing.push(name);continue}
   files.push({name,file:hit});
  }
@@ -130,8 +133,9 @@ export function deriveValue(value,{basename=false,field=null,characters=null,pre
  let text=String(value);
  if(basename)text=text.slice(text.lastIndexOf('/')+1);
  if(field&&field.separator){const from=Number(field.from)||1,to=Number(field.to)||from,parts=text.split(field.separator);if(parts.length<to||to<from)return null;text=parts.slice(from-1,to).join(field.separator)}
- if(characters&&Number(characters.from)){const from=Number(characters.from),to=Number(characters.to)||from;if(text.length<to||to<from)return null;text=text.slice(from-1,to)}
- else if(prefix){if(text.length<prefix)return null;text=text.slice(0,prefix)}
+ const chars=Array.from(text);
+ if(characters&&Number(characters.from)){const from=Number(characters.from),to=Number(characters.to)||from;if(chars.length<to||to<from)return null;text=chars.slice(from-1,to).join('')}
+ else if(prefix){if(chars.length<prefix)return null;text=chars.slice(0,prefix).join('')}
  return text;
 }
 
@@ -141,15 +145,16 @@ export const splitColumn=columns=>columns.find(c=>/(^|_)(split|fold|partition|su
 
 export function buildSpec({claim,unitName,sources,unit,citation}){
  const name=(unitName||'').trim().toLowerCase().replace(/[^a-z0-9_]+/g,'_').replace(/^_+|_+$/g,'')||'unit';
- const expression=unit.lookup?{lookup:{file:unit.lookup.file,format:formatOf(unit.lookup.file),key_column:unit.lookup.key,value_column:unit.lookup.value,on:{column:unit.column}}}
-  :{column:unit.column,...(unit.basename?{basename:true}:{}),
+ const derived={column:unit.column,...(unit.basename?{basename:true}:{}),
    ...(unit.field&&unit.field.separator?{field:{separator:unit.field.separator,from:Number(unit.field.from)||1,...(Number(unit.field.to)>(Number(unit.field.from)||1)?{to:Number(unit.field.to)}:{})}}:{}),
    ...(unit.characters&&Number(unit.characters.from)?{characters:{from:Number(unit.characters.from),to:Number(unit.characters.to)||Number(unit.characters.from)}}:unit.prefix?{prefix:Number(unit.prefix)}:{})};
- const sampleColumn=sources[0].sample.column;
- const levels=[];
- if(sampleColumn&&sources.every(s=>s.sample.column===sampleColumn)&&name!=='record')levels.push({name:name==='observation'?'sample':'observation',kind:'observation',expression:{column:sampleColumn}});
+ const expression=unit.lookup?{lookup:{file:unit.lookup.file,format:formatOf(unit.lookup.file),key_column:unit.lookup.key,value_column:unit.lookup.value,on:derived}}:derived;
+ if(!sources.length)throw Error('Choose at least one table of observations.');
+ const sample=sources[0].sample;
+ const overrides=Object.fromEntries(sources.slice(1).filter(s=>JSON.stringify(s.sample)!==JSON.stringify(sample)).map(s=>[s.file,s.sample]));
+ const levels=[{name:name==='observation'?'sample':'observation',kind:'observation',expression:sample,...(Object.keys(overrides).length?{by_source:overrides}:{})}];
  levels.push({name,kind:'unit',expression,...(unit.meaning?{meaning:unit.meaning.slice(0,400)}:{})});
- if(levels.length<2)levels.unshift({name:'row',kind:'observation',expression:{column:sampleColumn}});
+
  return {schema:'asterisk-ladder/1',claim:{text:claim,level:name},
   sources:sources.map(s=>({file:s.file,format:formatOf(s.file),sample:s.sample,partition:s.partition})),
   levels,citations:[{file:citation.file,start_line:Number(citation.start),end_line:Number(citation.end)}]};
@@ -157,3 +162,21 @@ export function buildSpec({claim,unitName,sources,unit,citation}){
 
 // Number of lines a citation can reach: a final newline does not start another line.
 export const lineCount=text=>{const t=String(text||'');return t?t.replace(/\n$/,'').split('\n').length:0};
+
+// Validate the whole selection before reading, and return it atomically.
+export async function readSelectedFiles(files){
+ const names=new Set();let bytes=0;
+ for(const file of files){
+  if(names.has(file.name))throw Error(`Two files are named ${file.name}. Rename one before choosing them.`);
+  names.add(file.name);bytes+=file.size;
+  if(file.size>16_000_000||bytes>16_000_000)throw Error('Choose at most 16 MB of files in total.');
+ }
+ return Object.fromEntries(await Promise.all(files.map(async file=>[file.name,await file.text()])));
+}
+
+export function partitionLabels(rows,column){
+ const counts=new Map();
+ for(const row of rows){if(!(column in row))throw Error(`Partition column "${column}" is missing from a row.`);const raw=String(row[column]);counts.set(raw,(counts.get(raw)||0)+1)}
+ if(counts.size>12)throw Error('The guided builder supports at most 12 partition labels. Choose another partition column or use an explicit JSON specification.');
+ return [...counts].map(([raw,count])=>({raw,count}));
+}
