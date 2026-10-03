@@ -46,17 +46,15 @@ marks the level your claim needs.
   numbered documentation lines and one validator-guided repair turn. Nemotron 3 Ultra is available as an option.
 - **Nebius Sandboxes** (`python:3.12-slim`) replay the measurement. Inputs are uploaded gzip-compressed, which fits
   multi-megabyte benchmark metadata.
-- **Tests:** the clean source package passed 590 Python tests (9 scientific-trace skips) and 167 JavaScript tests. Hosted checks covered confirmation, save/export, secure sessions, CSRF, ownership isolation and restart persistence. The final deployed 434-file manifest matches the source archive.
+- **Tests:** the clean source package passed 590 Python tests (9 scientific-trace skips) and 173 JavaScript tests. Hosted checks covered confirmation, save/export, secure sessions, CSRF, ownership isolation and restart persistence. The final deployed 439-file manifest matches the source archive.
 
 ## What the recorded evaluation supports
 
 - **The protocol:** four frozen experiments with the hypotheses, thresholds and product decisions written before the
   first call.
 - **The data:** 41 cases across four fresh PhysioNet case sets, including planted leaks. These are bounded development evaluations, not evidence that the models had never encountered the public datasets during training.
-- **Safety:** with Asterisk's guards, **no model proposal produced a false "held out"**. A single-column checker
-  produced 28.
-- **The guard earned its place:** on unseen data it stopped Nemotron Super from calling a real cross-database leak
-  "held out".
+- **Recorded safety result:** no guarded run produced a false "held out" in these retained cases. A single-column comparison produced 28. This is a bounded observation, not a guarantee on new inputs.
+- **The guard earned its place:** in a retained case it stopped Nemotron Super from calling a cross-database leak "held out". The exposed cases do not establish fresh held-out performance for the current implementation.
 - **Grammar matters.** Letting proposals say "characters 2–4" or "field 1 split on _" raised Nemotron Super from 3 to 5 of
   10 on a fresh set, with no false reassurance, so it is now the default.
 - **Zero false reassurance does not mean every proposal was correct.** Nemotron Super scored 21/41 and Ultra 24/41 across the tested configurations; Claude Sonnet scored 36/41. Abstentions, invalid replies and provider failures are reported separately in the protocols and results. Super with the shipping v4 prompt still failed the set-D pass rule at 5/10. The guided definition step keeps the user involved when preparation is incomplete.
