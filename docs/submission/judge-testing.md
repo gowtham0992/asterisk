@@ -14,7 +14,7 @@ The distinction matters when a claim requires unseen patients. The finding does 
 ## Try the application
 
 1. Open the hosted workspace URL above and sign in using the separately supplied preview credentials.
-2. Select **Try a synthetic example**. This loads a fictional slide dataset and its documentation; no personal research data are required.
+2. Select **Load real benchmark** to use the installed identifier-only WSI-Bench projection, or select **Try a synthetic example**. This loads a fictional slide dataset and its documentation; no personal research data are required.
 3. Select **Preview what will be sent**. Inspect the model payload. No inference has happened yet.
 4. Send the preview to the selected Nemotron model through Nebius Token Factory. This is the live model step. It can return a proposal, require correction, or abstain.
 5. If a usable proposal appears, review every raw partition label → role mapping, counts, exclusions, derivation rule and citation, then select **Measure on server**. This runs on the application server, outside the Sandbox. The model's text is not accepted as a measurement.
@@ -28,7 +28,7 @@ If the model cannot establish an identity definition, inspect the missing inform
 
 Expand **Advanced → Measure a ladder spec you wrote yourself** and select **Load subject-disjoint example**, then **Measure on server**. This is fictional data and a supplied specification. The result should say no shared values, with confirmation pending. Review the derivation, test-label mapping and population before ticking the confirmation. Confirm and measure again, save the result, and open its readable receipt. It should identify a confirmed claim and user-supplied specification, without claiming a model call or Sandbox execution. The overlapping-subject example beside it should produce a violation.
 
-Provider limits may return 429. They preserve manual measurement and receipt access; do not repeatedly retry or create new sessions to evade them. Defaults reserve 10 calls per session and 100 globally per UTC day; proposals reserve two calls and replays one. Receipts are capped at 30 per workspace.
+Dedicated `judge` credentials use the cumulative reserve described in [judge access](judge-access-2026-10-07.md), without the preview daily caps. The UI shows remaining calls. Preview credentials still use daily limits. Provider limits may return 429. They preserve manual measurement and receipt access; do not repeatedly retry or create new sessions to evade them. Defaults reserve 10 calls per session and 100 globally per UTC day; proposals reserve two calls and replays one. Receipts are capped at 30 per workspace.
 
 ## What to assess
 

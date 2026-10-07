@@ -96,11 +96,23 @@ function sponsors(nvidia,nebius){
  return el('span',{class:'sponsor-line'},nvidia&&el('img',{src:'/static/brand/nvidia.svg',alt:'NVIDIA',width:'62',height:'18'}),nebius&&el('img',{src:'/static/brand/nebius.svg',alt:'Nebius',width:'58',height:'16'}));
 }
 
+async function providerAllowance(){
+ try{
+  await fetch('/api/session',{credentials:'same-origin'});
+  const r=await fetch('/api/ladder/allowance',{credentials:'same-origin'});if(!r.ok)return;
+  const data=await r.json();let panel=$('#provider-allowance');
+  if(!panel){panel=el('p',{id:'provider-allowance',class:'product-note',role:'status'});$('#propose-form').append(panel)}
+  panel.textContent=data.mode==='judge'?`Dedicated judge access · ${data.remaining_calls} reserved calls remain through ${data.expires?new Date(data.expires).toLocaleDateString(): 'the configured expiry'}. No daily session cap. A proposal reserves up to two calls; replay reserves one.`:
+   data.remaining_calls===null?'Local installation.':`Live allowance: ${data.remaining_calls} reserved calls remain today. Manual measurement and saved receipts do not use this allowance.`;
+ }catch{}
+}
+
 async function post(path,body){
  await fetch('/api/session',{credentials:'same-origin'});
  const response=await fetch(path,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-Asterisk-Request':'1'},body:JSON.stringify(body)});
  const data=await response.json().catch(()=>({detail:'The server did not respond. Check the connection and retry.'}));
  if(response.status===404)throw new Error('This Asterisk server was started before this step existed. Restart it, then try again.');
+ if(path==='/api/ladder/propose'||path==='/api/ladder/replay')providerAllowance();
  if(!response.ok)throw new Error(typeof data.detail==='string'?data.detail:'The request was not accepted. Check the inputs and retry.');
  return data;
 }
@@ -160,6 +172,19 @@ function proposer(){
  drop.addEventListener('drop',e=>{if(e.dataTransfer?.files?.length)useFiles([...e.dataTransfer.files])});
  claimInput.addEventListener('input',()=>{invalidate();ready()});
  model.addEventListener('change',()=>{invalidate()});
+ $('#propose-real').addEventListener('click',async()=>{
+  const operation=++selectionGeneration;const revision=inputRevision;const button=$('#propose-real');button.disabled=true;
+  try{
+   await fetch('/api/session',{credentials:'same-origin'});
+   const r=await fetch('/api/ladder/benchmark-inputs',{credentials:'same-origin'});const data=await r.json();
+   if(!r.ok)throw new Error(data.detail||'Benchmark inputs could not be loaded.');
+   if(operation!==selectionGeneration||revision!==inputRevision)return;
+   fileInput.value='';claimInput.value=data.claim;
+   await useFiles(data.files.map(f=>new File([f.content],f.name)));
+   ['train.json','test.json'].forEach(n=>state.share.add(JSON.stringify([n,'image'])));renderInventory();ready();
+   $('#propose-drop-hint').textContent=data.notice+' Source rows: '+data.provenance['train.json'].rows+' training, '+data.provenance['test.json'].rows+' evaluation. Clinical conversations and question IDs excluded.';
+  }catch(e){if(operation===selectionGeneration)fail(e.message)}finally{button.disabled=false}
+ });
  $('#propose-example').addEventListener('click',async()=>{
   try{const names=['README.md','train.json','test.json'];
    const files=await Promise.all(names.map(async n=>{const r=await fetch('/static/ladder-example-propose/'+n);if(!r.ok)throw new Error();return new File([await r.text()],n)}));
@@ -330,7 +355,7 @@ function proposer(){
    panels.replay.replaceChildren(el('div',{class:'panel-head'},kicker('Inspect · Replayed in a Nebius Sandbox'),sponsors(false,true)),el('h3',{},'Matched the Asterisk server measurement exactly.'),
     el('div',{class:'chain-meta'},el('span',{},p.image),el('span',{},`${Number(p.seconds).toFixed(2)} s in the Sandbox`),el('span',{},'program '+p.program_sha256.slice(0,12)+'…'),el('span',{},'result '+p.result_sha256.slice(0,12)+'…')),
     el('p',{},'Same code, same inputs, independent infrastructure. This is evidence of reproducibility, not tamper-proofing.'),
-    data.receipt_error&&el('p',{class:'check-error'},data.receipt_error),
+    ...(data.receipt_error?[el('p',{class:'check-error'},data.receipt_error)]:[]),
     el('div',{class:'chain-actions'},saveButton(),downloadButton()));
    step('replay');
   }catch(e){if(revision===inputRevision&&operation===workflowRevision){fail(e.message);button.disabled=false;button.textContent='Retry the replay'}}
@@ -399,3 +424,5 @@ heroFigure($('#hero-rungs'));checker();proposer();
 Promise.allSettled([gallery(),experiment()]).then(()=>{
  const id=location.hash.slice(1);if(['propose','benchmarks','experiment'].includes(id))document.getElementById(id)?.scrollIntoView();
 });
+
+providerAllowance();

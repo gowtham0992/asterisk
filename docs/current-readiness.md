@@ -1,6 +1,6 @@
 # Asterisk current readiness
 
-Updated 2 October 2026, Denver. **Working hosted research preview; release-review hardening deployed and checked on 28 September. Researcher usefulness remains unmeasured.**
+Updated 7 October 2026, Denver. **Working hosted research preview; release-review hardening deployed and checked on 28 September. Researcher usefulness remains unmeasured.**
 
 ## Current product
 
@@ -18,7 +18,7 @@ The hosted application runs on AWS with HTTPS and preview authentication. GitHub
 - Zero-overlap rows say no shared values. Near-unique IDs and case/whitespace-folded overlap carry warnings without changing the exact matching rule.
 - Manual setup is available before any model call. Citation selection is explicit. A fictional subject-disjoint example exercises pending confirmation, confirmation, save and export.
 
-These are engineering fixes, not new held-out accuracy or user-benefit evidence. The clean packaged release passed 590 Python tests (9 scientific-trace skips) and 173 JavaScript tests. The final 439-file manifest was verified again as the hosted service user.
+These are engineering fixes, not new held-out accuracy or user-benefit evidence. The clean packaged release passed 597 Python tests (9 scientific-trace skips) and 173 JavaScript tests. The final 447-file manifest was verified again as the hosted service user.
 
 ## Recovery fixes, 2 October
 
@@ -28,11 +28,19 @@ The guided builder preserves transformations before lookup, supports different o
 
 The new-check screen now uses Define, Review and Inspect stages, with separate benchmark/evaluation views and preserved drafts. Results lead with the finding, and binding details remain expanded while meaning confirmation is required. The product and saved workspace share a neutral system-type design, with responsive layout and AA contrast checks. See [the design verification](submission/quiet-ui-2026-10-02.md). Model prompts and measurement rules are unchanged.
 
+## Real workflow and judge access, 7 October
+
+A real WSI-Bench identifier-only projection can now be loaded into the proposal workflow without hand-preparing files. Clinical conversations and question IDs are excluded; the cache stays outside source control. A scratch-browser live v4 Nemotron proposal recovered the patient prefix, measured 42 shared patient identifiers affecting 43 of 208 evaluation rows, matched one fresh Sandbox replay, and reopened its saved receipt. This reproduces an exposed benchmark through the product; it is not new-domain accuracy evidence.
+
+Dedicated judge credentials use an approved $25 estimated cumulative reserve through December 15, separate from preview daily caps. Remaining calls are visible, with persistent atomic reservations and legacy-route restrictions. A finite reserve is not unlimited testing; organizer confirmation of the unrestricted-access clause remains unobtained. See [judge access](submission/judge-access-2026-10-07.md).
+
+The human-review page supports screening, timed receipt reading, participant-owned answer download and withdrawal. Developer dry runs checked eligibility rejection and withdrawal; no human response was collected. The owner has no recruitment account yet. See [human-review collection](submission/human-review-launch-2026-10-07.md).
+
 ## Reliability and evidence limits
 
 Across retained configurations, Super scored 21/41, Ultra 24/41 and Sonnet 36/41. The shipping v4 Super prompt scored 5/10 on set D and failed its gate. Prompts differ across sets; guards were developed using exposed results, reference answers were developer-authored, and correction opportunities differ by model. Zero recorded false reassurance is not a guarantee on new files. See evaluation/ladder-proposal-v1 through v5.
 
-Earlier extraction and routing failures remain failures. Historical real-data checks include the DermaMNIST and frog trials, documented in [the benchmark audit](validation/product-finish-audit-2026-09-26.md) and [frog report](../research/anuran-user-trial-2026-09-26/REPORT.md). They used earlier product paths and do not validate the latest ladder model on fresh datasets. The 28 September hosted fictional smoke used one real Nemotron Super proposal (3,162 tokens) and one matching Sandbox replay, completing in 10.29 seconds. The saved and exported receipt retained the owner-scoped proposal origin and unedited binding. This is a deployment check, not an accuracy study.
+An October 7 explicit-line-number v5 candidate failed its fixed development gate (3/10 versus matched v4 4/10); both passed all six original synthetic tasks/refusal controls. It was rejected, and the default remains v4. See [the retained negative result](submission/preparation-development-2026-10-07.md). Earlier extraction and routing failures remain failures. Historical real-data checks include the DermaMNIST and frog trials, documented in [the benchmark audit](validation/product-finish-audit-2026-09-26.md) and [frog report](../research/anuran-user-trial-2026-09-26/REPORT.md). They used earlier product paths and do not validate the latest ladder model on fresh datasets. The 28 September hosted fictional smoke used one real Nemotron Super proposal (3,162 tokens) and one matching Sandbox replay, completing in 10.29 seconds. The saved and exported receipt retained the owner-scoped proposal origin and unedited binding. This is a deployment check, not an accuracy study.
 
 ## Remaining release work
 

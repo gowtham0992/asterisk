@@ -63,6 +63,11 @@ EXECUTOR = 'local'
 async def boundaries(request: Request, call_next):
     if request.url.path != '/healthz' and not RELEASE.authorized(request.headers.get('authorization','')):
         return Response(status_code=401, headers={'WWW-Authenticate':'Basic realm="Asterisk research preview", charset="UTF-8"','Cache-Control':'no-store'})
+    request.state.judge = RELEASE.is_judge(request.headers.get('authorization',''))
+    if request.state.judge and request.url.path.startswith('/api/') and not (
+            request.url.path == '/api/session' or request.url.path == '/api/ladder'
+            or request.url.path.startswith('/api/ladder/')):
+        return JSONResponse({'detail':'Judge access is limited to the independence ladder workflow.'},status_code=403)
     legacy_path = request.url.path == '/api/audits' or request.url.path.startswith('/api/audits/')
     if os.getenv('ASTERISK_LEGACY_AUDITS') != '1' and ((legacy_path and request.method not in ('GET','HEAD')) or request.url.path.startswith('/api/examples/')):
         return JSONResponse({'detail':'Legacy audit creation and execution are disabled. Saved records remain read-only.'},status_code=404,headers={'Cache-Control':'no-store'})
@@ -166,7 +171,7 @@ def session(request: Request):
         if not db.execute('SELECT id FROM sessions WHERE id=?', (token,)).fetchone():
             token = secrets.token_urlsafe(32)
             db.execute('INSERT INTO sessions VALUES (?)', (token,))
-    response = JSONResponse({'model':MODEL if os.getenv('ASTERISK_LEGACY_AUDITS')=='1' else 'nvidia/nemotron-3-super-120b-a12b', 'legacy_audits_enabled':os.getenv('ASTERISK_LEGACY_AUDITS')=='1', 'configured':bool(os.getenv('NEBIUS_API_KEY')), 'mode':'local', 'executor':EXECUTOR, 'sandbox_available':bool(os.getenv('NEBIUS_API_KEY') and (os.getenv('NEBIUS_PROJECT_ID') or os.getenv('NEBIUS_AI_PROJECT')))})
+    response = JSONResponse({'model':MODEL if os.getenv('ASTERISK_LEGACY_AUDITS')=='1' else 'nvidia/nemotron-3-super-120b-a12b', 'legacy_audits_enabled':os.getenv('ASTERISK_LEGACY_AUDITS')=='1', 'judge_access':getattr(request.state,'judge',False), 'configured':bool(os.getenv('NEBIUS_API_KEY')), 'mode':'local', 'executor':EXECUTOR, 'sandbox_available':bool(os.getenv('NEBIUS_API_KEY') and (os.getenv('NEBIUS_PROJECT_ID') or os.getenv('NEBIUS_AI_PROJECT')))})
     response.set_cookie('asterisk_session', token, httponly=True, samesite='strict', secure=RELEASE.public, max_age=604800)
     return response
 

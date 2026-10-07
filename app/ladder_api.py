@@ -5,6 +5,7 @@ import json
 import os
 import time
 import sqlite3
+from pathlib import Path
 from contextlib import nullcontext
 from .ladder_limits import Limits
 
@@ -88,6 +89,27 @@ def register(app, owner, completion=token_factory, sandbox=replay, connect=None)
     if connect is not None:
         from .ladder_receipts import register as register_receipts
         store = register_receipts(app, connect, owner, LadderRequest, _files)
+    @app.get('/api/ladder/benchmark-inputs')
+    def benchmark_inputs(request: Request):
+        owner(request)
+        folder=Path(os.getenv('ASTERISK_BENCHMARK_DIR', str(Path(__file__).resolve().parents[1]/'.data/benchmarks')))/'wsibench'
+        try:
+            provenance=json.loads((folder/'provenance.json').read_text())
+            files={n:(folder/n).read_text() for n in ['train.json','test.json','README.md']}
+            for name in ['train.json','test.json']:
+                if hashlib.sha256(files[name].encode()).hexdigest()!=provenance[name]['projection_sha256']:
+                    raise ValueError('Projected inputs differ from the installed manifest')
+        except (OSError, ValueError, KeyError):
+            raise HTTPException(503, 'The real benchmark projection is not installed or its hashes differ. Use your own files or the synthetic example.') from None
+        return {'claim':'No report-task evaluation patient appears in the report-task training data.',
+                'files':[{'name':n,'content':v} for n,v in files.items()], 'provenance':provenance,
+                'notice':'Real public benchmark, projected to image identifiers only. No model call or measurement has happened. The source authors’ intended claim is not established here.'}
+
+    @app.get('/api/ladder/allowance')
+    def allowance(request: Request):
+        who = owner(request)
+        return limits.status(who, getattr(request.state, 'judge', False)) if limits else {'mode':'local','remaining_calls':None,'active':True}
+
     @app.post('/api/ladder')
     def ladder(body: LadderRequest, request: Request):
         owner(request)
@@ -121,7 +143,7 @@ def register(app, owner, completion=token_factory, sandbox=replay, connect=None)
         key = os.getenv('NEBIUS_API_KEY')
         if not key:
             raise HTTPException(503, 'Add NEBIUS_API_KEY to the local .env file and restart Asterisk.')
-        reservation = limits.operation(who, 2) if limits else nullcontext()
+        reservation = limits.operation(who, 2, judge=getattr(request.state, 'judge', False)) if limits else nullcontext()
         complete, usage = completion(body.model, key)
         start = time.monotonic()
         try:
@@ -156,7 +178,7 @@ def register(app, owner, completion=token_factory, sandbox=replay, connect=None)
             store.binding_origin(who, body.proposal_id, body.spec, _files(body.files))
         project = os.getenv('NEBIUS_PROJECT_ID') or os.getenv('NEBIUS_AI_PROJECT')
         try:
-            with limits.operation(who, 1) if limits else nullcontext():
+            with limits.operation(who, 1, judge=getattr(request.state, 'judge', False)) if limits else nullcontext():
                 result, provenance = sandbox(body.spec, _files(body.files), body.confirmed, os.getenv('NEBIUS_API_KEY'), project)
         except LadderError as exc:
             raise HTTPException(422, str(exc)) from None
