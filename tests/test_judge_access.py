@@ -16,6 +16,7 @@ def test_judge_auth_requires_its_own_configured_secret(monkeypatch):
     monkeypatch.setenv('ASTERISK_PUBLIC', '1')
     monkeypatch.setenv('ASTERISK_PREVIEW_PASSWORD', 'r'*32)
     monkeypatch.setenv('ASTERISK_JUDGE_PASSWORD', 'j'*32)
+    monkeypatch.setenv('ASTERISK_LADDER_JUDGE_UNTIL', (datetime.now(timezone.utc)+timedelta(days=30)).isoformat())
     settings = ReleaseSettings.from_env()
     assert settings.authorized(header('judge', 'j'*32))
     assert settings.is_judge(header('judge', 'j'*32))
@@ -49,7 +50,7 @@ def test_expired_judge_reserve_cannot_call_provider(tmp_path, monkeypatch):
 
 def test_judge_cannot_use_legacy_provider_routes_or_spoof_role(client, monkeypatch):
     from app import main
-    monkeypatch.setattr(main, 'RELEASE', ReleaseSettings(True, ('testserver',), 'r'*32, 'j'*32))
+    monkeypatch.setattr(main, 'RELEASE', ReleaseSettings(True, ('testserver',), 'r'*32, 'j'*32, datetime.now(timezone.utc)+timedelta(days=30)))
     client.base_url='https://testserver'
     assert client.get('/api/session', auth=('judge','j'*32)).status_code == 200
     assert client.get('/api/ladder/allowance', auth=('judge','j'*32)).status_code == 200
@@ -75,3 +76,9 @@ def test_benchmark_projection_is_owner_gated_and_rejects_changed_bytes(client, t
     assert all(set(json.loads(f['content'])[0])=={'image'} for f in r.json()['files'] if f['name'].endswith('.json'))
     (folder/'train.json').write_text('changed')
     assert client.get('/api/ladder/benchmark-inputs').status_code==503
+
+
+def test_expired_judge_login_cannot_read_receipts():
+    settings=ReleaseSettings(True, ('testserver',), 'r'*32, 'j'*32, datetime.now(timezone.utc)-timedelta(seconds=1))
+    assert not settings.authorized(header('judge','j'*32))
+    assert settings.authorized(header('reviewer','r'*32))

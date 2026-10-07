@@ -3,6 +3,7 @@ import base64
 import os
 import secrets
 from dataclasses import dataclass
+from datetime import datetime, timezone
 
 @dataclass(frozen=True)
 class ReleaseSettings:
@@ -10,6 +11,7 @@ class ReleaseSettings:
     hosts: tuple[str, ...]
     password: str
     judge_password: str = ''
+    judge_until: datetime | None = None
 
     @classmethod
     def from_env(cls):
@@ -21,7 +23,11 @@ class ReleaseSettings:
         judge_password=os.getenv('ASTERISK_JUDGE_PASSWORD','')
         if judge_password and (len(judge_password)<24 or judge_password==password):
             raise RuntimeError('Judge access needs its own password of at least 24 characters.')
-        return cls(public,hosts,password,judge_password)
+        raw_until=os.getenv('ASTERISK_LADDER_JUDGE_UNTIL','')
+        judge_until=datetime.fromisoformat(raw_until) if raw_until else None
+        if judge_password and (judge_until is None or judge_until.tzinfo is None):
+            raise RuntimeError('Judge credentials require a timezone-aware expiry.')
+        return cls(public,hosts,password,judge_password,judge_until)
 
     def _credentials(self,header):
         try:
@@ -33,7 +39,7 @@ class ReleaseSettings:
 
     def is_judge(self,header):
         credentials=self._credentials(header)
-        return bool(self.judge_password and credentials and credentials[0]=='judge'
+        return bool(self.judge_password and self.judge_until and datetime.now(timezone.utc)<self.judge_until and credentials and credentials[0]=='judge'
                     and secrets.compare_digest(credentials[1].encode(),self.judge_password.encode()))
 
     def authorized(self,header):
