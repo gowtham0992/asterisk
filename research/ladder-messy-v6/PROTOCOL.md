@@ -1,0 +1,19 @@
+# Fresh messy-file comparison, 7 October 2026
+
+Compare shipping v4 to the unchanged bounds-only v6 candidate. Two unseen dataset layouts and four original messy-documentation fixtures; eight cases attempted twice per arm. Neither model sees reference specifications or expected measurements. Packet and exact requests are frozen before the corrected run. Authors also wrote the implementation, so this is not independently authored acceptance. No human participants or general-agent baseline.
+
+UCI Multiple Features: preserve original file alignment and row counts, project to feature-file plus original row number. Authored cross-view and group-respecting splits test original-character independence, not writer independence or a published benchmark flaw. A writer-identity question is an abstention control. UCI Libras Movement: project original row count to sample IDs and an authored split, without coordinates, class values or signer identity. The signer question must abstain. Both datasets are CC BY 4.0; credit R. Duin and Dias, Peres and Bscaro. Original fictional microscopy cases scatter identity, join and partition definitions across documents, place definitions late among blank maintenance-log lines, distinguish old column-name interpretations, or explicitly deny the identity mapping.
+
+Promotion rule, before inference: v6 must score at least 14/16 attempts and at least two more than v4, get all abstention controls correct, produce no wrong pending clear, have no paired regression where v4 was correct, and incur no larger total of rejected-call corrections plus structural citation-review flags. Otherwise keep v4. No retrying failed attempts to pass. Structural flags are not observed human corrections, semantic proof, practitioner time or demand.
+
+Correctness requires the same subject grouping, sample-to-partition assignment and finding status as the reference. A declaration of missing mapping requires abstention, not merely an uncertain headline. Equivalent valid citation ranges do not change correctness. Paired regressions and the all-abstain failure are tested before the corrected run.
+
+At most 32 proposals and 64 provider calls, one validator repair each; temperature zero, existing Nemotron 3 Super integration and bounds unchanged. Two workers, bounded calls, no SDK automatic retries. Complete messages and raw replies are retained even when the final parse fails. Secrets are loaded by the existing application loader and not retained. Only supplied documentation, column profiles and explicitly selected pseudonymous ID examples leave locally. No feature vectors, movement coordinates, images, personal fields, Sandbox uploads or judge reserve use. Separate $2 conservative estimated token cap at $0.50/M input and $1.50/M output; not a provider invoice.
+
+An initial invalid packet accidentally contained five cases, while its gate required sixteen attempts per arm. A self-test exposed the indentation defect, but inference had already been started. The batch was interrupted and retained under invalid-pilot; no partial result is scored or used for promotion. Its settled and uncertain reservations were carried into the corrected run's $2 ledger. The case-count assertion and all three scorer self-tests passed before any corrected-run call. The five overlapping cases are disclosed; this is not an entirely unexposed test. Prompts, references for overlapping cases and promotion criteria were not tuned to the pilot responses. Raw interrupted responses may be missing, and their charge reservations are retained conservatively.
+
+Primary sources:
+https://archive.ics.uci.edu/dataset/72/multiple+features
+https://archive.ics.uci.edu/dataset/181/libras+movement
+
+Private packet, source archive hashes, row-count inventory, replies and ledger: .data/ladder-messy-v6-20261007. Public source releases include only this protocol, research code and aggregate report. The shipping app is unchanged until a decision.

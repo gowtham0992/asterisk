@@ -70,6 +70,8 @@ for folder in (ROOT/'evaluation').glob('ladder-proposal-v*'):
 # Reproducible experiment code and prose only, never private packets or replies.
 DOCS += ['research/ladder-line-bounds-v6/'+name for name in ('variant.py','study.py','score.py','PROTOCOL.md')]
 
+DOCS += ['research/ladder-messy-v6/'+name for name in ('study.py','PROTOCOL.md')]
+
 def release_files(root):
     paths=[root/n for n in TOP+DOCS if (root/n).is_file()]
     for tree in TREES:
