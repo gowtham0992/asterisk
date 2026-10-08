@@ -72,6 +72,9 @@ DOCS += ['research/ladder-line-bounds-v6/'+name for name in ('variant.py','study
 
 DOCS += ['research/ladder-messy-v6/'+name for name in ('study.py','PROTOCOL.md')]
 
+# Fresh real-data test utilities only; never its downloaded metadata or records.
+DOCS += ['research/ucf101-researcher-trial/'+name for name in ('reference.py','assess.py','PROTOCOL.md','test_reference.py')]
+
 def release_files(root):
     paths=[root/n for n in TOP+DOCS if (root/n).is_file()]
     for tree in TREES:
