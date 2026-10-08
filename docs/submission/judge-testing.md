@@ -2,7 +2,7 @@
 
 Asterisk checks whether a train/test split separates the identity level required by a research claim. The model proposes how to recover identities from documentation; application code computes overlap and retains source-row evidence.
 
-**Hosted workspace:** https://asterisk.gowthamsarveswaran.com/static/ladder.html#propose (preview login required). Supply reviewer credentials separately in Devpost’s testing instructions, never in source. Repository: https://github.com/gowtham0992/asterisk. The owner is keeping it private until closer to submission. All published source is on `main`; the landing page is in `site/`. GitHub Pages is unavailable while the repository is private under the current plan. Use the hosted workspace directly.
+**Hosted workspace:** https://asterisk.gowthamsarveswaran.com/static/ladder.html#propose (dedicated judge login required). Supply judge credentials separately in Devpost’s testing instructions, never in source. Repository: https://github.com/gowtham0992/asterisk. The owner is keeping it private until closer to submission. All published source is on `main`; the landing page is in `site/`. GitHub Pages is unavailable while the repository is private under the current plan. Use the hosted workspace directly.
 
 **Release status, 28 September:** review hardening is deployed; the packaged source hashes match the installed runtime. The hosted fictional model → measurement → Sandbox replay → saved receipt/export smoke passed. The public repository and video are still pending.
 ## First look: a real finding without a model call
@@ -13,7 +13,7 @@ The distinction matters when a claim requires unseen patients. The finding does 
 
 ## Try the application
 
-1. Open the hosted workspace URL above and sign in using the separately supplied preview credentials.
+1. Open the hosted workspace URL above and sign in using the separately supplied judge credentials.
 2. Select **Load real benchmark** to use the installed identifier-only WSI-Bench projection, or select **Try a synthetic example**. This loads a fictional slide dataset and its documentation; no personal research data are required.
 3. Select **Preview what will be sent**. Inspect the model payload. No inference has happened yet.
 4. Send the preview to the selected Nemotron model through Nebius Token Factory. This is the live model step. It can return a proposal, require correction, or abstain.
