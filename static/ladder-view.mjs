@@ -250,19 +250,29 @@ export function bindingQuestions(spec){
 
 // A preview cannot choose among conflicting lookup rows; only the server measures.
 export function bindingPreview(sources,unit,rows){
- let lookup=null;
+ let lookup=null;const conflicts=new Set();
  if(unit.lookup){
   lookup=new Map();
   for(const row of rows[unit.lookup.file]||[]){
    const key=row[unit.lookup.key],value=row[unit.lookup.value];
    if(key===undefined||key===null||key==='')continue;
    const k=String(key),v=value===undefined||value===null||value===''?null:String(value);
-   lookup.set(k,lookup.has(k)&&lookup.get(k)!==v?null:v);
+   if(lookup.has(k)&&lookup.get(k)!==v)conflicts.add(k);
+   lookup.set(k,conflicts.has(k)?null:v);
   }
  }
  return sources.map(file=>{
-  const values=(rows[file]||[]).map(row=>{const raw=row[unit.column],derived=deriveValue(raw,unit);return {raw:String(raw??''),value:lookup?(lookup.get(derived)??null):derived}});
-  return {file,rows:values.length,distinct:new Set(values.map(r=>r.value).filter(v=>v!==null)).size,unmapped:values.filter(r=>r.value===null).length,examples:values.slice(0,6)};
+  const failures=[];
+  const values=(rows[file]||[]).map((row,i)=>{
+   const raw=row[unit.column],derived=deriveValue(raw,unit),value=lookup?(lookup.get(derived)??null):derived;
+   if(value===null&&failures.length<3){
+    const reason=derived===null?(raw===undefined||raw===null||raw===''?'Source identifier is missing.':'Identifier cannot be extracted with this rule.'):
+     conflicts.has(derived)?'Mapping key has conflicting identity values.':lookup&&!lookup.has(derived)?'No mapping row matches this extracted key.':'Mapped identity is empty.';
+    failures.push({row:i+1,raw:String(raw??''),key:derived,reason});
+   }
+   return {raw:String(raw??''),value};
+  });
+  return {file,rows:values.length,distinct:new Set(values.map(r=>r.value).filter(v=>v!==null)).size,unmapped:values.filter(r=>r.value===null).length,examples:values.slice(0,6),failures};
  });
 }
 

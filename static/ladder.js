@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview,validateBuilderUnit} from './ladder-view.mjs?v=correction-validation-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview,validateBuilderUnit} from './ladder-view.mjs?v=mapping-diagnostics-1';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,builderField,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=correction-validation-1';
+import {el,kicker,builderField,renderLadder,renderReviewContext,renderBindingQuestions,renderBindingFailures} from './ladder-render.mjs?v=mapping-diagnostics-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -353,7 +353,7 @@ function proposer(){
    preview.replaceChildren(el('h3',{},'Preview the link from each row to its subject'),
     el('p',{},'Local examples only. Conflicting or missing lookup values remain unmapped; server validation and measurement decide the result.'),
     ...previews.map(p=>el('section',{},el('p',{},`${p.file}: ${p.distinct.toLocaleString('en-US')} distinct ${unitName.value||'unit'} values across ${p.rows.toLocaleString('en-US')} rows; ${p.unmapped.toLocaleString('en-US')} unmapped.`+(p.distinct===p.rows&&p.rows?' Each row in this file has a different identity. Check that these values identify the subject, rather than just the sample.':'')),
-     el('table',{class:'builder-table'},el('tr',{},el('th',{},unitCol.value),el('th',{},unitName.value||'unit')),p.examples.map(r=>el('tr',{},el('td',{},r.raw),el('td',{},r.value??'— unmapped —')))))));
+     el('table',{class:'builder-table'},el('tr',{},el('th',{},unitCol.value),el('th',{},unitName.value||'unit')),p.examples.map(r=>el('tr',{},el('td',{},r.raw),el('td',{},r.value??'— unmapped —')))),renderBindingFailures(p))));
    }catch(e){
     use.disabled=true;correctionError.hidden=false;correctionError.textContent=e.message;
     preview.replaceChildren(el('h3',{},'Preview paused'),el('p',{},'Correct the extraction settings above. No identity values are shown for an invalid rule.'));

@@ -76,3 +76,17 @@ test('each correction control has its own precise name, independent of help text
  const literal=builderField('<script>file.csv</script>',new Node('select'));
  assert.equal(literal.children.some(n=>n.tag==='script'),false);
 });
+
+test('review displays late unmapped rows and reasons as literal text rather than hiding them behind good samples',async()=>{
+ const {renderBindingSamples}=await import('../static/ladder-render.mjs');
+ const p={available:true,level:'subject',files:[{file:'rows.csv',rows:10,unmapped:4,examples:[{raw:'good',value:'s1'}],failures:[{row:7,raw:'<script>late</script>',key:'k7',reason:'Mapping key has conflicting identity values.'}]}]};
+ const node=renderBindingSamples(p);
+ assert.match(node.textContent,/10 source rows · 4 unmapped/);
+ assert.match(node.textContent,/Inspect unmapped rows/);
+ assert.match(node.textContent,/4 unmapped across this entire source; first 1 shown/);
+ assert.match(node.textContent,/excluding a CSV header/);
+ assert.match(node.textContent,/conflicting identity values/);
+ const all=n=>[n,...n.children.flatMap(all)];
+ assert.equal(all(node).some(n=>n.tag==='script'),false);
+ assert.match(node.textContent,/<script>late<\/script>/);
+});

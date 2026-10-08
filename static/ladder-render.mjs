@@ -1,5 +1,5 @@
 import {plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=correction-validation-1';
+import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=mapping-diagnostics-1';
 // Every value from a ladder or a file enters the DOM through textContent, never parsed markup.
 function el(tag,attrs={},...children){
  const node=document.createElement(tag);
@@ -55,14 +55,27 @@ function renderBindingQuestions(spec){
   el('p',{class:'check-hint'},'These are recorded rules, not verified scientific meanings. Correct them before measuring.'));
 }
 
+function renderBindingFailures(file){
+ if(!file.failures?.length)return null;
+ return el('section',{class:'binding-failures'},el('h4',{},'Inspect unmapped rows'),
+  el('p',{},`${file.unmapped.toLocaleString('en-US')} unmapped across this entire source; first ${file.failures.length} shown. Positions are data rows, excluding a CSV header. Excluded partitions are included; this is a local diagnostic, not a verdict.`),
+  el('table',{class:'builder-table'},el('thead',{},el('tr',{},...['Data row','Source identifier','Extracted key','Why unmapped'].map(x=>el('th',{},x)))),
+   el('tbody',{},file.failures.map(r=>el('tr',{},el('td',{'data-label':'Data row'},r.row),el('td',{'data-label':'Source identifier'},r.raw||'— missing —'),el('td',{'data-label':'Extracted key'},r.key??'— unavailable —'),el('td',{'data-label':'Why unmapped'},r.reason))))));
+}
+
 function renderBindingSamples(preview){
  if(!preview)return null;
  if(!preview.available)return el('p',{class:'check-hint'},preview.reason);
+ const files=preview.files.map((p,i)=>{
+  const table=el('table',{class:'builder-table'},
+   el('thead',{},el('tr',{},el('th',{},'Source identifier'),el('th',{},preview.level))),
+   el('tbody',{},p.examples.map(r=>el('tr',{},el('td',{},r.raw),el('td',{},r.value??'— unmapped —')))));
+  return el('details',{...(i<2?{open:'true'}:{})},el('summary',{},p.file),
+   Number.isInteger(p.rows)&&el('p',{},`${p.rows.toLocaleString('en-US')} source rows · ${p.unmapped.toLocaleString('en-US')} unmapped.`),
+   table,renderBindingFailures(p));
+ });
  return el('section',{class:'builder-preview binding-samples'},el('h3',{},'See the identity this rule produces'),
-  el('p',{class:'hint'},'Local row-to-unit examples, not an independence verdict or verified meaning. First six rows of each source, including excluded rows. Check that these values retain the unit and namespace your claim needs.'),
-  ...preview.files.map((p,i)=>el('details',{...(i<2?{open:'true'}:{})},el('summary',{},p.file),
-   el('table',{class:'builder-table'},el('thead',{},el('tr',{},el('th',{},'Source identifier'),el('th',{},preview.level))),
-    el('tbody',{},p.examples.map(r=>el('tr',{},el('td',{},r.raw),el('td',{},r.value??'— unmapped —'))))))));
+  el('p',{class:'hint'},'Local row-to-unit examples, not an independence verdict or verified meaning. First six rows of each source, including excluded rows. Check that these values retain the unit and namespace your claim needs.'),...files);
 }
 
 function renderReviewContext(context,preview=null){
@@ -105,4 +118,4 @@ function renderLadder(panel,result,onConfirm,preview=null){
 }
 
 
-export {el,kicker,builderField,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions,renderBindingSamples};
+export {el,kicker,builderField,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions,renderBindingSamples,renderBindingFailures};

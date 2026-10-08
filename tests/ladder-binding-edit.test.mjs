@@ -61,3 +61,14 @@ test('valid extraction boundaries remain inclusive and keep character-range prec
  assert.deepEqual(result.levels[1].expression,{column:'window',field:{separator:'_',from:1,to:32},characters:{from:1,to:512}});
  assert.equal(buildSpec({...args,unit:{column:'window',prefix:0}}).levels[1].expression.prefix,undefined);
 });
+
+test('preview exposes mapping failures beyond its first six rows with stable data-row positions',async()=>{
+ const {bindingPreview}=await import('../static/ladder-view.mjs');
+ const rows=Array.from({length:10},(_,i)=>({id:`item${i+1}`}));
+ const mapping=rows.slice(0,6).map(r=>({key:r.id,subject:'subject'}));
+ mapping.push({key:'item7',subject:'a'},{key:'item7',subject:'b'},{key:'item9',subject:''});
+ const [p]=bindingPreview(['rows.csv'],{column:'id',lookup:{file:'map.csv',key:'key',value:'subject'}},{'rows.csv':rows,'map.csv':mapping});
+ assert.equal(p.unmapped,4);assert.equal(p.examples.length,6);assert.ok(p.examples.every(r=>r.value!==null));
+ assert.equal(p.failures.length,3);assert.equal(p.failures[0].row,7);assert.equal(p.failures[0].raw,'item7');
+ assert.match(p.failures[0].reason,/conflicting/);assert.match(p.failures[1].reason,/No mapping/);assert.match(p.failures[2].reason,/empty/);
+});
