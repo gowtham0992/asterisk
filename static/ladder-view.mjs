@@ -129,7 +129,7 @@ export const formatOf=name=>/\.json$/i.test(name)?'json':/\.csv$/i.test(name)?'c
 export function tableRows(name,text){
  const fmt=formatOf(name);
  if(fmt==='json'){try{const rows=JSON.parse(text);return Array.isArray(rows)?rows.filter(r=>r&&typeof r==='object'):[]}catch{return []}}
- if(fmt==='lines')return text.split('\n').filter(Boolean).map(value=>({value}));
+ if(fmt==='lines')return text.split(/\r\n|\n|\r/).filter(Boolean).map(value=>({value}));
  const table=inspectCSV(text);
  const decode=value=>value.startsWith('"')?value.slice(1,-1).replaceAll('""','"'):value;
  return table.rows.slice(1).map(row=>Object.fromEntries(table.headers.map((h,i)=>[h,decode(row.fields[i])])));
@@ -249,4 +249,19 @@ export function bindingPreview(sources,unit,rows){
   const values=(rows[file]||[]).map(row=>{const raw=row[unit.column],derived=deriveValue(raw,unit);return {raw:String(raw??''),value:lookup?(lookup.get(derived)??null):derived}});
   return {file,rows:values.length,distinct:new Set(values.map(r=>r.value).filter(v=>v!==null)).size,unmapped:values.filter(r=>r.value===null).length,examples:values.slice(0,6)};
  });
+}
+
+// Preview of an already reviewed, round-trippable definition. Never a verdict.
+export function reviewBindingPreview(spec,files){
+ const unavailable={available:false,reason:'This definition needs the complete rule review; a simplified row-to-unit preview is unavailable.'};
+ const seed=bindingSeed(spec);
+ if(!seed||seed.sources.some(s=>s.format!==formatOf(s.file)))return unavailable;
+ const level=spec.levels.find(l=>l.name===spec.claim.level);
+ if(level.expression.lookup&&level.expression.lookup.format!==formatOf(level.expression.lookup.file))return unavailable;
+ const names=[...new Set([...seed.sources.map(s=>s.file),...(seed.unit.lookup?[seed.unit.lookup.file]:[])])];
+ if(names.some(n=>typeof files[n]!=='string'))return {available:false,reason:'A required source file is missing from this local preview.'};
+ try{
+  const rows=Object.fromEntries(names.map(n=>[n,tableRows(n,files[n])]));
+  return {available:true,level:seed.name,files:bindingPreview(seed.sources.map(s=>s.file),seed.unit,rows)};
+ }catch{return {available:false,reason:'The source text cannot be parsed for this local preview. Review the complete definition and server validation.'}}
 }

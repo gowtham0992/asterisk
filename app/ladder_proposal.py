@@ -271,11 +271,38 @@ def request(claim, files, share_examples=(), documentation=None, version=PROMPT_
     return messages
 
 
+def _sample_transform_error(spec):
+    """Explain a known rejected grammar mix-up without echoing input values.
+
+    Called only after the trusted population parser rejected the sources. This
+    cannot accept, rewrite or confirm a proposal. Lookup traversal is bounded to
+    the same single-lookup depth as the source grammar.
+    """
+    for index, source in enumerate(spec['sources']):
+        expr, path = source['sample'], f'sources[{index}].sample'
+        for _ in range(2):
+            if not isinstance(expr, dict):
+                break
+            if set(expr) & {'field', 'characters'}:
+                return (f'{path}: field and characters transforms are supported only in level expressions, '
+                        'not in source sample expressions. A sample supports column with optional basename/prefix, '
+                        'row:true, or one lookup; keep the unit derivation in levels[].expression.')
+            lookup = expr.get('lookup')
+            if not isinstance(lookup, dict):
+                break
+            expr, path = lookup.get('on'), path + '.lookup.on'
+    return None
+
+
 def parse(text, files, claim, documentation=None):
     """Validate a model reply without measuring. Returns the proposal or raises LadderError."""
+    if isinstance(text, str) and not text.strip():
+        raise ladder.LadderError('The model returned an empty response; return one complete JSON object or an abstention')
     try:
         reply = json.loads(text, object_pairs_hook=executor.unique)
-    except (ValueError, executor.ExtractionError) as exc:
+    except executor.ExtractionError as exc:
+        raise ladder.LadderError('The proposal contains duplicate JSON keys; each object key must appear exactly once') from exc
+    except ValueError as exc:
         raise ladder.LadderError('The proposal is not valid JSON') from exc
     if not isinstance(reply, dict) or reply.get('status') not in ('ladder', 'abstain'):
         raise ladder.LadderError('The proposal must be a ladder or an abstention')
@@ -297,7 +324,8 @@ def parse(text, files, claim, documentation=None):
     try:
         ladder.population(spec, files)
     except executor.ExtractionError as exc:
-        raise ladder.LadderError(f'The proposed sources cannot be read: {exc}') from None
+        detail = _sample_transform_error(spec) or str(exc)
+        raise ladder.LadderError(f'The proposed sources cannot be read: {detail}') from None
     return {'status': 'ladder', 'spec': spec}
 
 

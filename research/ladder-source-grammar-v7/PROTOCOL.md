@@ -1,0 +1,11 @@
+# Source grammar reminder — bounded development comparison
+
+Freeze before new inference. Compare unmodified shipping v4 with a research-only v7 that appends a source-sample/claim reminder. Six exposed, developer-authored cases, two trials each and two arms: 24 proposals, at most 48 provider calls including one validation repair. Maximum estimated spend $1.00; no Sandbox calls, no judge reserve. Stop starting calls at 04:25 UTC on 8 October 2026. Provider failures remain recorded, not rerun.
+
+Inputs: original public UCF101 split-1 filename lists and prior researcher-authored notes (no video, audio or personal fields); five synthetic cases for action-qualified filename groups, mid-identifier groups, lookup joins, absent actor identities and documentation denying a specimen binding. The real trial and all labels have been seen by the implementer. This is a development comparison, not held-out acceptance or human evidence.
+
+Each call transmits only documentation, counts and explicitly listed identifier examples through the existing Token Factory client. The exact requests and source hashes are retained privately before the run. Full replies and rejected attempts survive. Conservative costing treats all returned tokens as output tokens; provider failures retain their reservation.
+
+Promotion requires: both UCF101 attempts semantically correct on the first call; candidate at least two more first-call semantically correct attempts than v4; every supported candidate attempt ultimately correct; all absent/denying controls abstain; zero paired final regression; no wrong reassuring binding; fewer total rejected calls than v4. Incomplete runs or provider failures are inconclusive and do not promote. No rerun after seeing the results. Validation diagnostics are the same in both arms. v4's system prompt bytes are unchanged.
+
+Correctness compares every sample-to-unit mapping and every partition, not just an overlap headline. First-call validity, first-call semantic correctness, final semantic correctness, corrections, latency and estimated tokens/cost are separate. A more specific source-sample rejection may ship independently: it changes error detail only after trusted execution has rejected the source, never widens the grammar or accepts/reinterprets a model response.

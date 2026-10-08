@@ -1,5 +1,5 @@
 import {plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=binding-1';
+import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=grammar-review-1';
 // Every value from a ladder or a file enters the DOM through textContent, never parsed markup.
 function el(tag,attrs={},...children){
  const node=document.createElement(tag);
@@ -50,7 +50,17 @@ function renderBindingQuestions(spec){
   el('p',{class:'check-hint'},'These are recorded rules, not verified scientific meanings. Correct them before measuring.'));
 }
 
-function renderReviewContext(context){
+function renderBindingSamples(preview){
+ if(!preview)return null;
+ if(!preview.available)return el('p',{class:'check-hint'},preview.reason);
+ return el('section',{class:'builder-preview binding-samples'},el('h3',{},'See the identity this rule produces'),
+  el('p',{class:'hint'},'Local row-to-unit examples, not an independence verdict or verified meaning. First six rows of each source, including excluded rows. Check that these values retain the unit and namespace your claim needs.'),
+  ...preview.files.map((p,i)=>el('details',{...(i<2?{open:'true'}:{})},el('summary',{},p.file),
+   el('table',{class:'builder-table'},el('thead',{},el('tr',{},el('th',{},'Source identifier'),el('th',{},preview.level))),
+    el('tbody',{},p.examples.map(r=>el('tr',{},el('td',{},r.raw),el('td',{},r.value??'— unmapped —'))))))));
+}
+
+function renderReviewContext(context,preview=null){
  if(!context)return el('p',{},'This older result does not retain partition and derivation review details.');
  const p=context.population;
  return el('section',{class:'panel-meta'},el('h3',{},'Population and partition rules'),
@@ -61,7 +71,7 @@ function renderReviewContext(context){
   el('h3',{},'How each level was derived'),
   el('ul',{},context.sources.map(r=>el('li',{},`Sample in ${r.file}: ${r.sample}; deduplicate: ${r.deduplicate}`)),
    context.levels.map(r=>el('li',{},`${r.name}: ${r.rule}`,Object.entries(r.overrides).map(([f,rule])=>`; ${f}: ${rule}`)))),
-  el('h3',{},'Cited documentation'),el('p',{},'Supplied context, not automatic confirmation.'),
+  renderBindingSamples(preview),el('h3',{},'Cited documentation'),el('p',{},'Supplied context, not automatic confirmation.'),
   ...(context.citations||[]).map(c=>el('blockquote',{},el('pre',{style:'white-space:pre-wrap'},c.quote),
    el('cite',{},`${c.file}, lines ${c.start_line}–${c.end_line}`))),renderCitationReview(context.citation_review));
 }
@@ -75,13 +85,13 @@ function confirmBox(result,onConfirm){
  return el('div',{class:'confirm-box'},el('label',{for:id},box,' '+result.review_context.confirmation+(c.perSample?' Every sample has its own value; I have checked that this is still the intended identity.':'')),go);
 }
 
-function renderLadder(panel,result,onConfirm){
+function renderLadder(panel,result,onConfirm,preview=null){
  const view=ladderView(result),source=result.source;
  panel.replaceChildren(...[
   source&&el('div',{class:'panel-source'},kicker('Benchmark'),el('h3',{},source.title),el('p',{},source.summary),
    el('div',{class:'source-links'},el('a',{href:source.url,target:'_blank',rel:'noopener noreferrer'},'Dataset source ↗'),el('span',{},'Spec: ',el('code',{},source.spec)),source.licences.length>0&&el('span',{},source.licences.join(' · ')))),
   el('div',{class:'panel-claim'},kicker(`Claim · needs ${view.claimLevel} held out`),el('blockquote',{},view.claim)),
-  el('div',{class:`panel-finding tone-${view.finding.tone}`},el('span',{class:'finding-label'},'Finding at '+view.claimLevel),el('h4',{},view.finding.title),el('p',{},view.finding.reason),el('details',{class:'result-assumptions',...(confirmable(result)?{open:'true'}:{})},el('summary',{},'Review the binding and partition assumptions'),renderReviewContext(result.review_context)),view.finding.warning&&el('p',{class:'finding-warning'},view.finding.warning),(result.confirmed_levels||[]).length>0&&el('p',{class:'finding-confirmed'},'Confirmed by you: '+result.confirmed_levels.join(', ')),confirmBox(result,onConfirm)),
+  el('div',{class:`panel-finding tone-${view.finding.tone}`},el('span',{class:'finding-label'},'Finding at '+view.claimLevel),el('h4',{},view.finding.title),el('p',{},view.finding.reason),el('details',{class:'result-assumptions',...(confirmable(result)?{open:'true'}:{})},el('summary',{},'Review the binding and partition assumptions'),renderReviewContext(result.review_context,preview)),view.finding.warning&&el('p',{class:'finding-warning'},view.finding.warning),(result.confirmed_levels||[]).length>0&&el('p',{class:'finding-confirmed'},'Confirmed by you: '+result.confirmed_levels.join(', ')),confirmBox(result,onConfirm)),
   el('div',{class:'ladder-axis','aria-hidden':'true'},el('span',{},'Level · finer to coarser'),el('span',{},'Evaluation units also in training')),
   el('ol',{class:'ladder-rows','aria-label':'Ladder levels, finest first'},view.rows.map(row=>levelItem(row,result.levels.find(l=>l.name===row.name)))),
   el('div',{class:'panel-meta'},el('p',{},view.population),...view.agreements.map(a=>el('p',{},a)),el('p',{},view.scope),
@@ -90,4 +100,4 @@ function renderLadder(panel,result,onConfirm){
 }
 
 
-export {el,kicker,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions};
+export {el,kicker,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions,renderBindingSamples};

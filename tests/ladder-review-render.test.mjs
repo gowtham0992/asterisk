@@ -46,3 +46,17 @@ test('citation gaps and denial candidates remain explicitly unverified text',asy
  assert.match(node.textContent,/Candidate passages · not verified support/);assert.match(node.textContent,/Do NOT join/);
  const all=n=>[n,...n.children.flatMap(all)];assert.equal(all(node).some(n=>n.tag==='script'),false);
 });
+
+test('row-to-unit values sit in assumption review before confirmation and stay literal text',()=>{
+ const panel=new Node('main');
+ const result={claim:{text:'Unseen groups',level:'patient'},finding:{level:'patient',status:'held_out_pending_confirmation',confirmable:true,reason:'No overlap'},
+  levels:[{name:'patient',kind:'unit',status:'measured',shared:0,test_units:1,test_rows:2,affected_test_rows:0,unmapped_rows:0,test_units_seen_in_train_percent:0}],
+  population:context.population,review_context:context};
+ const preview={available:true,level:'patient',files:[{file:'split.csv',examples:[{raw:'<script>raw</script>',value:'action_g03'}]}]};
+ renderLadder(panel,result,()=>{},preview);
+ assert.match(panel.textContent,/See the identity this rule produces/);
+ assert.match(panel.textContent,/action_g03/);
+ assert.ok(panel.textContent.indexOf('action_g03')<panel.textContent.indexOf('I confirm'));
+ assert.match(panel.textContent,/not an independence verdict/);
+ const all=n=>[n,...n.children.flatMap(all)];assert.equal(all(panel).some(n=>n.tag==='script'),false);
+});

@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview} from './ladder-view.mjs?v=text-intake-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview} from './ladder-view.mjs?v=grammar-review-1';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=binding-1';
+import {el,kicker,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=grammar-review-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -244,7 +244,7 @@ function proposer(){
   function show(){const lines=(state.files[choose.value]||'').split('\n').slice(0,lineCount(state.files[choose.value]));page=Math.min(page,Math.max(0,Math.ceil(lines.length/40)-1));text.textContent=lines.slice(page*40,(page+1)*40).map((s,i)=>`${page*40+i+1}  ${s}`).join('\n');previous.disabled=page===0;next.disabled=(page+1)*40>=lines.length}
   choose.addEventListener('change',()=>{page=0;show()});previous.addEventListener('click',()=>{page--;show()});next.addEventListener('click',()=>{page++;show()});
   const add=el('button',{type:'button',class:'secondary'},'Add reviewed citation');
-  function draw(){holder.replaceChildren(renderReviewContext(review),el('details',{},el('summary',{},'Read full documentation and add a citation'),
+  function draw(){holder.replaceChildren(renderReviewContext(review,reviewBindingPreview(state.spec,state.files)),el('details',{},el('summary',{},'Read full documentation and add a citation'),
    el('p',{},'Read the meaning, including denials or limitations. Adding a citation changes the specification, clears any prior result or confirmation, and requires a new local measurement. It makes no model call.'),
    el('label',{},'Citation document ',choose),text,el('div',{class:'chain-actions'},previous,next),
    el('label',{},'First citation line ',start),el('label',{},'Last citation line ',end),add,notice))}
@@ -390,7 +390,7 @@ function proposer(){
   const revision=inputRevision,operation=++workflowRevision;error.hidden=true;reset('ladder');state.confirmed=confirmed;
   try{
    const data=await post('/api/ladder',{spec:state.spec,files:body().files,confirmed});if(revision!==inputRevision||operation!==workflowRevision)return;state.result=data;state.replay=null;
-   renderLadder(panels.ladder,data,level=>measure([...confirmed,level]));
+   renderLadder(panels.ladder,data,level=>measure([...confirmed,level]),reviewBindingPreview(state.spec,state.files));
    if(!panels.result.querySelector('.completed-review')){const content=[...panels.result.childNodes];panels.result.replaceChildren(el('details',{class:'completed-review'},el('summary',{},'Reviewed definition · '+state.spec.claim.level),...content))}
    panels.ladder.scrollIntoView({behavior:'smooth',block:'start'});
    const replayButton=el('button',{class:'primary',type:'button'},'Replay in a Nebius Sandbox');replayButton.addEventListener('click',()=>replayChain(replayButton));

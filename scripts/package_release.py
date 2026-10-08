@@ -75,6 +75,10 @@ DOCS += ['research/ladder-messy-v6/'+name for name in ('study.py','PROTOCOL.md')
 # Fresh real-data test utilities only; never its downloaded metadata or records.
 DOCS += ['research/ucf101-researcher-trial/'+name for name in ('reference.py','assess.py','PROTOCOL.md','test_reference.py')]
 
+# Research-only comparison utilities, never captured prompts, replies or private inputs.
+DOCS += ['research/ladder-source-grammar-v7/'+name for name in ('variant.py','study.py','score.py','test_score.py','PROTOCOL.md')]
+
+
 def release_files(root):
     paths=[root/n for n in TOP+DOCS if (root/n).is_file()]
     for tree in TREES:
