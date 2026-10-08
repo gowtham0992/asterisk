@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview} from './ladder-view.mjs?v=correction-fields-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview,validateBuilderUnit} from './ladder-view.mjs?v=correction-validation-1';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,builderField,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=correction-fields-1';
+import {el,kicker,builderField,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=correction-validation-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -334,22 +334,36 @@ function proposer(){
   }
   docSel.addEventListener('change',()=>{documentPage=0;showDocument()});showDocument();
   const preview=el('div',{class:'builder-preview'});
-  function unitSpec(){const u={column:unitCol.value,basename:base.checked,prefix:Number(prefix.value)||0,meaning:meaning.value,
-    field:sep.value?{separator:sep.value,from:Number(fieldFrom.value)||1,to:Number(fieldTo.value)||Number(fieldFrom.value)||1}:null,
-    characters:Number(charFrom.value)?{from:Number(charFrom.value),to:Number(charTo.value)||Number(charFrom.value)}:null};
-   if(lookTable.value!=='— none —')u.lookup={file:lookTable.value,key:lookKey.value.trim(),value:lookValue.value.trim()};return u}
+  let reviewing=false;
+  const correctionError=el('p',{class:'builder-error',role:'status',hidden:'true'});
+  function unitSpec(){
+   if(!sep.value&&(fieldFrom.value!==''||fieldTo.value!==''))throw Error('Enter a field separator, or clear both field positions.');
+   if(charFrom.value===''&&charTo.value!=='')throw Error('Enter the first character position, or clear the last character position.');
+   const number=(input,fallback)=>input.value===''?fallback:Number(input.value);
+   const u={column:unitCol.value,basename:base.checked,prefix:number(prefix,0),meaning:meaning.value,
+    field:sep.value?{separator:sep.value,from:number(fieldFrom,1),to:number(fieldTo,number(fieldFrom,1))}:null,
+    characters:charFrom.value!==''?{from:number(charFrom,1),to:number(charTo,number(charFrom,1))}:null};
+   if(lookTable.value!=='— none —')u.lookup={file:lookTable.value,key:lookKey.value.trim(),value:lookValue.value.trim()};
+   return validateBuilderUnit(u);
+  }
   function refresh(){
+   try{
    const previews=bindingPreview(sourceRows.filter(r=>r.role.value==='observations').map(r=>r.name),unitSpec(),rows);
+   correctionError.hidden=true;correctionError.textContent='';use.disabled=reviewing;
    preview.replaceChildren(el('h3',{},'Preview the link from each row to its subject'),
     el('p',{},'Local examples only. Conflicting or missing lookup values remain unmapped; server validation and measurement decide the result.'),
     ...previews.map(p=>el('section',{},el('p',{},`${p.file}: ${p.distinct.toLocaleString('en-US')} distinct ${unitName.value||'unit'} values across ${p.rows.toLocaleString('en-US')} rows; ${p.unmapped.toLocaleString('en-US')} unmapped.`+(p.distinct===p.rows&&p.rows?' Each row in this file has a different identity. Check that these values identify the subject, rather than just the sample.':'')),
      el('table',{class:'builder-table'},el('tr',{},el('th',{},unitCol.value),el('th',{},unitName.value||'unit')),p.examples.map(r=>el('tr',{},el('td',{},r.raw),el('td',{},r.value??'— unmapped —')))))));
+   }catch(e){
+    use.disabled=true;correctionError.hidden=false;correctionError.textContent=e.message;
+    preview.replaceChildren(el('h3',{},'Preview paused'),el('p',{},'Correct the extraction settings above. No identity values are shown for an invalid rule.'));
+   }
   }
   sourceRows.forEach(r=>[r.role,r.sample,r.partition,r.whole].forEach(x=>x.addEventListener('change',refresh)));
   [unitCol,base,prefix,sep,fieldFrom,fieldTo,charFrom,charTo,lookTable,lookKey,lookValue,unitName].forEach(x=>x.addEventListener('input',refresh));
   const use=el('button',{class:'primary',type:'button'},'Review corrected definition');
   use.addEventListener('click',async()=>{
-   use.disabled=true;
+   if(reviewing)return;reviewing=true;use.disabled=true;
    try{
    for(const r of sourceRows.filter(r=>r.role.value==='observations')){if(r.mappingError)throw Error(r.mappingError);if(r.mapping.some(m=>m.box.value==='— choose role —'))throw Error(`Choose training, evaluation or excluded for every label in ${r.name}.`)}
    const sources=sourceRows.filter(r=>r.role.value==='observations').map(r=>({file:r.name,sample:{column:r.sample.value},
@@ -385,7 +399,7 @@ function proposer(){
     el('fieldset',{},el('legend',{},'3 · Link identities through a mapping table (optional)'),
      el('p',{class:'check-hint builder-intro'},'Keep “none” if each observation already contains its identity. Otherwise the extracted value above must match the mapping key.'),
      builderField('Mapping table',lookTable),builderField('Mapping key column',lookKey),builderField('Mapped identity column',lookValue)),
-    preview,
+    correctionError,preview,
     el('fieldset',{},el('legend',{},'4 · Cite the definition you reviewed'),builderField('Documentation file',docSel),builderField('First cited line',start),builderField('Last cited line',end)),
     documentPanel),
    el('div',{class:'chain-actions'},use));

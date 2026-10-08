@@ -41,3 +41,23 @@ test('review preview explicitly refuses unsupported shapes and parse errors rath
  const altered=structuredClone(spec);altered.sources[0].format='json';
  assert.equal(reviewBindingPreview(altered,{'windows.csv':'[]'}).available,false);
 });
+
+test('builder refuses reversed and fractional ranges instead of silently changing the requested rule',()=>{
+ const args={claim:'Unseen groups',unitName:'group',sources:spec.sources,citation:{file:'notes.txt',start:2,end:3}};
+ for(const unit of [{column:'window',field:{separator:'_',from:3,to:2}},
+  {column:'window',field:{separator:'_',from:1.5,to:2}},
+  {column:'window',characters:{from:4,to:2}},
+  {column:'window',characters:{from:0}},
+  {column:'window',characters:{from:1,to:513}},
+  {column:'window',prefix:-1},{column:'window',prefix:1.5}]){
+  assert.throws(()=>buildSpec({...args,unit}),/whole|range|positions|length/);
+ }
+});
+
+
+test('valid extraction boundaries remain inclusive and keep character-range precedence',()=>{
+ const args={claim:'Unseen groups',unitName:'group',sources:spec.sources,citation:{file:'notes.txt',start:2,end:3}};
+ const result=buildSpec({...args,unit:{column:'window',field:{separator:'_',from:1,to:32},characters:{from:1,to:512},prefix:128}});
+ assert.deepEqual(result.levels[1].expression,{column:'window',field:{separator:'_',from:1,to:32},characters:{from:1,to:512}});
+ assert.equal(buildSpec({...args,unit:{column:'window',prefix:0}}).levels[1].expression.prefix,undefined);
+});

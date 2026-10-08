@@ -1,0 +1,7 @@
+# Extraction-range validation — 7 October 2026
+
+The guided builder previously rewrote a reversed field range (3 through 2) into field 3 alone. A regression test reproduced this before the fix. The builder now rejects invalid ranges instead of changing their meaning. Field positions are whole numbers from 1–32, character positions from 1–512, and prefix lengths whole numbers from 0–128. End positions cannot precede start positions. Blank controls remain optional, and character ranges retain documented precedence over prefix length.
+
+The local preview pauses and clears its examples while extraction settings are invalid; the review button stays disabled. Feedback appears in the editor. Recovery restores examples without discarding other inputs. A guard keeps refresh events from re-enabling review during an in-flight submission.
+
+Verification: 615 Python tests passed, 9 skipped; 186 JavaScript tests passed. The regression was observed failing before and passing afterward. An existing test fixture used character position 0 as a disabled sentinel; it now uses null explicitly, and position 0 is tested as invalid. Browser verification entered fields 3 through 2, observed the error and disabled review, then changed to fields 1–3 and successfully reviewed SYN-AB-0001 patient identifiers on the fictional slide example. No provider calls or judge allowance used. No change to the trusted measurement engine or production model prompt.

@@ -1,5 +1,5 @@
 import {plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=correction-fields-1';
+import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=correction-validation-1';
 // Every value from a ladder or a file enters the DOM through textContent, never parsed markup.
 function el(tag,attrs={},...children){
  const node=document.createElement(tag);

@@ -152,7 +152,22 @@ const SPLIT_WORDS={train:'train',training:'train',learn:'train',learning:'train'
 export function guessPartition(raw){return SPLIT_WORDS[String(raw).trim().toLowerCase()]||'excluded'}
 export const splitColumn=columns=>columns.find(c=>/(^|_)(split|fold|partition|subset|set)(_|$)/i.test(c))||null;
 
+export function validateBuilderUnit(unit){
+ for(const [key,title,limit] of [['field','Field',32],['characters','Character',512]]){
+  const range=unit[key];if(!range)continue;
+  const from=Number(range.from),to=Number(range.to??range.from);
+  if(!Number.isInteger(from)||!Number.isInteger(to)||from<1||to<from||to>limit)
+   throw Error(`${title} range needs whole positions from 1 to ${limit}, with the last position at least the first.`);
+  if(key==='field'&&(typeof range.separator!=='string'||Array.from(range.separator).length<1||Array.from(range.separator).length>3))
+   throw Error('Field separator must contain 1–3 characters.');
+ }
+ const prefix=Number(unit.prefix??0);
+ if(!Number.isInteger(prefix)||prefix<0||prefix>128)throw Error('Prefix length must be a whole number from 0 to 128.');
+ return unit;
+}
+
 export function buildSpec({claim,unitName,sources,unit,citation}){
+ validateBuilderUnit(unit);
  const name=(unitName||'').trim().toLowerCase().replace(/[^a-z0-9_]+/g,'_').replace(/^_+|_+$/g,'')||'unit';
  const derived={column:unit.column,...(unit.basename?{basename:true}:{}),
    ...(unit.field&&unit.field.separator?{field:{separator:unit.field.separator,from:Number(unit.field.from)||1,...(Number(unit.field.to)>(Number(unit.field.from)||1)?{to:Number(unit.field.to)}:{})}}:{}),

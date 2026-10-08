@@ -96,7 +96,7 @@ test('field and characters derive and describe exactly like the engine',async()=
  assert.equal(v.describeExpression({column:'f',basename:true,field:{separator:'-',from:2,to:3}}),'column "f", file name after the last /, fields 2–3 split on "-"');
  assert.equal(v.describeExpression({column:'c',characters:{from:4,to:5}}),'column "c", characters 4–5');
  const spec=v.buildSpec({claim:'c c c',unitName:'location',sources:[{file:'a.csv',sample:{column:'f'},partition:{value:'train'}}],
-  unit:{column:'f',basename:true,field:{separator:'-',from:2,to:3},characters:{from:0}},citation:{file:'r.md',start:1,end:1}});
+  unit:{column:'f',basename:true,field:{separator:'-',from:2,to:3},characters:null},citation:{file:'r.md',start:1,end:1}});
  assert.deepEqual(spec.levels.at(-1).expression,{column:'f',basename:true,field:{separator:'-',from:2,to:3}});
  const chars=v.buildSpec({claim:'c c c',unitName:'subject',sources:[{file:'a.csv',sample:{column:'f'},partition:{value:'train'}}],
   unit:{column:'f',characters:{from:4,to:5},prefix:5},citation:{file:'r.md',start:1,end:1}});

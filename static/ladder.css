@@ -281,3 +281,5 @@
 .builder .builder-intro{flex-basis:100%;margin:0}
 .builder input:focus-visible,.builder select:focus-visible,.builder summary:focus-visible{outline:2px solid var(--accent,#365438);outline-offset:3px}
 @media(max-width:600px){.builder-transform-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.builder .builder-field{flex-basis:100%}.builder fieldset{padding:16px 12px}.builder-transform-grid .builder-field{min-width:0}}
+
+.builder .builder-error{margin:0;padding:14px 16px;border:1px solid #c99a75;border-radius:8px;background:#fff8f1;color:#783e20;font-size:13px;line-height:1.6}
