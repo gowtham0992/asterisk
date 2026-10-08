@@ -259,3 +259,11 @@
 .experiment-table thead th:first-child,.experiment-table tbody th{position:sticky;left:0;z-index:1}
 .experiment-table thead th:first-child{background:#f7f8f2}
 .experiment-table tbody th{background:var(--surface)}.experiment-table tr.is-product th{background:#fbfcf7}
+
+.binding-questions{margin:24px 0;border-top:1px solid var(--line);padding-top:20px}
+.binding-question{display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}
+.binding-number{font:12px var(--mono);color:var(--muted);padding-top:4px}
+.binding-question h3{font-size:17px;margin:0 0 8px}.binding-question p{margin:4px 0;overflow-wrap:anywhere}
+.complete-definition{width:100%;box-sizing:border-box;font:12px var(--mono);padding:16px;color:var(--ink);background:var(--field);border:1px solid var(--field-line)}
+.binding-question>div{min-width:0}
+.chain-panel .panel-meta{overflow-x:auto}

@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels} from './ladder-view.mjs?v=evidence-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview} from './ladder-view.mjs?v=binding-1';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,renderLadder,renderReviewContext} from './ladder-render.mjs?v=citations-1';
+import {el,kicker,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=binding-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -225,7 +225,7 @@ function proposer(){
     const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
     panels.result.replaceChildren(el('div',{class:'panel-head'},kicker('Review · Proposed ladder · validated and dry-run'),sponsors(true,true)),el('h3',{},`Claim bound to "${p.spec.claim.level}"`),meta,
      el('ol',{class:'proposal-levels'},p.spec.levels.map(l=>el('li',{class:l.name===p.spec.claim.level?'is-claim':''},el('b',{},l.name),l.kind+(l.name===p.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression)+(l.by_source?` (per-file overrides for ${Object.keys(l.by_source).join(', ')})`:'')+(l.missing?' · blanks counted as unmapped':''))))),
-     citationEditor(review),
+     renderBindingQuestions(state.spec),citationEditor(review),
      el('div',{class:'chain-actions'},measureButton,editButton()));
    }
    panels.result.hidden=false;step('propose');panels.result.setAttribute('tabindex','-1');panels.result.focus({preventScroll:true});panels.result.scrollIntoView({behavior:'smooth',block:'start'});button.textContent='Sent';
@@ -260,42 +260,62 @@ function proposer(){
    finally{add.disabled=false}
   });draw();show();return holder;
  }
- function editButton(){const b=el('button',{class:'text-button',type:'button'},'Define it differently');b.addEventListener('click',()=>builder());return b}
+ function editButton(){const b=el('button',{class:'text-button',type:'button'},'Correct this binding');b.addEventListener('click',()=>builder());return b}
+ function completeEditor(original,revision,operation){
+  const text=el('textarea',{rows:'22','aria-label':'Complete ladder definition',class:'complete-definition'},JSON.stringify(original,null,2));
+  const reviewButton=el('button',{type:'button',class:'primary'},'Validate corrected definition');
+  reviewButton.addEventListener('click',async()=>{
+   reviewButton.disabled=true;
+   try{const next=JSON.parse(text.value),review=await post('/api/ladder/review',{spec:next,files:body().files,confirmed:[],documentation:[...state.docs]});
+    if(revision!==inputRevision||operation!==workflowRevision)return;
+    state.spec=next;state.result=null;state.confirmed=[];state.replay=null;state.bundleReceipt=null;
+    state.proposal=state.proposal?{...state.proposal,defined_by:'person'}:null;
+    const go=el('button',{type:'button',class:'primary'},'Measure on server');go.addEventListener('click',()=>measure([]));
+    panels.result.replaceChildren(kicker('Review · Defined by you'),renderBindingQuestions(next),citationEditor(review),el('div',{class:'chain-actions'},go,editButton()));
+   }catch(e){if(revision===inputRevision&&operation===workflowRevision)fail(e.message)}finally{reviewButton.disabled=false}
+  });
+  panels.result.replaceChildren(kicker('Review · Correct the complete definition'),renderBindingQuestions(original),
+   el('p',{},'This definition uses rules beyond the guided form. All levels, source rules and citations are retained here. Editing and validation make no model call; a new measurement and confirmation are required.'),text,reviewButton);
+  panels.result.hidden=false;panels.result.setAttribute('tabindex','-1');panels.result.focus({preventScroll:true});
+ }
  function builder(){
   try{
   const revision=inputRevision,operation=++workflowRevision;reset('ladder');step('propose');
+  const original=state.spec?structuredClone(state.spec):null,seed=bindingSeed(original);
+  if(original&&!seed){completeEditor(original,revision,operation);return}
   const tables=tableFiles(),docs=[...state.docs];
   const cols=Object.fromEntries(tables.map(n=>[n,tableColumns(n,state.files[n])]));
   const rows=Object.fromEntries(tables.map(n=>[n,tableRows(n,state.files[n])]));
   for(const n of tables){if(rows[n].length>100000)throw Error('The builder supports at most 100,000 rows per table.');}
   const select=(options,value)=>{const s=el('select',{},options.map(o=>el('option',{value:o,...(o===value?{selected:'true'}:{})},o)));return s};
   const sourceRows=tables.map(n=>{
-   const split=splitColumn(cols[n]);
-   const role=select(['observations','lookup table only','ignore'],'observations');
-   const sample=select(cols[n],cols[n].find(c=>c!==split)||cols[n][0]);
-   const whole=select(['train','test','excluded'],/test|eval/i.test(n)?'test':'train');
-   const partition=select(['— whole file —',...cols[n]],split||'— whole file —');
+   const prior=seed?.sources.find(s=>s.file===n),split=prior?.partition.column||splitColumn(cols[n]);
+   const role=select(['observations','lookup table only','ignore'],seed?(prior?'observations':'lookup table only'):'observations');
+   const sample=select(cols[n],prior?.sample.column||cols[n].find(c=>c!==split)||cols[n][0]);
+   const whole=select(['train','test','excluded'],prior?.partition.value||(/test|eval/i.test(n)?'test':'train'));
+   const partition=select(['— whole file —',...cols[n]],prior?.partition.value?'— whole file —':split||'— whole file —');
    const mappingPanel=el('span',{class:'builder-map'});
    const source={name:n,split:null,role,sample,whole,partition,mapping:[],mappingPanel,mappingError:null};
    function updatePartition(){
     source.split=partition.value==='— whole file —'?null:partition.value;source.mappingError=null;source.mapping=[];
     try{
-     source.mapping=source.split?partitionLabels(rows[n],source.split).map(({raw,count})=>({raw,count,box:select(['— choose role —','train','test','excluded'],/^(train|training|learn|learning|dev|val|valid|validation|test|testing|eval|evaluation)$/i.test(raw.trim())?guessPartition(raw):'— choose role —')})):[];
+     source.mapping=source.split?partitionLabels(rows[n],source.split).map(({raw,count})=>({raw,count,box:select(['— choose role —','train','test','excluded'],prior?.partition.column===source.split&&prior.partition.map?.[raw]?prior.partition.map[raw]:/^(train|training|learn|learning|dev|val|valid|validation|test|testing|eval|evaluation)$/i.test(raw.trim())?guessPartition(raw):'— choose role —')})):[];
      mappingPanel.replaceChildren(...source.mapping.map(m=>el('label',{},`${JSON.stringify(m.raw)} (${m.count} rows) → `,m.box)));
     }catch(e){source.mappingError=e.message;mappingPanel.replaceChildren(el('span',{},e.message))}
     whole.disabled=!!source.split;
    }
    partition.addEventListener('change',updatePartition);updatePartition();return source;
   });
-  const first=sourceRows[0];
-  const unitName=el('input',{type:'text',value:(claimInput.value.match(/\b(patient|subject|person|recording|site|case|lesion|frog|study)\b/i)||['','subject'])[1].toLowerCase(),maxlength:'40'});
-  const unitCol=select(cols[first.name],first.sample.value);
-  const base=el('input',{type:'checkbox'}),prefix=el('input',{type:'number',min:'0',max:'128',value:'0'});
+  const first=sourceRows.find(r=>r.role.value==='observations')||sourceRows[0];
+  const unitName=el('input',{type:'text',value:seed?.name||(claimInput.value.match(/\b(patient|subject|person|recording|site|case|lesion|frog|study)\b/i)||['','subject'])[1].toLowerCase(),maxlength:'40'});
+  const unitCol=select([...new Set(tables.flatMap(n=>cols[n]))],seed?.unit.column||first.sample.value);
+  const base=el('input',{type:'checkbox',...(seed?.unit.basename?{checked:'true'}:{})}),prefix=el('input',{type:'number',min:'0',max:'128',value:String(seed?.unit.prefix||0)});
   const sep=el('input',{type:'text',maxlength:'3',placeholder:'e.g. -',class:'narrow'}),fieldFrom=el('input',{type:'number',min:'1',max:'32',placeholder:'from'}),fieldTo=el('input',{type:'number',min:'1',max:'32',placeholder:'to'});
   const charFrom=el('input',{type:'number',min:'1',max:'512',placeholder:'from'}),charTo=el('input',{type:'number',min:'1',max:'512',placeholder:'to'});
   const lookTable=select(['— none —',...tables],'— none —'),lookKey=el('input',{type:'text',placeholder:'key column'}),lookValue=el('input',{type:'text',placeholder:'value column'});
   const meaning=el('input',{type:'text',maxlength:'400',placeholder:'e.g. Records from the same subject differ in the last digit only.'});
   const docSel=select(['— choose documentation —',...docs],'— choose documentation —'),start=el('input',{type:'number',min:'1',placeholder:'first line'}),end=el('input',{type:'number',min:'1',placeholder:'last line'});
+  if(seed){sep.value=seed.unit.field?.separator||'';fieldFrom.value=seed.unit.field?.from||'';fieldTo.value=seed.unit.field?.to||'';charFrom.value=seed.unit.characters?.from||'';charTo.value=seed.unit.characters?.to||'';lookTable.value=seed.unit.lookup?.file||'— none —';lookKey.value=seed.unit.lookup?.key||'';lookValue.value=seed.unit.lookup?.value||'';meaning.value=seed.meaning;docSel.value=seed.citation?.file||'— choose documentation —';start.value=seed.citation?.start_line||'';end.value=seed.citation?.end_line||''}
   const documentPanel=el('div',{class:'builder-preview'});let documentPage=0;
   function showDocument(){
    const text=state.files[docSel.value];
@@ -316,16 +336,15 @@ function proposer(){
     characters:Number(charFrom.value)?{from:Number(charFrom.value),to:Number(charTo.value)||Number(charFrom.value)}:null};
    if(lookTable.value!=='— none —')u.lookup={file:lookTable.value,key:lookKey.value.trim(),value:lookValue.value.trim()};return u}
   function refresh(){
-   const u=unitSpec(),src=sourceRows.find(r=>r.role.value==='observations')||first;
-   let lookup=null;
-   if(u.lookup&&rows[u.lookup.file])lookup=new Map(rows[u.lookup.file].map(r=>[String(r[u.lookup.key]),String(r[u.lookup.value]??'')]));
-   const sample=rows[src.name].slice(0,6).map(r=>{let v=deriveValue(r[u.column],u);if(lookup)v=v===null?null:(lookup.get(v)??null);return [String(r[u.column]??''),v]});
-   const groups=new Set(rows[src.name].map(r=>{let v=deriveValue(r[u.column],u);if(lookup)v=v===null?null:(lookup.get(v)??null);return v}).filter(v=>v!==null));
-   preview.replaceChildren(el('p',{},`${groups.size.toLocaleString('en-US')} distinct ${unitName.value||'unit'} values across ${rows[src.name].length.toLocaleString('en-US')} rows of ${src.name}`+(groups.size===rows[src.name].length?' — every row is its own unit, so zero overlap would prove nothing.':'.')),
-    el('table',{class:'builder-table'},el('tr',{},el('th',{},u.column),el('th',{},unitName.value||'unit')),sample.map(([a,b])=>el('tr',{},el('td',{},a),el('td',{},b??'— none —')))));
+   const previews=bindingPreview(sourceRows.filter(r=>r.role.value==='observations').map(r=>r.name),unitSpec(),rows);
+   preview.replaceChildren(el('h3',{},'Preview the link from each row to its subject'),
+    el('p',{},'Local examples only. Conflicting or missing lookup values remain unmapped; server validation and measurement decide the result.'),
+    ...previews.map(p=>el('section',{},el('p',{},`${p.file}: ${p.distinct.toLocaleString('en-US')} distinct ${unitName.value||'unit'} values across ${p.rows.toLocaleString('en-US')} rows; ${p.unmapped.toLocaleString('en-US')} unmapped.`+(p.distinct===p.rows&&p.rows?' Every row is its own unit, so zero overlap would prove nothing.':'')),
+     el('table',{class:'builder-table'},el('tr',{},el('th',{},unitCol.value),el('th',{},unitName.value||'unit')),p.examples.map(r=>el('tr',{},el('td',{},r.raw),el('td',{},r.value??'— unmapped —')))))));
   }
+  sourceRows.forEach(r=>[r.role,r.sample,r.partition,r.whole].forEach(x=>x.addEventListener('change',refresh)));
   [unitCol,base,prefix,sep,fieldFrom,fieldTo,charFrom,charTo,lookTable,lookKey,lookValue,unitName].forEach(x=>x.addEventListener('input',refresh));
-  const use=el('button',{class:'primary',type:'button'},'Use this definition');
+  const use=el('button',{class:'primary',type:'button'},'Review corrected definition');
   use.addEventListener('click',async()=>{
    use.disabled=true;
    try{
@@ -334,28 +353,32 @@ function proposer(){
     partition:r.split?{column:r.split,map:Object.fromEntries(r.mapping.map(m=>[m.raw,m.box.value]))}:{value:r.whole.value}}));
    if(!sources.length){fail('Choose at least one table of observations.');return}
    if(!docs.includes(docSel.value)||!Number(start.value)||!Number(end.value)){fail('Choose the documentation and line range you reviewed.');return}
-   state.spec=buildSpec({claim:claimInput.value.trim(),unitName:unitName.value,sources,unit:unitSpec(),citation:{file:docSel.value,start:start.value,end:end.value}});
-   const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[],documentation:[...state.docs]});if(revision!==inputRevision||operation!==workflowRevision)return;
+   const next=preserveBinding(original,buildSpec({claim:claimInput.value.trim(),unitName:unitName.value,sources,unit:unitSpec(),citation:{file:docSel.value,start:start.value,end:end.value}}));
+   const review=await post('/api/ladder/review',{spec:next,files:body().files,confirmed:[],documentation:[...state.docs]});if(revision!==inputRevision||operation!==workflowRevision)return;
+   state.spec=next;state.result=null;state.confirmed=[];state.replay=null;state.bundleReceipt=null;
    state.proposal=state.proposal?{...state.proposal,defined_by:'person'}:null;
    const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
    panels.result.replaceChildren(kicker('Review · Defined by you'),el('h3',{},`Claim bound to "${state.spec.claim.level}"`),
     el('ol',{class:'proposal-levels'},state.spec.levels.map(l=>el('li',{},el('b',{},l.name),l.kind+(l.name===state.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression))))),
-    citationEditor(review),
+    renderBindingQuestions(state.spec),citationEditor(review),
     el('div',{class:'chain-actions'},measureButton,editButton()));
    step('propose');
-   }catch(e){fail(e.message)}finally{use.disabled=false}
+   }catch(e){if(revision===inputRevision&&operation===workflowRevision)fail(e.message)}finally{use.disabled=false}
   });
   panels.result.replaceChildren(kicker('Review · Define the unit yourself'),el('h3',{},'How is the claim\'s unit written in your files?'),
    el('div',{class:'builder'},
-    el('fieldset',{},el('legend',{},'Tables'),...sourceRows.map(r=>el('div',{class:'builder-row'},el('strong',{},r.name),el('label',{},'Role ',r.role),el('label',{},'One observation = ',r.sample),
+    el('fieldset',{},el('legend',{},'1 · What does one row represent?'),...sourceRows.map(r=>el('div',{class:'builder-row'},el('strong',{},r.name),el('label',{},'Role ',r.role),el('label',{},'One observation = ',r.sample),
      el('label',{},'Partition column ',r.partition),el('label',{},'Whole-file role ',r.whole),r.mappingPanel))),
-    el('fieldset',{},el('legend',{},'The unit'),el('label',{},'Name ',unitName),el('label',{},'From column ',unitCol),el('label',{},base,' file name after the last /'),
+    el('fieldset',{},el('legend',{},'2 · What identifies the subject that must be unseen?'),el('label',{},'Name ',unitName),el('label',{},'From column ',unitCol),el('label',{},base,' file name after the last /'),
      el('label',{},'split on ',sep,' and keep field ',fieldFrom,' to ',fieldTo),
      el('label',{},'then characters ',charFrom,' to ',charTo),
      el('label',{},'or the first ',prefix,' characters (0 = all)'),
-     el('label',{},'then look it up in ',lookTable,lookKey,lookValue),el('label',{class:'wide'},'Why (optional) ',meaning)),
+     el('label',{class:'wide'},'Why (optional) ',meaning)),
+    el('fieldset',{},el('legend',{},'3 · How is that subject linked to each row?'),el('label',{},'Lookup table ',lookTable),el('label',{},'Lookup key column ',lookKey),el('label',{},'Subject column ',lookValue),
+     el('p',{class:'check-hint'},'Choose no lookup when the subject is already in each observation row. Otherwise the derived value above matches the lookup key.')),
+    preview,
     el('fieldset',{},el('legend',{},'Evidence'),el('label',{},'Documentation ',docSel),el('label',{},'lines ',start,' to ',end)),
-    documentPanel,preview),
+    documentPanel),
    el('div',{class:'chain-actions'},use));
   panels.result.hidden=false;refresh();panels.result.setAttribute('tabindex','-1');panels.result.focus({preventScroll:true});panels.result.scrollIntoView({behavior:'smooth',block:'start'});
   }catch(e){fail(e.message)}

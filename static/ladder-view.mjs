@@ -180,3 +180,64 @@ export function partitionLabels(rows,column){
  if(counts.size>12)throw Error('The guided builder supports at most 12 partition labels. Choose another partition column or use an explicit JSON specification.');
  return [...counts].map(([raw,count])=>({raw,count}));
 }
+
+
+// Read a two-level definition into the guided editor only when every rule can round-trip.
+// Complex definitions remain available in the complete JSON editor, never flattened.
+export function bindingSeed(spec){
+ if(!spec)return null;
+ const level=spec.levels?.find(l=>l.name===spec.claim?.level);
+ const observations=spec.levels?.filter(l=>l.kind==='observation')||[];
+ if(spec.levels?.length!==2||observations.length!==1||level?.kind!=='unit'||level.by_source)return null;
+ const expr=level.expression,derived=expr?.lookup?.on||expr;
+ const allowed=['column','basename','prefix','field','characters'];
+ if(!derived?.column||Object.keys(derived).some(k=>!allowed.includes(k)))return null;
+ if(expr.lookup&&Object.keys(expr).some(k=>k!=='lookup'))return null;
+ if(spec.sources.some(s=>!s.sample?.column||Object.keys(s.sample).length!==1||s.filter||s.deduplicate))return null;
+ const observation=observations[0];
+ if(spec.sources.some(s=>JSON.stringify(observation.by_source?.[s.file]||observation.expression)!==JSON.stringify(s.sample)))return null;
+ return {name:level.name,meaning:level.meaning||'',unit:{...derived,
+  ...(expr.lookup?{lookup:{file:expr.lookup.file,key:expr.lookup.key_column,value:expr.lookup.value_column}}:{})},
+  sources:spec.sources,citation:spec.citations?.[0]||null};
+}
+
+export function preserveBinding(original,next){
+ if(!original)return next;
+ if(!bindingSeed(original))throw Error('Use the complete definition editor for this specification.');
+ const observation=original.levels.find(l=>l.kind==='observation');
+ const unit=original.levels.find(l=>l.name===original.claim.level);
+ const freshObservation=next.levels.find(l=>l.kind==='observation');
+ const freshUnit=next.levels.find(l=>l.name===next.claim.level);
+ const citations=[...(original.citations||[]),...next.citations].filter((c,i,a)=>a.findIndex(x=>JSON.stringify(x)===JSON.stringify(c))===i);
+ return {...original,claim:{...original.claim,...next.claim},sources:next.sources,
+  ...(original.agreements?{agreements:original.agreements.map(pair=>pair.map(name=>name===unit.name?freshUnit.name:name))}:{}),
+  levels:original.levels.map(l=>l===observation?{...l,expression:freshObservation.expression,by_source:freshObservation.by_source||{}}:
+   l===unit?{...l,...freshUnit,meaning:freshUnit.meaning||''}:l),citations};
+}
+
+export function bindingQuestions(spec){
+ const level=spec.levels.find(l=>l.name===spec.claim.level);
+ return [
+  {question:'What does one row represent?',answers:spec.sources.map(s=>`${s.file}: one recorded observation, identified by ${describeExpression(s.sample)}.`)},
+  {question:'What identifies the subject that must be unseen?',answers:[`The claim requires unseen ${level.name} values. Their identifier is ${level.expression.lookup?`column "${level.expression.lookup.value_column}" in ${level.expression.lookup.file}`:describeExpression(level.expression)}.`,...(level.meaning?[`Proposer’s description (unverified): ${level.meaning}`]:[])]},
+  {question:'How is that subject linked to each row?',answers:spec.sources.map(s=>`${s.file}: ${describeExpression(level.by_source?.[s.file]||level.expression)}.`)}
+ ];
+}
+
+// A preview cannot choose among conflicting lookup rows; only the server measures.
+export function bindingPreview(sources,unit,rows){
+ let lookup=null;
+ if(unit.lookup){
+  lookup=new Map();
+  for(const row of rows[unit.lookup.file]||[]){
+   const key=row[unit.lookup.key],value=row[unit.lookup.value];
+   if(key===undefined||key===null||key==='')continue;
+   const k=String(key),v=value===undefined||value===null||value===''?null:String(value);
+   lookup.set(k,lookup.has(k)&&lookup.get(k)!==v?null:v);
+  }
+ }
+ return sources.map(file=>{
+  const values=(rows[file]||[]).map(row=>{const raw=row[unit.column],derived=deriveValue(raw,unit);return {raw:String(raw??''),value:lookup?(lookup.get(derived)??null):derived}});
+  return {file,rows:values.length,distinct:new Set(values.map(r=>r.value).filter(v=>v!==null)).size,unmapped:values.filter(r=>r.value===null).length,examples:values.slice(0,6)};
+ });
+}

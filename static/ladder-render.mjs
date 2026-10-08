@@ -1,5 +1,5 @@
 import {plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,confirmable} from './ladder-view.mjs?v=recovery-2';
+import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=binding-1';
 // Every value from a ladder or a file enters the DOM through textContent, never parsed markup.
 function el(tag,attrs={},...children){
  const node=document.createElement(tag);
@@ -43,6 +43,13 @@ function renderCitationReview(review){
    el('details',{},el('summary',{},'Candidate passages · not verified support'),...r.candidates.map(c=>el('blockquote',{},el('pre',{style:'white-space:pre-wrap'},c.text+(c.truncated?' [line truncated]':'')),el('cite',{},`${c.file}, line ${c.line}`)))))));
 }
 
+function renderBindingQuestions(spec){
+ return el('section',{class:'binding-questions'},kicker('Check the definition'),
+  ...bindingQuestions(spec).map((q,i)=>el('div',{class:'binding-question'},el('span',{class:'binding-number'},String(i+1)),
+   el('div',{},el('h3',{},q.question),...q.answers.map(a=>el('p',{},a))))),
+  el('p',{class:'check-hint'},'These are recorded rules, not verified scientific meanings. Correct them before measuring.'));
+}
+
 function renderReviewContext(context){
  if(!context)return el('p',{},'This older result does not retain partition and derivation review details.');
  const p=context.population;
@@ -83,4 +90,4 @@ function renderLadder(panel,result,onConfirm){
 }
 
 
-export {el,kicker,renderLadder,renderReviewContext,renderCitationReview};
+export {el,kicker,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions};
