@@ -165,3 +165,15 @@ test('portable measurement preserves complete witnesses and population like the 
  assert.deepEqual(r.result,result);assert.deepEqual(r.levels,result.levels);
  assert.equal(r.result.levels[0].witnesses[0].train,'a');assert.equal(r.result.population.excluded,4);
 });
+
+test('text filename lists default to data without turning prose into data',async()=>{
+ const {isDocumentation}=await import('../static/ladder-view.mjs');
+ assert.equal(isDocumentation('trainlist01.txt','Action/v_Action_g08_c01.avi 1\nAction/v_Action_g08_c02.avi 1\n'),false);
+ assert.equal(isDocumentation('test.txt','folder/a.png\nfolder/b.png\n'),false);
+ assert.equal(isDocumentation('notes.txt','Images identify observations.\nPatients identify subjects.\n'),true);
+ assert.equal(isDocumentation('README.md','a.png\nb.png\n'),true);
+ assert.equal(isDocumentation('notes.txt','See a.png for an example.\nSee b.png for another.\n'),true);
+ assert.equal(isDocumentation('mixed.txt','a.png\nThese are evaluation images.\n'),true);
+ assert.equal(isDocumentation('ids.txt','P01\nP02\n'),true);
+ assert.equal(isDocumentation('empty.txt',''),true);
+});

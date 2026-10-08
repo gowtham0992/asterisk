@@ -78,7 +78,16 @@ export function confirmable(result){
  return onlyMeaning?{level:f.level,meaning:row.meaning||'',perSample:!!row.one_unit_per_sample}:null;
 }
 
-export const isDocumentation=name=>/\.(md|txt|rst)$/i.test(name);
+// A role suggestion only: never grants example-value sharing or confirms an identity.
+export function isDocumentation(name,text=''){
+ if(/\.(md|rst)$/i.test(name))return true;
+ if(!/\.txt$/i.test(name))return false;
+ const lines=text.trim().split(/\r?\n/).filter(line=>line.trim());
+ // Require every nonempty line to be a filename, optionally followed by a numeric label.
+ // Plain identifiers and mixed prose remain documentation until the person changes the role.
+ const filename=/^[^\s]+\.[a-z0-9]{1,10}(?:[ \t]+[0-9]+)?$/i;
+ return !(lines.length>0&&lines.every(line=>filename.test(line.trim())));
+}
 
 // Column names of a table the person chose, read locally so they can decide which example values may be shared.
 export function tableColumns(name,text){

@@ -1,5 +1,5 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview} from './ladder-view.mjs?v=binding-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview} from './ladder-view.mjs?v=text-intake-1';
 const $=(s,root=document)=>root.querySelector(s);
 import {el,kicker,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=binding-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
@@ -139,7 +139,7 @@ function proposer(){
  function ready(){previewButton.disabled=!(claimInput.value.trim().length>=3&&state.docs.size>0&&tableFiles().length>0);$('#propose-manual').disabled=previewButton.disabled}
  $('#propose-manual').addEventListener('click',()=>builder());
  function renderInventory(){
-  inventory.replaceChildren(el('p',{},'Mark which files are documentation. For tables, tick only identifier columns whose example values may be sent; every other column is sent as counts only.'),
+  inventory.replaceChildren(el('p',{},'Review each file role. Text filename lists are suggested as data; prose is suggested as documentation. You can change either. For data, select only identifier columns whose example values may be sent. No example values are selected automatically.'),
    ...Object.keys(state.files).map(name=>{
     const doc=el('input',{type:'checkbox',id:'doc-'+name,...(state.docs.has(name)?{checked:'true'}:{})});
     doc.addEventListener('change',()=>{doc.checked?state.docs.add(name):state.docs.delete(name);invalidate();renderInventory();ready()});
@@ -147,7 +147,10 @@ function proposer(){
      const key=JSON.stringify([name,col]),box=el('input',{type:'checkbox',...(state.share.has(key)?{checked:'true'}:{})});
      box.addEventListener('change',()=>{box.checked?state.share.add(key):state.share.delete(key);invalidate()});
      return el('label',{},box,' ',col);}));
-    return el('div',{class:'inventory-file'},el('strong',{},name),el('label',{for:'doc-'+name},doc,' documentation'),cols);
+    const textFile=/\.txt$/i.test(name),lines=textFile?state.files[name].split(/\r?\n/):[];
+    return el('div',{class:'inventory-file'},el('strong',{},name),el('label',{for:'doc-'+name},doc,' Use as documentation (full text)'),
+     textFile?el('p',{class:'hint'},state.docs.has(name)?'Documentation is sent as numbered text. If this is a split list, uncheck this option to read one data row per line.':'Data list: each nonempty line is a row in the value column. A trailing class label remains part of the line; review the extraction before measuring.'):null,
+     textFile?el('details',{},el('summary',{},'Preview text on this device'),el('pre',{tabindex:'0'},lines.slice(0,6).join('\n').slice(0,2400)),el('p',{class:'hint'},'First six lines, up to 2,400 characters. This preview makes no upload.')):null,cols);
    }));
   inventory.hidden=false;
  }
@@ -158,7 +161,7 @@ function proposer(){
   try{
    const files=await readSelectedFiles(list);
    if(generation!==selectionGeneration)return;
-   state.files=files;state.docs=new Set(Object.keys(files).filter(isDocumentation));state.share=new Set();
+   state.files=files;state.docs=new Set(Object.keys(files).filter(name=>isDocumentation(name,files[name])));state.share=new Set();
    invalidate();renderInventory();ready();
    const names=Object.keys(files);
    $('#propose-drop-hint').textContent=names.length?`${names.length} file${names.length>1?'s':''}: ${names.join(', ')}`:'Preview uploads files to the Asterisk server; sending to Nebius is a separate step.';
