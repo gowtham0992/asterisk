@@ -57,7 +57,7 @@ marks the level your claim needs.
 - **The guard earned its place:** in a retained case it stopped Nemotron Super from calling a cross-database leak "held out". The exposed cases do not establish fresh held-out performance for the current implementation.
 - **Grammar matters.** Letting proposals say "characters 2–4" or "field 1 split on _" raised Nemotron Super from 3 to 5 of
   10 on a fresh set, with no false reassurance, so it is now the default.
-- **Zero false reassurance does not mean every proposal was correct.** Nemotron Super scored 21/41 and Ultra 24/41 across the tested configurations; Claude Sonnet scored 36/41. Abstentions, invalid replies and provider failures are reported separately in the protocols and results. Super with the shipping v4 prompt still failed the set-D pass rule at 5/10. The guided definition step keeps the user involved when preparation is incomplete.
+- **Zero false reassurance does not mean every proposal was correct.** Nemotron Super scored 21/41 and Ultra 24/41 across the tested configurations; Claude Sonnet scored 36/41. Abstentions, invalid replies and provider failures are reported separately in the protocols and results. Super with the shipping v4 prompt still failed the set-D pass rule at 5/10. The guided definition step keeps the user involved when preparation is incomplete. A later small development comparison also elicited one unsupported binding when documentation denied its meaning; historical zero-false-reassurance counts are not a guarantee that model interpretations are correct. [Latest comparison](line-bounds-comparison-2026-10-07.md).
 
 ## Challenges
 

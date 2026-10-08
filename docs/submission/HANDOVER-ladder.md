@@ -1,3 +1,7 @@
+# Current update: 7 October 2026
+
+The hosted release is 1d55a9a, including citation correction and evidence exports. A fresh paired bounds-only prompt experiment scored 16/16 versus v4's 13/16 attempts on eight correlated cases, but did not pass its precommitted promotion criterion. Shipping v4 stays unchanged. One new denial control elicited an unsupported binding from v4; historical statements below that misses were only abstentions do not describe all future behavior. See [the full report](line-bounds-comparison-2026-10-07.md), including the scorer correction, limitations and retained failures. Historical no-commit/no-push instructions below have been superseded by the owner's later explicit authorization.
+
 # Handover: Asterisk independence ladder (26–27 September 2026)
 
 ## Update: workspace integration, 27 September
