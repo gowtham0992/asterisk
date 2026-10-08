@@ -1,5 +1,5 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,citedLines,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels} from './ladder-view.mjs?v=recovery-2';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,citedLines,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels} from './ladder-view.mjs?v=evidence-1';
 const $=(s,root=document)=>root.querySelector(s);
 import {el,kicker,renderLadder,renderReviewContext} from './ladder-render.mjs?v=quiet-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
@@ -343,7 +343,7 @@ function proposer(){
    const replayButton=el('button',{class:'primary',type:'button'},'Replay in a Nebius Sandbox');replayButton.addEventListener('click',()=>replayChain(replayButton));
    panels.replay.replaceChildren(kicker('Inspect · Independent recomputation'),el('h3',{},'Recompute in a fresh Nebius Sandbox.'),
     el('p',{},'Sends the engine source, the spec, your confirmations and the files to a disposable python:3.12-slim Sandbox. A matching replay and its inputs are saved privately in your workspace. Do not send personal or sensitive data to the Sandbox beta.'),
-    el('div',{class:'chain-actions'},replayButton,saveButton(),downloadButton()));
+    el('div',{class:'chain-actions'},replayButton,saveButton(),downloadButton(),bundleButton()));
    panels.replay.hidden=false;step('measure');
   }catch(e){if(revision===inputRevision&&operation===workflowRevision)fail(e.message)}
  }
@@ -356,7 +356,7 @@ function proposer(){
     el('div',{class:'chain-meta'},el('span',{},p.image),el('span',{},`${Number(p.seconds).toFixed(2)} s in the Sandbox`),el('span',{},'program '+p.program_sha256.slice(0,12)+'…'),el('span',{},'result '+p.result_sha256.slice(0,12)+'…')),
     el('p',{},'Same code, same inputs, independent infrastructure. This is evidence of reproducibility, not tamper-proofing.'),
     ...(data.receipt_error?[el('p',{class:'check-error'},data.receipt_error)]:[]),
-    el('div',{class:'chain-actions'},saveButton(),downloadButton()));
+    el('div',{class:'chain-actions'},saveButton(),downloadButton(),bundleButton()));
    step('replay');
   }catch(e){if(revision===inputRevision&&operation===workflowRevision){fail(e.message);button.disabled=false;button.textContent='Retry the replay'}}
  }
@@ -364,6 +364,8 @@ function proposer(){
   const button=el('button',{class:'secondary',type:'button'},state.replay?.receipt_id?'Open saved receipt':'Save to workspace');
   button.addEventListener('click',async()=>{
    if(state.replay?.receipt_id){location.href='/#ladder/'+state.replay.receipt_id;return}
+   const currentKey=JSON.stringify({spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});
+   if(state.bundleReceipt?.key===currentKey){location.href='/#ladder/'+state.bundleReceipt.id;return}
    button.disabled=true;button.textContent='Saving…';
    try{
     const revision=inputRevision,operation=++workflowRevision;const saved=await post('/api/ladder/receipts',{spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null});
@@ -371,12 +373,33 @@ function proposer(){
    }catch(e){fail(e.message);button.disabled=false;button.textContent='Save to workspace'}
   });return button;
  }
+ function bundleButton(){
+  const b=el('button',{class:'secondary',type:'button',disabled:true},'Download evidence + inputs (ZIP)');
+  const consent=el('input',{type:'checkbox',onchange:event=>{b.disabled=!event.target.checked}});
+  b.addEventListener('click',async()=>{
+   if(!consent.checked)return;
+   const revision=inputRevision,operation=workflowRevision;
+   b.disabled=true;b.textContent='Preparing evidence…';
+   try{
+    const payload={spec:state.spec,files:body().files,confirmed:state.confirmed,proposal_id:state.proposal?.proposal_id||null};
+    const key=JSON.stringify(payload);
+    let rid=state.replay?.receipt_id||(state.bundleReceipt?.key===key?state.bundleReceipt.id:null);
+    if(!rid){const saved=await post('/api/ladder/receipts',payload);rid=saved.id;if(revision!==inputRevision||operation!==workflowRevision)return;state.bundleReceipt={key,id:rid}}
+    const response=await fetch(`/api/ladder/receipts/${rid}/export?format=zip`,{credentials:'same-origin'});
+    if(!response.ok){const data=await response.json().catch(()=>({}));throw Error(data.detail||'Evidence download failed. The saved receipt remains available.')}
+    const blob=await response.blob();if(revision!==inputRevision||operation!==workflowRevision)return;
+    const url=URL.createObjectURL(blob),link=el('a',{href:url,download:`asterisk-evidence-${rid}.zip`});
+    document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);step('receipt');
+   }catch(e){if(revision===inputRevision&&operation===workflowRevision)fail(e.message)}
+   finally{b.disabled=false;b.textContent='Download evidence + inputs (ZIP)'}
+  });return el('details',{},el('summary',{},'Include original inputs in an evidence ZIP'),el('p',{class:'hint'},'Includes every uploaded source file, including columns not sent to the model. Saves a private receipt without a paid call. Share only with authorized recipients.'),el('label',{},consent,' I want to include the uploaded source files.'),b);
+ }
  function downloadButton(){
-  const b=el('button',{class:'secondary',type:'button'},'Download receipt (JSON)');
+  const b=el('button',{class:'secondary',type:'button'},'Download measurement JSON');
   b.addEventListener('click',()=>{
    const r=receipt({claim:claimInput.value.trim(),proposal:state.proposal,spec:state.spec,result:state.result,replay:state.replay,createdAt:new Date().toISOString()});
    const link=el('a',{href:URL.createObjectURL(new Blob([JSON.stringify(r,null,2)],{type:'application/json'})),download:'asterisk-ladder-receipt.json'});
-   document.body.append(link);link.click();link.remove();step('receipt');
+   document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(link.href),1000);step('receipt');
   });
   return b;
  }

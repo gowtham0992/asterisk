@@ -158,3 +158,10 @@ test('identifier previews count Unicode characters like the Python engine',async
  assert.equal(deriveValue('🧪AB-01',{characters:{from:2,to:3}}),'AB');
  assert.equal(deriveValue('🧪A',{characters:{from:1,to:3}}),null);
 });
+test('portable measurement preserves complete witnesses and population like the saved export',async()=>{
+ const {receipt}=await import('../static/ladder-view.mjs');
+ const result={...load('ptbxl'),levels:[{name:'patient',kind:'unit',status:'measured',shared:1,test_units:2,affected_test_rows:1,witnesses:[{train:'a',test:'b'}]}],population:{train:3,test:2,excluded:4}};
+ const r=receipt({claim:'c',proposal:null,spec:{},result,replay:null,createdAt:'t'});
+ assert.deepEqual(r.result,result);assert.deepEqual(r.levels,result.levels);
+ assert.equal(r.result.levels[0].witnesses[0].train,'a');assert.equal(r.result.population.excluded,4);
+});

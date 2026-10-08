@@ -156,12 +156,19 @@ def register(app, connect, owner, request_model, parse_files):
     @app.get('/api/ladder/receipts/{rid}/export')
     def export(rid: str, request: Request, format: str = 'html'):
         record = store.get(owner(request), rid)
+        if format == 'zip':
+            from .ladder_bundle import build
+            try:
+                data = build(record, receipt_html(record))
+            except (ValueError, LadderError) as exc:
+                raise HTTPException(409, str(exc)) from None
+            return Response(data, media_type='application/zip', headers={'Content-Disposition': f'attachment; filename="asterisk-evidence-{record["id"]}.zip"'})
         headers = {'Content-Disposition': f'attachment; filename="asterisk-ladder-{record["id"]}.{format if format in ("html", "json") else "txt"}"'}
         if format == 'html':
             return HTMLResponse(receipt_html(record), headers=headers)
         if format == 'json':
             return Response(json.dumps(public(record), indent=2), media_type='application/json', headers=headers)
-        raise HTTPException(422, 'Choose html or json.')
+        raise HTTPException(422, 'Choose html, json or zip.')
 
     @app.delete('/api/ladder/receipts/{rid}')
     def delete(rid: str, request: Request):

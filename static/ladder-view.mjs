@@ -110,7 +110,7 @@ export function receipt({claim,proposal,spec,result,replay,createdAt}){
  return {schema:'asterisk-ladder-receipt/1',created_at:createdAt,claim,
   proposal:proposal?{defined_by:proposal.defined_by||(proposal.proposal?.status==='abstain'?'person':'model'),provider:proposal.provider,model:proposal.model,payload_sha256:proposal.payload_sha256,attempts:proposal.attempts.length,repaired:proposal.attempts.length>1,total_tokens:proposal.total_tokens}:null,
   spec,finding:result.finding,headline:result.headline,confirmed_levels:result.confirmed_levels||[],spec_hash:result.spec_hash,input_hashes:result.input_hashes,
-  levels:result.levels.map(l=>({name:l.name,kind:l.kind,status:l.status,shared:l.shared??null,test_units:l.test_units??null})),
+  result,levels:result.levels,
   replay:replay?replay.provenance:null,scope:result.scope};
 }
 

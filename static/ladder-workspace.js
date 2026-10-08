@@ -5,9 +5,15 @@ export function createLadderWorkspace({el,btn,api,main,toast}){
  let generation=0;
  const title=text=>{document.querySelector('#page-name').textContent=text};
  const link=(text,href)=>el('a',{class:'secondary',href},text);
+ const evidenceAction=rid=>{
+  const download=link('Download evidence + inputs (ZIP)',`/api/ladder/receipts/${rid}/export?format=zip`);download.hidden=true;
+  const consent=el('input',{type:'checkbox',onchange:event=>{download.hidden=!event.target.checked}});
+  return el('details',{},el('summary',{},'Include original inputs in an evidence ZIP'),el('p',{class:'hint'},'Includes every uploaded source file, including columns not sent to the model. Share only with authorized recipients.'),el('label',{},consent,' I want to include the uploaded source files.'),download);
+ };
  const actions=rid=>el('div',{class:'chain-actions'},
   link('Download readable receipt',`/api/ladder/receipts/${rid}/export`),
-  link('Download measurement JSON',`/api/ladder/receipts/${rid}/export?format=json`));
+  link('Download measurement JSON',`/api/ladder/receipts/${rid}/export?format=json`),
+  evidenceAction(rid));
  async function route(hash){
   const g=++generation;
   const match=hash.match(/^#ladder\/([a-f0-9]{24})$/);
@@ -38,7 +44,7 @@ export function createLadderWorkspace({el,btn,api,main,toast}){
    main.replaceChildren(el('div',{class:'ladder-page'},link('← All saved ladders','#ladders'),panel,
     el('section',{class:'panel ladder-saved-card'},el('h2',{},'Keep the evidence.'),el('p',{},scope),el('p',{},originText),
      origin?.kind==='recorded_model_proposal'?el('details',{},el('summary',{},'Proposal origin'),el('pre',{},JSON.stringify(origin,null,2))):null,
-     el('p',{class:'hint'},r.confirmation.scope+' Inputs are retained privately in this workspace; downloaded HTML and JSON include the measurement, not raw inputs or model proposal history.'),
+     el('p',{class:'hint'},r.confirmation.scope+' HTML and JSON contain the full measurement and witnesses. The evidence ZIP also includes all uploaded inputs and instructions for recomputation from a separately trusted Asterisk installation. No new model or Sandbox call is made.'),
      actions(r.id),el('details',{},el('summary',{},'Saved extraction specification'),el('pre',{},JSON.stringify(r.spec,null,2))),
      el('details',{},el('summary',{},'Execution provenance'),el('pre',{},JSON.stringify(r.execution,null,2))),
      btn('Delete this saved ladder',async()=>{

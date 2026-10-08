@@ -121,9 +121,16 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__);sub=parser.add_subparsers(dest='command',required=True)
     p=sub.add_parser('check',help='Recheck CSVs using saved columns; never makes a network call');p.add_argument('config',type=Path);p.add_argument('--output',type=Path,required=True);p.add_argument('--compare-to',type=Path,help='Prior extracted receipt directory; checks hashes before comparing')
     p=sub.add_parser('verify',help='Verify an extracted receipt locally with installed checker code; no credentials or network');p.add_argument('receipt',type=Path)
+    p=sub.add_parser('verify-ladder',help='Recompute a data-only ladder evidence ZIP using this trusted installation');p.add_argument('receipt',type=Path)
     p=sub.add_parser('ladder',help='Show which unit a split holds out at every declared level; local only');p.add_argument('spec',type=Path);p.add_argument('--sources',type=Path,action='append',required=True,help='Directory holding files named in the spec; repeat to search several');p.add_argument('--output',type=Path,required=True);p.add_argument('--manifest',type=Path,help='JSON with pinned SHA-256 per file; listed files that differ are refused');p.add_argument('--confirm',action='append',default=[],metavar='LEVEL',help='Record that you confirmed what LEVEL means; repeatable')
     args=parser.parse_args()
     try:
+        if args.command=='verify-ladder':
+            from app.ladder_bundle import verify
+            from app.ladder import LadderError
+            try: report=verify(args.receipt)
+            except LadderError as exc: parser.exit(2,str(exc)+'\n')
+            print(json.dumps(report,indent=2));return 0
         if args.command=='verify':
             from app.bundle_verifier import verify_bundle
             from app.receipt_verification import assess_receipt
