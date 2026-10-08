@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview} from './ladder-view.mjs?v=grammar-review-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview} from './ladder-view.mjs?v=correction-fields-1';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=grammar-review-1';
+import {el,kicker,builderField,renderLadder,renderReviewContext,renderBindingQuestions} from './ladder-render.mjs?v=correction-fields-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -342,7 +342,7 @@ function proposer(){
    const previews=bindingPreview(sourceRows.filter(r=>r.role.value==='observations').map(r=>r.name),unitSpec(),rows);
    preview.replaceChildren(el('h3',{},'Preview the link from each row to its subject'),
     el('p',{},'Local examples only. Conflicting or missing lookup values remain unmapped; server validation and measurement decide the result.'),
-    ...previews.map(p=>el('section',{},el('p',{},`${p.file}: ${p.distinct.toLocaleString('en-US')} distinct ${unitName.value||'unit'} values across ${p.rows.toLocaleString('en-US')} rows; ${p.unmapped.toLocaleString('en-US')} unmapped.`+(p.distinct===p.rows&&p.rows?' Every row is its own unit, so zero overlap would prove nothing.':'')),
+    ...previews.map(p=>el('section',{},el('p',{},`${p.file}: ${p.distinct.toLocaleString('en-US')} distinct ${unitName.value||'unit'} values across ${p.rows.toLocaleString('en-US')} rows; ${p.unmapped.toLocaleString('en-US')} unmapped.`+(p.distinct===p.rows&&p.rows?' Each row in this file has a different identity. Check that these values identify the subject, rather than just the sample.':'')),
      el('table',{class:'builder-table'},el('tr',{},el('th',{},unitCol.value),el('th',{},unitName.value||'unit')),p.examples.map(r=>el('tr',{},el('td',{},r.raw),el('td',{},r.value??'— unmapped —')))))));
   }
   sourceRows.forEach(r=>[r.role,r.sample,r.partition,r.whole].forEach(x=>x.addEventListener('change',refresh)));
@@ -370,17 +370,23 @@ function proposer(){
   });
   panels.result.replaceChildren(kicker('Review · Define the unit yourself'),el('h3',{},'How is the claim\'s unit written in your files?'),
    el('div',{class:'builder'},
-    el('fieldset',{},el('legend',{},'1 · What does one row represent?'),...sourceRows.map(r=>el('div',{class:'builder-row'},el('strong',{},r.name),el('label',{},'Role ',r.role),el('label',{},'One observation = ',r.sample),
-     el('label',{},'Partition column ',r.partition),el('label',{},'Whole-file role ',r.whole),r.mappingPanel))),
-    el('fieldset',{},el('legend',{},'2 · What identifies the subject that must be unseen?'),el('label',{},'Name ',unitName),el('label',{},'From column ',unitCol),el('label',{},base,' file name after the last /'),
-     el('label',{},'split on ',sep,' and keep field ',fieldFrom,' to ',fieldTo),
-     el('label',{},'then characters ',charFrom,' to ',charTo),
-     el('label',{},'or the first ',prefix,' characters (0 = all)'),
-     el('label',{class:'wide'},'Why (optional) ',meaning)),
-    el('fieldset',{},el('legend',{},'3 · How is that subject linked to each row?'),el('label',{},'Lookup table ',lookTable),el('label',{},'Lookup key column ',lookKey),el('label',{},'Subject column ',lookValue),
-     el('p',{class:'check-hint'},'Choose no lookup when the subject is already in each observation row. Otherwise the derived value above matches the lookup key.')),
+    el('fieldset',{},el('legend',{},'1 · Choose the observation and partition'),...sourceRows.map(r=>el('div',{class:'builder-row'},el('strong',{},r.name),
+     builderField(`File role · ${r.name}`,r.role),builderField(`Observation identifier · ${r.name}`,r.sample),
+     builderField(`Partition column · ${r.name}`,r.partition),builderField(`Whole-file role · ${r.name}`,r.whole),r.mappingPanel))),
+    el('fieldset',{},el('legend',{},'2 · Define the identity that must be unseen'),
+     builderField('Identity name',unitName,'For example: patient, lesion or recording group.'),builderField('Identity source column',unitCol),
+     el('details',{class:'builder-transforms',...(seed?.unit.basename||seed?.unit.field||seed?.unit.characters||seed?.unit.prefix?{open:'true'}:{})},
+      el('summary',{},'Extract part of an identifier (optional)'),
+      el('p',{class:'check-hint'},'Applied in this order: file name, separated fields, then character range or prefix. Field and character positions start at 1. Check the resulting values below.'),
+      el('div',{class:'builder-transform-grid'},el('label',{class:'builder-basename'},base,' Use only the file name after the last /'),
+       builderField('Field separator',sep,'Leave blank to keep the entire value.'),builderField('First field',fieldFrom),builderField('Last field',fieldTo),
+       builderField('First character',charFrom),builderField('Last character',charTo),builderField('Prefix length',prefix,'0 keeps all characters. A character range takes precedence.'))),
+     builderField('Reason for this identity (optional)',meaning)),
+    el('fieldset',{},el('legend',{},'3 · Link identities through a mapping table (optional)'),
+     el('p',{class:'check-hint builder-intro'},'Keep “none” if each observation already contains its identity. Otherwise the extracted value above must match the mapping key.'),
+     builderField('Mapping table',lookTable),builderField('Mapping key column',lookKey),builderField('Mapped identity column',lookValue)),
     preview,
-    el('fieldset',{},el('legend',{},'Evidence'),el('label',{},'Documentation ',docSel),el('label',{},'lines ',start,' to ',end)),
+    el('fieldset',{},el('legend',{},'4 · Cite the definition you reviewed'),builderField('Documentation file',docSel),builderField('First cited line',start),builderField('Last cited line',end)),
     documentPanel),
    el('div',{class:'chain-actions'},use));
   panels.result.hidden=false;refresh();panels.result.setAttribute('tabindex','-1');panels.result.focus({preventScroll:true});panels.result.scrollIntoView({behavior:'smooth',block:'start'});

@@ -60,3 +60,19 @@ test('row-to-unit values sit in assumption review before confirmation and stay l
  assert.match(panel.textContent,/not an independence verdict/);
  const all=n=>[n,...n.children.flatMap(all)];assert.equal(all(panel).some(n=>n.tag==='script'),false);
 });
+
+
+test('each correction control has its own precise name, independent of help text',async()=>{
+ const {builderField}=await import('../static/ladder-render.mjs');
+ const controls=['First field','Last field','First character','Last character','First cited line','Last cited line'];
+ for(const name of controls){
+  const input=new Node('input');
+  const label=builderField(name,input,'Example values are not a confirmation.');
+  assert.equal(input.attrs['aria-label'],name);
+  assert.equal(label.tag,'label');
+  assert.equal(label.children.filter(n=>n.tag==='input').length,1);
+  assert.match(label.textContent,/Example values are not a confirmation/);
+ }
+ const literal=builderField('<script>file.csv</script>',new Node('select'));
+ assert.equal(literal.children.some(n=>n.tag==='script'),false);
+});

@@ -267,3 +267,17 @@
 .complete-definition{width:100%;box-sizing:border-box;font:12px var(--mono);padding:16px;color:var(--ink);background:var(--field);border:1px solid var(--field-line)}
 .binding-question>div{min-width:0}
 .chain-panel .panel-meta{overflow-x:auto}
+
+/* Correction controls: one accessible label per field, optional extraction grouped. */
+.builder .builder-field{display:flex;flex-direction:column;align-items:stretch;gap:7px;flex:1 1 180px;min-width:0}
+.builder-field-name{font-weight:600;overflow-wrap:anywhere}
+.builder .builder-field input,.builder .builder-field select{width:100%;min-height:40px;box-sizing:border-box}
+.builder .builder-field-hint{color:var(--muted);font-size:11px;line-height:1.5;font-weight:400}
+.builder .builder-row strong{flex-basis:100%;overflow-wrap:anywhere;margin-bottom:6px}
+.builder .builder-transforms{flex:1 1 100%;border-top:1px solid var(--line);padding-top:14px}
+.builder-transforms summary{cursor:pointer;font-size:13px;font-weight:600;padding:6px 0}
+.builder-transform-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:14px}
+.builder .builder-basename{grid-column:1/-1;min-height:40px}
+.builder .builder-intro{flex-basis:100%;margin:0}
+.builder input:focus-visible,.builder select:focus-visible,.builder summary:focus-visible{outline:2px solid var(--accent,#365438);outline-offset:3px}
+@media(max-width:600px){.builder-transform-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.builder .builder-field{flex-basis:100%}.builder fieldset{padding:16px 12px}.builder-transform-grid .builder-field{min-width:0}}

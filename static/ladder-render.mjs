@@ -1,5 +1,5 @@
 import {plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=grammar-review-1';
+import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=correction-fields-1';
 // Every value from a ladder or a file enters the DOM through textContent, never parsed markup.
 function el(tag,attrs={},...children){
  const node=document.createElement(tag);
@@ -11,6 +11,11 @@ function el(tag,attrs={},...children){
  }
  for(const child of children.flat(Infinity))if(child!==null&&child!==undefined&&child!==false)node.append(child instanceof Node?child:document.createTextNode(String(child)));
  return node;
+}
+function builderField(name,control,hint=null){
+ control.setAttribute('aria-label',name);
+ return el('label',{class:'builder-field'},el('span',{class:'builder-field-name'},name),control,
+  hint&&el('small',{class:'builder-field-hint'},hint));
 }
 const kicker=text=>el('p',{class:'product-kicker'},text);
 function witnessItem(w){
@@ -100,4 +105,4 @@ function renderLadder(panel,result,onConfirm,preview=null){
 }
 
 
-export {el,kicker,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions,renderBindingSamples};
+export {el,kicker,builderField,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions,renderBindingSamples};
