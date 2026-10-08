@@ -1,5 +1,5 @@
 import {plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=mapping-diagnostics-1';
+import {ladderView,confirmable,bindingQuestions} from './ladder-view.mjs?v=review-recovery-1';
 // Every value from a ladder or a file enters the DOM through textContent, never parsed markup.
 function el(tag,attrs={},...children){
  const node=document.createElement(tag);
@@ -11,6 +11,20 @@ function el(tag,attrs={},...children){
  }
  for(const child of children.flat(Infinity))if(child!==null&&child!==undefined&&child!==false)node.append(child instanceof Node?child:document.createTextNode(String(child)));
  return node;
+}
+function createBuilderReview(){
+ let pending=false;
+ return {get pending(){return pending},async run(action){
+  if(pending)return;
+  pending=true;
+  try{return await action()}finally{pending=false}
+ }};
+}
+function lockBuilderControls(controls){
+ const previous=[...controls].map(control=>[control,control.disabled]);
+ for(const [control] of previous)control.disabled=true;
+ let restored=false;
+ return ()=>{if(restored)return;restored=true;for(const [control,disabled] of previous)control.disabled=disabled};
 }
 function builderField(name,control,hint=null){
  control.setAttribute('aria-label',name);
@@ -118,4 +132,4 @@ function renderLadder(panel,result,onConfirm,preview=null){
 }
 
 
-export {el,kicker,builderField,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions,renderBindingSamples,renderBindingFailures};
+export {el,kicker,builderField,lockBuilderControls,createBuilderReview,renderLadder,renderReviewContext,renderCitationReview,renderBindingQuestions,renderBindingSamples,renderBindingFailures};

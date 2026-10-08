@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview,validateBuilderUnit} from './ladder-view.mjs?v=mapping-diagnostics-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview,validateBuilderUnit} from './ladder-view.mjs?v=review-recovery-1';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,builderField,renderLadder,renderReviewContext,renderBindingQuestions,renderBindingFailures} from './ladder-render.mjs?v=mapping-diagnostics-1';
+import {el,kicker,builderField,lockBuilderControls,createBuilderReview,renderLadder,renderReviewContext,renderBindingQuestions,renderBindingFailures} from './ladder-render.mjs?v=review-recovery-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -334,7 +334,7 @@ function proposer(){
   }
   docSel.addEventListener('change',()=>{documentPage=0;showDocument()});showDocument();
   const preview=el('div',{class:'builder-preview'});
-  let reviewing=false;
+  const reviewing=createBuilderReview();
   const correctionError=el('p',{class:'builder-error',role:'status',hidden:'true'});
   function unitSpec(){
    if(!sep.value&&(fieldFrom.value!==''||fieldTo.value!==''))throw Error('Enter a field separator, or clear both field positions.');
@@ -349,7 +349,7 @@ function proposer(){
   function refresh(){
    try{
    const previews=bindingPreview(sourceRows.filter(r=>r.role.value==='observations').map(r=>r.name),unitSpec(),rows);
-   correctionError.hidden=true;correctionError.textContent='';use.disabled=reviewing;
+   correctionError.hidden=true;correctionError.textContent='';use.disabled=reviewing.pending;
    preview.replaceChildren(el('h3',{},'Preview the link from each row to its subject'),
     el('p',{},'Local examples only. Conflicting or missing lookup values remain unmapped; server validation and measurement decide the result.'),
     ...previews.map(p=>el('section',{},el('p',{},`${p.file}: ${p.distinct.toLocaleString('en-US')} distinct ${unitName.value||'unit'} values across ${p.rows.toLocaleString('en-US')} rows; ${p.unmapped.toLocaleString('en-US')} unmapped.`+(p.distinct===p.rows&&p.rows?' Each row in this file has a different identity. Check that these values identify the subject, rather than just the sample.':'')),
@@ -362,15 +362,16 @@ function proposer(){
   sourceRows.forEach(r=>[r.role,r.sample,r.partition,r.whole].forEach(x=>x.addEventListener('change',refresh)));
   [unitCol,base,prefix,sep,fieldFrom,fieldTo,charFrom,charTo,lookTable,lookKey,lookValue,unitName].forEach(x=>x.addEventListener('input',refresh));
   const use=el('button',{class:'primary',type:'button'},'Review corrected definition');
-  use.addEventListener('click',async()=>{
-   if(reviewing)return;reviewing=true;use.disabled=true;
+  use.addEventListener('click',()=>reviewing.run(async()=>{
+   use.disabled=true;let restoreControls=null;
    try{
    for(const r of sourceRows.filter(r=>r.role.value==='observations')){if(r.mappingError)throw Error(r.mappingError);if(r.mapping.some(m=>m.box.value==='— choose role —'))throw Error(`Choose training, evaluation or excluded for every label in ${r.name}.`)}
    const sources=sourceRows.filter(r=>r.role.value==='observations').map(r=>({file:r.name,sample:{column:r.sample.value},
     partition:r.split?{column:r.split,map:Object.fromEntries(r.mapping.map(m=>[m.raw,m.box.value]))}:{value:r.whole.value}}));
-   if(!sources.length){fail('Choose at least one table of observations.');return}
-   if(!docs.includes(docSel.value)||!Number(start.value)||!Number(end.value)){fail('Choose the documentation and line range you reviewed.');return}
+   if(!sources.length)throw Error('Choose at least one table of observations.');
+   if(!docs.includes(docSel.value)||!Number.isInteger(Number(start.value))||!Number.isInteger(Number(end.value))||Number(start.value)<1||Number(end.value)<Number(start.value)||Number(end.value)-Number(start.value)>=40||Number(end.value)>lineCount(state.files[docSel.value]))throw Error('Choose an existing documentation range of 1–40 lines, with the last line at least the first.');
    const next=preserveBinding(original,buildSpec({claim:claimInput.value.trim(),unitName:unitName.value,sources,unit:unitSpec(),citation:{file:docSel.value,start:start.value,end:end.value}}));
+   correctionError.hidden=true;restoreControls=lockBuilderControls(panels.result.querySelectorAll('.builder input,.builder select'));use.textContent='Reviewing definition…';
    const review=await post('/api/ladder/review',{spec:next,files:body().files,confirmed:[],documentation:[...state.docs]});if(revision!==inputRevision||operation!==workflowRevision)return;
    state.spec=next;state.result=null;state.confirmed=[];state.replay=null;state.bundleReceipt=null;
    state.proposal=state.proposal?{...state.proposal,defined_by:'person'}:null;
@@ -380,8 +381,16 @@ function proposer(){
     renderBindingQuestions(state.spec),citationEditor(review),
     el('div',{class:'chain-actions'},measureButton,editButton()));
    step('propose');
-   }catch(e){if(revision===inputRevision&&operation===workflowRevision)fail(e.message)}finally{use.disabled=false}
-  });
+   }catch(e){
+    if(revision===inputRevision&&operation===workflowRevision){
+     correctionError.hidden=false;correctionError.textContent=e.message;
+     correctionError.scrollIntoView({block:'nearest'});
+    }
+   }finally{
+    restoreControls?.();use.textContent='Review corrected definition';
+    try{unitSpec();use.disabled=false}catch{use.disabled=true}
+   }
+  }));
   panels.result.replaceChildren(kicker('Review · Define the unit yourself'),el('h3',{},'How is the claim\'s unit written in your files?'),
    el('div',{class:'builder'},
     el('fieldset',{},el('legend',{},'1 · Choose the observation and partition'),...sourceRows.map(r=>el('div',{class:'builder-row'},el('strong',{},r.name),

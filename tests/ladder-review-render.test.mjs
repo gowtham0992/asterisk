@@ -90,3 +90,24 @@ test('review displays late unmapped rows and reasons as literal text rather than
  assert.equal(all(node).some(n=>n.tag==='script'),false);
  assert.match(node.textContent,/<script>late<\/script>/);
 });
+
+test('pending editor controls restore their original disabled states exactly once',async()=>{
+ const {lockBuilderControls}=await import('../static/ladder-render.mjs');
+ const editable={disabled:false},partitionLocked={disabled:true};
+ const restore=lockBuilderControls([editable,partitionLocked]);
+ assert.equal(editable.disabled,true);assert.equal(partitionLocked.disabled,true);
+ restore();assert.equal(editable.disabled,false);assert.equal(partitionLocked.disabled,true);
+ editable.disabled=true;restore();assert.equal(editable.disabled,true);
+});
+
+test('review guard suppresses duplicate requests and permits retry after rejection',async()=>{
+ const {createBuilderReview}=await import('../static/ladder-render.mjs');
+ const guard=createBuilderReview();let reject,calls=0;
+ const first=guard.run(()=>{calls++;return new Promise((resolve,fail)=>{reject=fail})});
+ assert.equal(guard.pending,true);
+ await guard.run(()=>{calls++});assert.equal(calls,1);
+ reject(new Error('Rejected by server'));await assert.rejects(first,/Rejected by server/);
+ assert.equal(guard.pending,false);
+ assert.equal(await guard.run(()=>{calls++;return 'reviewed'}),'reviewed');
+ assert.equal(calls,2);assert.equal(guard.pending,false);
+});

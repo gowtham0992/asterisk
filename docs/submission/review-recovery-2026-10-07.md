@@ -1,0 +1,7 @@
+# Correction review recovery — 7 October 2026
+
+The guided correction form now keeps validation errors beside its preview rather than reopening the initial file-import panel. Citation ranges are checked locally for whole-number positions, order, length (1–40 lines) and document bounds. Input values survive server rejection.
+
+A request guard suppresses duplicate submissions and releases its pending state even when the operation rejects. This closes a bug where a failed review left the internal reviewing flag set although the button appeared enabled. Input/select controls are locked during the server request and restored to their previous disabled state afterward, preserving partition-controlled disabled fields. The button reports Reviewing definition while pending.
+
+Verification: a real local review endpoint rejected identity name 123. The browser showed the error in the editor, retained the chosen document and lines 2–4, restored editable controls, and kept file intake collapsed. Changing the name to patient allowed a second submission to reach Claim bound to patient. The final implementation was exercised again after extracting the tested request guard. Automated tests cover duplicate suppression, rejection followed by retry, and exact/idempotent control restoration. Full checks: 615 Python passed, 9 skipped; 190 JavaScript passed. No paid provider requests, Sandbox execution or judge allowance used. Scientific meaning remains a separate explicit confirmation.
