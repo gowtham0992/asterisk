@@ -1,4 +1,4 @@
-import {renderLadder} from './ladder-render.mjs?v=quiet-1';
+import {renderLadder,renderCitationReview} from './ladder-render.mjs?v=citations-1';
 import {FINDINGS} from './ladder-view.mjs?v=ladder-6';
 
 export function createLadderWorkspace({el,btn,api,main,toast}){
@@ -41,7 +41,7 @@ export function createLadderWorkspace({el,btn,api,main,toast}){
    const origin=r.binding_origin;
    const originText=origin?.kind==='recorded_model_proposal'?`Proposed by ${origin.model_name}, prompt ${origin.prompt_version}. Specification edited: ${origin.edited}; inputs changed: ${origin.inputs_changed}.`:(origin?.note||'This older receipt does not record proposal origin.');
    const scope=r.execution.kind==='sandbox_replay'?'Matched a fresh Nebius Sandbox replay, as attested by this Asterisk server.':'Measured on the Asterisk server. No Sandbox replay is recorded.';
-   main.replaceChildren(el('div',{class:'ladder-page'},link('← All saved ladders','#ladders'),panel,
+   main.replaceChildren(el('div',{class:'ladder-page'},link('← All saved ladders','#ladders'),panel,renderCitationReview(r.citation_review),
     el('section',{class:'panel ladder-saved-card'},el('h2',{},'Keep the evidence.'),el('p',{},scope),el('p',{},originText),
      origin?.kind==='recorded_model_proposal'?el('details',{},el('summary',{},'Proposal origin'),el('pre',{},JSON.stringify(origin,null,2))):null,
      el('p',{class:'hint'},r.confirmation.scope+' HTML and JSON contain the full measurement and witnesses. The evidence ZIP also includes all uploaded inputs and instructions for recomputation from a separately trusted Asterisk installation. No new model or Sandbox call is made.'),

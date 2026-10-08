@@ -39,6 +39,10 @@ class LadderRequest(BaseModel):
     proposal_id: str | None = Field(default=None, pattern=r'^[a-f0-9]{24}$')
 
 
+class ReviewRequest(LadderRequest):
+    documentation: list[str] | None = Field(default=None, max_length=20)
+
+
 class ProposalRequest(BaseModel):
     model_config = ConfigDict(extra='forbid')
     claim: str = Field(min_length=3, max_length=1000)
@@ -119,11 +123,15 @@ def register(app, owner, completion=token_factory, sandbox=replay, connect=None)
             raise HTTPException(422, str(exc)) from None
 
     @app.post('/api/ladder/review')
-    def review(body: LadderRequest, request: Request):
+    def review(body: ReviewRequest, request: Request):
         owner(request)
         try:
-            return review_context(body.spec, _files(body.files))
-        except (LadderError, executor.ExtractionError) as exc:
+            files = _files(body.files)
+            context = review_context(body.spec, files)
+            from .ladder_citations import review as citation_review
+            context['citation_review'] = citation_review(body.spec, files, body.documentation)
+            return context
+        except (LadderError, executor.ExtractionError, ValueError) as exc:
             raise HTTPException(422, str(exc)) from None
 
     @app.post('/api/ladder/preview')

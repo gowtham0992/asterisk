@@ -35,6 +35,14 @@ function levelItem(row,level={}){
    row.witnesses.length>0&&el('details',{class:'witnesses'},el('summary',{},`Witnesses · first ${row.witnesses.length} shared ${row.name} values with their source rows`),el('ul',{class:'witness-list'},row.witnesses.map(witnessItem)))));
 }
 
+function renderCitationReview(review){
+ if(!review)return null;
+ return el('section',{class:'panel-meta'},el('h3',{},'Check the documentation behind each binding'),el('p',{},review.scope),
+  ...review.requirements.map(r=>el('div',{},el('p',{},el('strong',{},r.description)),
+   el('p',{class:r.missing_terms.length?'check-error':'hint'},r.missing_terms.length?'Missing cited field references: '+r.missing_terms.join(', '):'Field references appear in cited text. Meaning is not verified.'),
+   el('details',{},el('summary',{},'Candidate passages · not verified support'),...r.candidates.map(c=>el('blockquote',{},el('pre',{style:'white-space:pre-wrap'},c.text+(c.truncated?' [line truncated]':'')),el('cite',{},`${c.file}, line ${c.line}`)))))));
+}
+
 function renderReviewContext(context){
  if(!context)return el('p',{},'This older result does not retain partition and derivation review details.');
  const p=context.population;
@@ -48,7 +56,7 @@ function renderReviewContext(context){
    context.levels.map(r=>el('li',{},`${r.name}: ${r.rule}`,Object.entries(r.overrides).map(([f,rule])=>`; ${f}: ${rule}`)))),
   el('h3',{},'Cited documentation'),el('p',{},'Supplied context, not automatic confirmation.'),
   ...(context.citations||[]).map(c=>el('blockquote',{},el('pre',{style:'white-space:pre-wrap'},c.quote),
-   el('cite',{},`${c.file}, lines ${c.start_line}–${c.end_line}`))));
+   el('cite',{},`${c.file}, lines ${c.start_line}–${c.end_line}`))),renderCitationReview(context.citation_review));
 }
 
 function confirmBox(result,onConfirm){
@@ -75,4 +83,4 @@ function renderLadder(panel,result,onConfirm){
 }
 
 
-export {el,kicker,renderLadder,renderReviewContext};
+export {el,kicker,renderLadder,renderReviewContext,renderCitationReview};

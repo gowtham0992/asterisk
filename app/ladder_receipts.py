@@ -65,6 +65,8 @@ class Receipts:
                                 'provenance': provenance},
                   'confirmation': {'levels': result.get('confirmed_levels', []),
                                    'scope': 'Self-reported meaning confirmation; reviewer identity is not verified.'}}
+        from .ladder_citations import review as citation_review
+        record['citation_review'] = citation_review(spec, files)
         record['integrity_sha256'] = hashlib.sha256(canonical(record).encode()).hexdigest()
         with self.db() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -122,6 +124,10 @@ def receipt_html(record):
         metadata += '<p>Specification edited since proposal: ' + str(origin['edited']) + '; inputs changed: ' + str(origin['inputs_changed']) + '.</p>'
         metadata += '<p>Request SHA-256: ' + escape(origin['payload_sha256']) + '; attempts: ' + str(len(origin['attempts'])) + '.</p>'
     metadata += '<p>' + escape(origin['note']) + '</p>'
+    if record.get('citation_review'):
+        metadata += '<h2>Documentation review</h2><p>' + escape(record['citation_review']['scope']) + '</p>'
+        for requirement in record['citation_review']['requirements']:
+            metadata += '<p>' + escape(requirement['description']) + ': ' + escape('Missing cited field references: '+', '.join(requirement['missing_terms']) if requirement['missing_terms'] else 'Field references appear; meaning is not verified.') + '</p>'
     metadata += '<p>' + escape(text) + '</p><p>Saved ' + escape(record['created_at']) + '</p>'
     metadata += '<p>' + escape(record['confirmation']['scope']) + '</p>'
     metadata += '<p>This unsigned receipt records an interpretation and a measurement. '

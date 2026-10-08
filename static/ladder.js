@@ -1,7 +1,7 @@
 import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
-import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,citedLines,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels} from './ladder-view.mjs?v=evidence-1';
+import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels} from './ladder-view.mjs?v=evidence-1';
 const $=(s,root=document)=>root.querySelector(s);
-import {el,kicker,renderLadder,renderReviewContext} from './ladder-render.mjs?v=quiet-1';
+import {el,kicker,renderLadder,renderReviewContext} from './ladder-render.mjs?v=citations-1';
 const EXAMPLE=['spec.json','split.csv','subjects.csv','README.md'];
 
 async function gallery(){
@@ -221,16 +221,44 @@ function proposer(){
      el('div',{class:'chain-actions'},define));
    }else{
     state.spec=p.spec;
-    const review=await post('/api/ladder/review',{spec:state.spec,files:request.files,confirmed:[]});if(revision!==inputRevision||operation!==workflowRevision)return;
+    const review=await post('/api/ladder/review',{spec:state.spec,files:request.files,confirmed:[],documentation:[...state.docs]});if(revision!==inputRevision||operation!==workflowRevision)return;
     const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
     panels.result.replaceChildren(el('div',{class:'panel-head'},kicker('Review · Proposed ladder · validated and dry-run'),sponsors(true,true)),el('h3',{},`Claim bound to "${p.spec.claim.level}"`),meta,
      el('ol',{class:'proposal-levels'},p.spec.levels.map(l=>el('li',{class:l.name===p.spec.claim.level?'is-claim':''},el('b',{},l.name),l.kind+(l.name===p.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression)+(l.by_source?` (per-file overrides for ${Object.keys(l.by_source).join(', ')})`:'')+(l.missing?' · blanks counted as unmapped':''))))),
-     renderReviewContext(review),
-     ...citedLines(p.spec.citations,state.files).map(c=>el('blockquote',{class:'citation'},c.text,el('small',{},`${c.file}, lines ${c.start}–${c.end}`))),
+     citationEditor(review),
      el('div',{class:'chain-actions'},measureButton,editButton()));
    }
    panels.result.hidden=false;step('propose');panels.result.setAttribute('tabindex','-1');panels.result.focus({preventScroll:true});panels.result.scrollIntoView({behavior:'smooth',block:'start'});button.textContent='Sent';
   }catch(e){if(revision===inputRevision&&operation===workflowRevision){fail(e.message);button.disabled=false;button.textContent='Send again'}}
+ }
+ function citationEditor(initial){
+  const holder=el('section',{});let review=initial,page=0;
+  const names=review.citation_review?.documents.map(d=>d.file)||[...state.docs];
+  const choose=el('select',{},names.map(n=>el('option',{value:n},n)));
+  const start=el('input',{type:'number',min:'1',value:'1'}),end=el('input',{type:'number',min:'1',value:'1'});
+  const text=el('pre',{style:'white-space:pre-wrap;overflow-wrap:anywhere'}),notice=el('p',{role:'status'});
+  const previous=el('button',{type:'button',class:'secondary'},'Previous documentation lines'),next=el('button',{type:'button',class:'secondary'},'Next documentation lines');
+  function show(){const lines=(state.files[choose.value]||'').split('\n').slice(0,lineCount(state.files[choose.value]));page=Math.min(page,Math.max(0,Math.ceil(lines.length/40)-1));text.textContent=lines.slice(page*40,(page+1)*40).map((s,i)=>`${page*40+i+1}  ${s}`).join('\n');previous.disabled=page===0;next.disabled=(page+1)*40>=lines.length}
+  choose.addEventListener('change',()=>{page=0;show()});previous.addEventListener('click',()=>{page--;show()});next.addEventListener('click',()=>{page++;show()});
+  const add=el('button',{type:'button',class:'secondary'},'Add reviewed citation');
+  function draw(){holder.replaceChildren(renderReviewContext(review),el('details',{},el('summary',{},'Read full documentation and add a citation'),
+   el('p',{},'Read the meaning, including denials or limitations. Adding a citation changes the specification, clears any prior result or confirmation, and requires a new local measurement. It makes no model call.'),
+   el('label',{},'Citation document ',choose),text,el('div',{class:'chain-actions'},previous,next),
+   el('label',{},'First citation line ',start),el('label',{},'Last citation line ',end),add,notice))}
+  add.addEventListener('click',async()=>{
+   const citation={file:choose.value,start_line:Number(start.value),end_line:Number(end.value)};
+   if(!names.includes(citation.file)||!Number.isInteger(citation.start_line)||!Number.isInteger(citation.end_line)||citation.start_line<1||citation.end_line<citation.start_line||citation.end_line-citation.start_line>=40||citation.end_line>lineCount(state.files[citation.file])){notice.textContent='Choose an existing documentation range of 1–40 lines.';return}
+   if(state.spec.citations.some(c=>JSON.stringify(c)===JSON.stringify(citation))){notice.textContent='That range is already cited.';return}
+   if(state.spec.citations.length>=16){notice.textContent='At most 16 citations are supported. Define the specification differently to replace a range.';return}
+   const revision=inputRevision,operation=++workflowRevision,newSpec={...state.spec,citations:[...state.spec.citations,citation]};add.disabled=true;
+   try{
+    const updated=await post('/api/ladder/review',{spec:newSpec,files:body().files,confirmed:[],documentation:[...state.docs]});
+    if(revision!==inputRevision||operation!==workflowRevision)return;
+    state.spec=newSpec;state.result=null;state.confirmed=[];state.replay=null;state.bundleReceipt=null;reset('ladder');
+    review=updated;notice.textContent='Citation added. Meaning remains unverified; measure the reviewed specification again.';draw();step('propose');
+   }catch(e){if(revision===inputRevision&&operation===workflowRevision)notice.textContent=e.message}
+   finally{add.disabled=false}
+  });draw();show();return holder;
  }
  function editButton(){const b=el('button',{class:'text-button',type:'button'},'Define it differently');b.addEventListener('click',()=>builder());return b}
  function builder(){
@@ -307,13 +335,12 @@ function proposer(){
    if(!sources.length){fail('Choose at least one table of observations.');return}
    if(!docs.includes(docSel.value)||!Number(start.value)||!Number(end.value)){fail('Choose the documentation and line range you reviewed.');return}
    state.spec=buildSpec({claim:claimInput.value.trim(),unitName:unitName.value,sources,unit:unitSpec(),citation:{file:docSel.value,start:start.value,end:end.value}});
-   const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[]});if(revision!==inputRevision||operation!==workflowRevision)return;
+   const review=await post('/api/ladder/review',{spec:state.spec,files:body().files,confirmed:[],documentation:[...state.docs]});if(revision!==inputRevision||operation!==workflowRevision)return;
    state.proposal=state.proposal?{...state.proposal,defined_by:'person'}:null;
    const measureButton=el('button',{class:'primary',type:'button'},'Measure on server');measureButton.addEventListener('click',()=>measure([]));
    panels.result.replaceChildren(kicker('Review · Defined by you'),el('h3',{},`Claim bound to "${state.spec.claim.level}"`),
     el('ol',{class:'proposal-levels'},state.spec.levels.map(l=>el('li',{},el('b',{},l.name),l.kind+(l.name===state.spec.claim.level?' · the claim level':''),el('em',{},describeExpression(l.expression))))),
-    renderReviewContext(review),
-    ...citedLines(state.spec.citations,state.files).map(c=>el('blockquote',{class:'citation'},c.text,el('small',{},`${c.file}, lines ${c.start}–${c.end}`))),
+    citationEditor(review),
     el('div',{class:'chain-actions'},measureButton,editButton()));
    step('propose');
    }catch(e){fail(e.message)}finally{use.disabled=false}

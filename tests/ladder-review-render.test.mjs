@@ -39,3 +39,10 @@ test('confirmation uses the reviewed derivation and partition, never proposer pr
  assert.doesNotMatch(label.textContent,/ALREADY PROVEN/);
  assert.match(panel.textContent,/Proposer’s note \(unverified\)/);
 });
+test('citation gaps and denial candidates remain explicitly unverified text',async()=>{
+ const {renderCitationReview}=await import('../static/ladder-render.mjs');
+ const r={scope:'Matching words do not verify meaning.',requirements:[{description:'rotor join',missing_terms:['window_key'],candidates:[{file:'notes.txt',line:2,text:'Do NOT join <script>window_key</script>',truncated:false}]}]};
+ const node=renderCitationReview(r);assert.match(node.textContent,/Missing cited field references: window_key/);
+ assert.match(node.textContent,/Candidate passages · not verified support/);assert.match(node.textContent,/Do NOT join/);
+ const all=n=>[n,...n.children.flatMap(all)];assert.equal(all(node).some(n=>n.tag==='script'),false);
+});
