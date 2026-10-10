@@ -78,6 +78,9 @@ DOCS += ['research/ucf101-researcher-trial/'+name for name in ('reference.py','a
 # Research-only comparison utilities, never captured prompts, replies or private inputs.
 DOCS += ['research/ladder-source-grammar-v7/'+name for name in ('variant.py','study.py','score.py','test_score.py','PROTOCOL.md')]
 
+# Research-only focused comparison; private packets and model replies excluded.
+DOCS += ['research/ladder-focused-v8/'+name for name in ('variant.py','study.py','test_study.py','PROTOCOL.md','REPORT.md')]
+
 
 def release_files(root):
     paths=[root/n for n in TOP+DOCS if (root/n).is_file()]

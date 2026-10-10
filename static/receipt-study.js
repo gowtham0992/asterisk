@@ -1,13 +1,16 @@
 import {renderLadder} from './ladder-render.mjs?v=quiet-1';
 const $=id=>document.getElementById(id);
-let started=null,record=null,interval=null;
+let started=null,record=null,interval=null,starting=false;
 const sha=async text=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)))].map(x=>x.toString(16).padStart(2,'0')).join('');
 $('study-screen').addEventListener('submit',async e=>{
- e.preventDefault();if(started!==null)return;
+ e.preventDefault();if(started!==null||starting)return;
  if(!$('study-consent').checked)return;
  if($('study-experience').value!=='yes'||$('study-exposure').value!=='no'){
   $('study-status').textContent='This review needs someone with practical held-out evaluation experience who has not seen the receipt. No task has started.';return;
  }
+ starting=true;$('study-start').disabled=true;
+ const role=$('study-role').value;
+ $('study-status').textContent='Loading the receipt. The five-minute timer has not started.';
  try{
   const response=await fetch('/static/ladders/wsibench-report.json');if(!response.ok)throw new Error();
   const text=await response.text(),result=JSON.parse(text);
@@ -16,10 +19,11 @@ $('study-screen').addEventListener('submit',async e=>{
   $('study-receipt').hidden=false;$('study-answers').hidden=false;$('study-screen').hidden=true;
   started=performance.now();record={schema:'asterisk-comprehension-response/1',participant_id:crypto.randomUUID(),
    receipt_sha256:receiptHash,started_utc:new Date().toISOString(),receipt_kind:'saved public measurement',
-   consent:true,experience:$('study-role').value,prior_exposure:false,visibility_changes:[]};
+   consent:true,experience:role,prior_exposure:false,visibility_changes:[]};
   interval=setInterval(()=>{$('study-status').textContent=Math.floor((performance.now()-started)/1000)>300?
    'Five minutes have elapsed. You can still finish; the extra time will be recorded.':`${Math.floor((performance.now()-started)/1000)} seconds elapsed.`},1000);
- }catch{$('study-status').textContent='Receipt access failed. No task has started. Please tell the facilitator.'}
+ }catch{$('study-status').textContent='Receipt access failed. No task has started. You can try Start reading again or tell the facilitator.'}
+ finally{starting=false;$('study-start').disabled=false}
 });
 document.addEventListener('visibilitychange',()=>{if(record&&started!==null)record.visibility_changes.push({state:document.visibilityState,elapsed_seconds:(performance.now()-started)/1000})});
 $('study-answers').addEventListener('submit',e=>{
