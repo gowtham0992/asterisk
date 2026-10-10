@@ -322,10 +322,22 @@ def parse(text, files, claim, documentation=None):
         if citation.get('file', '') not in docs:
             raise ladder.LadderError('Units must be cited from documentation, not from data tables')
     try:
-        ladder.population(spec, files)
+        base = ladder.population(spec, files)
     except executor.ExtractionError as exc:
         detail = _sample_transform_error(spec) or str(exc)
         raise ladder.LadderError(f'The proposed sources cannot be read: {detail}') from None
+    index = ladder._record_index(files, spec)
+    for position, level in enumerate(spec['levels']):
+        try:
+            ladder._derive(spec, level, files, base, index)
+        except ladder.LadderError:
+            # The executor's diagnostics can contain unshared sample values.
+            # Repairs identify the failing expression without transmitting them.
+            raise ladder.LadderError(
+                f'levels[{position}] cannot extract its unit from the local files. '
+                'Check its column, lookup, and transform boundaries; if missing values are expected, '
+                'declare missing: unmapped. This does not establish the scientific meaning of the unit.'
+            ) from None
     return {'status': 'ladder', 'spec': spec}
 
 

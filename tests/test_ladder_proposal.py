@@ -205,3 +205,35 @@ def test_empty_reply_has_a_distinct_bounded_repair_reason():
     with pytest.raises(LadderError) as caught:
         lp.parse('   ', FILES, CLAIM)
     assert 'empty response' in str(caught.value)
+
+
+def test_unit_extraction_is_checked_before_a_proposal_is_accepted():
+    broken = spec()
+    broken['levels'][1]['expression'] = {'column': 'nonexistent'}
+    with pytest.raises(LadderError, match='levels\\[1\\] cannot extract'):
+        lp.parse(json.dumps({'status': 'ladder', 'spec': broken}), FILES, CLAIM)
+
+
+def test_unit_repair_does_not_transmit_unshared_row_values():
+    broken = spec()
+    broken['levels'][1]['expression'] = {'column': 'image', 'prefix': 128}
+    seen = []
+    def complete(messages, maximum, timeout):
+        seen.append(messages)
+        return json.dumps({'status': 'ladder', 'spec': broken if len(seen) == 1 else spec()})
+    got, attempts = lp.propose(CLAIM, FILES, complete)
+    assert got['status'] == 'ladder'
+    assert len(attempts) == 2
+    assert 'TCGA-' not in seen[1][-1]['content']
+    assert 'levels[1]' in seen[1][-1]['content']
+
+
+def test_explicit_unmapped_policy_still_allows_incomplete_inputs_for_review():
+    incomplete = spec()
+    # A blank recorded identity is allowed only under the explicit policy.
+    incomplete['levels'][1]['expression'] = {'column': 'patient'}
+    incomplete['levels'][1]['missing'] = 'unmapped'
+    files = {**FILES, 'train.json': json.dumps([{'image': 'a', 'patient': ''}]),
+             'test.json': json.dumps([{'image': 'b', 'patient': 'p'}])}
+    incomplete['levels'] = incomplete['levels'][:2]
+    assert lp.parse(json.dumps({'status': 'ladder', 'spec': incomplete}), files, CLAIM)['status'] == 'ladder'
