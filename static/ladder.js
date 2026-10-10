@@ -139,7 +139,7 @@ function proposer(){
  function ready(){previewButton.disabled=!(claimInput.value.trim().length>=3&&state.docs.size>0&&tableFiles().length>0);$('#propose-manual').disabled=previewButton.disabled}
  $('#propose-manual').addEventListener('click',()=>builder());
  function renderInventory(){
-  inventory.replaceChildren(el('p',{},'Review each file role. Text filename lists are suggested as data; prose is suggested as documentation. You can change either. For data, select only identifier columns whose example values may be sent. No example values are selected automatically.'),
+  inventory.replaceChildren(el('p',{},'Review each file role. Text filename lists are suggested as data; prose is suggested as documentation. You can change either. For data, select only identifier columns whose example values may be sent. Your own uploads start with no example values selected. The synthetic example preselects its fictional slide identifiers; review the boxes before continuing.'),
    ...Object.keys(state.files).map(name=>{
     const doc=el('input',{type:'checkbox',id:'doc-'+name,...(state.docs.has(name)?{checked:'true'}:{})});
     doc.addEventListener('change',()=>{doc.checked?state.docs.add(name):state.docs.delete(name);invalidate();renderInventory();ready()});
@@ -204,7 +204,7 @@ function proposer(){
    send.addEventListener('click',()=>propose(send));
    panels.payload.replaceChildren(kicker('Define · Review the outbound request'),el('h3',{},'Not yet sent to Nebius. Your files are on the Asterisk server.'),
     el('div',{class:'chain-meta'},el('span',{},data.provider),el('span',{},data.model_name),el('span',{},`${data.characters.toLocaleString('en-US')} characters`),el('span',{},'SHA-256 '+data.payload_sha256.slice(0,16)+'…')),
-    el('p',{},`Documentation text (${Object.keys(user.documentation).join(', ')}), column names with counts, and example values only for the ${state.share.size} column(s) you ticked. Other cell values are held by this Asterisk server and are not sent to the model. A Sandbox replay sends the supplied files separately, only when you request it.`),
+    el('p',{},`Documentation text (${Object.keys(user.documentation).join(', ')}), column names with counts, and example values only for the ${state.share.size} selected column(s). Other cell values are held by this Asterisk server and are not sent to the model. A Sandbox replay sends the supplied files separately, only when you request it.`),
     el('details',{},el('summary',{},'Show the full request'),el('pre',{},JSON.stringify(user,null,1))),
     el('div',{class:'chain-actions'},send));
    panels.payload.hidden=false;step('preview');
