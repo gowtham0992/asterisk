@@ -1,5 +1,6 @@
 """Build only the static product introduction; never publish or copy application state."""
 import argparse
+import base64
 import html
 import json
 from pathlib import Path
@@ -32,6 +33,8 @@ def build(output, workspace_url, source_url=None, allow_local=False):
     values = {'WORKSPACE_URL': workspace_url, 'SLIDES': levels['slide']['shared'],
               'PATIENTS': levels['patient']['shared'], 'AFFECTED': levels['patient']['affected_test_rows'],
               'ROWS': levels['patient']['test_rows']}
+    for name in ('nebius', 'nvidia'):
+        values[name.upper()+'_MARK'] = 'data:image/svg+xml;base64,'+base64.b64encode((ROOT/'static/brand'/f'{name}.svg').read_bytes()).decode('ascii')
     witness = levels['patient']['witnesses'][0]
     values.update({'WITNESS_UNIT': witness['unit'], 'WITNESS_TRAIN': witness['train']['sample'],
                    'WITNESS_TEST': witness['test']['sample'],
