@@ -37,3 +37,18 @@ def test_local_preview_requires_explicit_option_and_html_escapes_urls(tmp_path):
     out = build(tmp_path/'preview', 'http://127.0.0.1:8792/#ladders', allow_local=True,
                 source_url='https://example.org/repo?a=1&b=2')
     assert 'href="https://example.org/repo?a=1&amp;b=2"' in (out/'index.html').read_text()
+
+
+def test_public_witness_and_definition_come_from_retained_sources(tmp_path):
+    from scripts.build_public_site import ROOT
+    out = build(tmp_path/'public', 'https://app.example.org/static/ladder.html#receipt')
+    page = (out/'index.html').read_text()
+    result = json.loads((out/'evidence.json').read_text())
+    patient = next(x for x in result['levels'] if x['name'] == 'patient')
+    witness = patient['witnesses'][0]
+    assert witness['unit'] in page
+    assert witness['train']['sample'] in page and witness['test']['sample'] in page
+    assert (ROOT/'examples/ladders/docs/tcga-barcode.md').read_text().splitlines()[1] in page
+    assert 'Live call' not in page
+    assert 'underlying image' not in page
+    assert '/static/ladder.html#check' in page

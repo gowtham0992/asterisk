@@ -1,6 +1,14 @@
 # Asterisk current readiness
 
-Updated 7 October 2026, Denver. **Working hosted research preview; release-review hardening deployed and checked on 28 September. Researcher usefulness remains unmeasured.**
+Updated 23 October 2026, Denver. **Working hosted research preview; release-review hardening deployed and checked on 28 September. Researcher usefulness remains unmeasured.**
+
+## Latest product restructuring, 23 October
+
+The receipt-first entry (`/static/ladder.html#receipt`, also the default view) leads with the retained WSI-Bench result: 0 shared slide IDs, 42 shared patient IDs, 43 of 208 evaluation rows affected. One retained patient witness is expanded. Its main action loads the same identifier-only files into the normal reviewed workflow; loading makes no model or Sandbox call. The site rung is labeled expected-shared context in this introductory figure only; the recorded measurement and all scientific semantics remain unchanged.
+
+The exact read-only `/public/` assets are accessible without workspace credentials. The workspace and APIs remain protected. The README now describes the ladder architecture alone and links the complete older text in a dated history file. Shipping v4 and its failed 5/10 gate remain unchanged; the later unsupported-binding exception is explicit. No new prompt, benchmark, recruitment, video or submission was created.
+
+See [implementation and verification](submission/receipt-first-2026-10-23.md) for the current source checks and deployment status. Current restructuring checks: **620 Python passed, 9 existing skips; 194 JavaScript passed**. Counts in dated sections below are historical runs, not current totals.
 
 ## Current product
 
@@ -34,7 +42,7 @@ A real WSI-Bench identifier-only projection can now be loaded into the proposal 
 
 Dedicated judge credentials use an approved $25 estimated cumulative reserve through December 15, separate from preview daily caps. Remaining calls are visible, with persistent atomic reservations and legacy-route restrictions. A finite reserve is not unlimited testing; organizer confirmation of the unrestricted-access clause remains unobtained. See [judge access](submission/judge-access-2026-10-07.md).
 
-The human-review page supports screening, timed receipt reading, participant-owned answer download and withdrawal. Developer dry runs checked eligibility rejection and withdrawal; no human response was collected. The owner has no recruitment account yet. See [human-review collection](submission/human-review-launch-2026-10-07.md).
+The human-review page supports screening, timed receipt reading, participant-owned answer download and withdrawal. Developer dry runs checked eligibility rejection and withdrawal; no human response was collected. The owner chose to skip Prolific; the voluntary study remains available without further recruitment work. See [human-review collection](submission/human-review-launch-2026-10-07.md).
 
 ## Reliability and evidence limits
 

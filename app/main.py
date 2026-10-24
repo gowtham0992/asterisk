@@ -57,11 +57,24 @@ app.add_middleware(TrustedHostMiddleware, allowed_hosts=list(RELEASE.hosts))
 model_lock = threading.Lock()
 execution_lock = threading.Lock()
 EXECUTOR = 'local'
+# Exact, read-only build outputs only; never expose the source tree or workspace state.
+PUBLIC_ASSETS = {'/public/': 'index.html', '/public/index.html': 'index.html',
+                 '/public/site.css': 'site.css', '/public/evidence.json': 'evidence.json'}
+
+
+@app.api_route('/public/{asset:path}', methods=['GET', 'HEAD'])
+def public_introduction(asset: str, request: Request):
+    name = PUBLIC_ASSETS.get(request.url.path)
+    if name is None:
+        raise HTTPException(404)
+    return FileResponse(Path(__file__).resolve().parents[1] / 'site' / name)
+
 
 
 @app.middleware('http')
 async def boundaries(request: Request, call_next):
-    if request.url.path != '/healthz' and not RELEASE.authorized(request.headers.get('authorization','')):
+    readonly_public = request.method in ('GET', 'HEAD') and request.url.path in PUBLIC_ASSETS
+    if request.url.path != '/healthz' and not readonly_public and not RELEASE.authorized(request.headers.get('authorization','')):
         return Response(status_code=401, headers={'WWW-Authenticate':'Basic realm="Asterisk research preview", charset="UTF-8"','Cache-Control':'no-store'})
     request.state.judge = RELEASE.is_judge(request.headers.get('authorization',''))
     if request.state.judge and request.url.path.startswith('/api/') and not (
@@ -96,7 +109,7 @@ async def boundaries(request: Request, call_next):
     response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://raw.githubusercontent.com/kakumarabhishek/Corrected-Skin-Image-Datasets/ac655ac5a5b93264c57d69d6d520778d915bfc89/DermaMNIST/DermaMNIST_Analysis/; frame-ancestors 'none'; base-uri 'none'; form-action 'self'"
     if request.url.path.startswith('/api/'):
         response.headers['Cache-Control'] = 'no-store'
-    elif request.url.path == '/' or request.url.path.startswith('/static/'):
+    elif request.url.path == '/' or request.url.path.startswith(('/static/', '/public/')):
         # Static filenames are mutable across releases (including module imports).
         # Revalidate cached bytes rather than heuristically serving an older UI.
         # ETags still allow an unchanged resource to return a bodyless 304.

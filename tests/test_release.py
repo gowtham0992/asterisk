@@ -69,3 +69,18 @@ def test_ladder_runtime_assets_ship_but_private_run_records_do_not(tmp_path):
     with zipfile.ZipFile(package(tmp_path)) as z:
         assert all('asterisk/'+name in z.namelist() for name in required)
         assert not any(b'do-not-ship' in z.read(name) for name in z.namelist())
+
+
+def test_only_exact_readonly_public_assets_bypass_preview_auth(client, monkeypatch):
+    monkeypatch.setattr(main, 'RELEASE', ReleaseSettings(True, ('testserver',), 'a'*24))
+    for path in ('/public/', '/public/index.html', '/public/site.css', '/public/evidence.json'):
+        response = client.get(path)
+        assert response.status_code == 200, path
+        assert 'set-cookie' not in response.headers
+        assert response.headers['X-Content-Type-Options'] == 'nosniff'
+    assert 'One patient. Two different slides.' in client.get('/public/').text
+    for path in ('/public/private.txt', '/public/README.md', '/public/../api/session',
+                 '/public/%2e%2e/api/session', '/api/session', '/static/ladder.html', '/static/product.html'):
+        assert client.get(path).status_code == 401, path
+    for method in ('post', 'put', 'delete'):
+        assert getattr(client, method)('/public/').status_code == 401

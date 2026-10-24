@@ -1,4 +1,4 @@
-import {heroFigure,plural} from './ladder-figure.mjs?v=ladder-1';
+import {heroFigure,plural} from './ladder-figure.mjs?v=receipt-first-1';
 import {ladderView,referencedFiles,matchFiles,confirmable,isDocumentation,tableColumns,describeExpression,receipt,tableRows,deriveValue,guessPartition,splitColumn,buildSpec,lineCount,readSelectedFiles,partitionLabels,bindingSeed,preserveBinding,bindingPreview,reviewBindingPreview,validateBuilderUnit} from './ladder-view.mjs?v=review-recovery-1';
 const $=(s,root=document)=>root.querySelector(s);
 import {el,kicker,builderField,lockBuilderControls,createBuilderReview,renderLadder,renderReviewContext,renderBindingQuestions,renderBindingFailures} from './ladder-render.mjs?v=review-recovery-1';
@@ -101,7 +101,7 @@ async function providerAllowance(){
   await fetch('/api/session',{credentials:'same-origin'});
   const r=await fetch('/api/ladder/allowance',{credentials:'same-origin'});if(!r.ok)return;
   const data=await r.json();let panel=$('#provider-allowance');
-  if(!panel){panel=el('p',{id:'provider-allowance',class:'product-note',role:'status'});$('#propose-form').append(panel)}
+  if(!panel){panel=el('p',{id:'provider-allowance',class:'product-note',role:'status'});$('#ladder-main').prepend(panel)}
   panel.textContent=data.mode==='judge'?`Dedicated judge access · ${data.remaining_calls} reserved calls remain through ${data.expires?new Date(data.expires).toLocaleDateString(): 'the configured expiry'}. No daily session cap. A proposal reserves up to two calls; replay reserves one.`:
    data.remaining_calls===null?'Local installation.':`Live allowance: ${data.remaining_calls} reserved calls remain today. Manual measurement and saved receipts do not use this allowance.`;
  }catch{}
@@ -139,7 +139,7 @@ function proposer(){
  function ready(){previewButton.disabled=!(claimInput.value.trim().length>=3&&state.docs.size>0&&tableFiles().length>0);$('#propose-manual').disabled=previewButton.disabled}
  $('#propose-manual').addEventListener('click',()=>builder());
  function renderInventory(){
-  inventory.replaceChildren(el('p',{},'Review each file role. Text filename lists are suggested as data; prose is suggested as documentation. You can change either. For data, select only identifier columns whose example values may be sent. Your own uploads start with no example values selected. The synthetic example preselects its fictional slide identifiers; review the boxes before continuing.'),
+  inventory.replaceChildren(el('p',{},'Review each file role. Text filename lists are suggested as data; prose is suggested as documentation. You can change either. For data, select only identifier columns whose example values may be sent. Your own uploads start with no example values selected. The synthetic example preselects fictional slide identifiers; the real benchmark preset preselects its projected image identifiers. Review the boxes before continuing.'),
    ...Object.keys(state.files).map(name=>{
     const doc=el('input',{type:'checkbox',id:'doc-'+name,...(state.docs.has(name)?{checked:'true'}:{})});
     doc.addEventListener('change',()=>{doc.checked?state.docs.add(name):state.docs.delete(name);invalidate();renderInventory();ready()});
@@ -175,7 +175,9 @@ function proposer(){
  drop.addEventListener('drop',e=>{if(e.dataTransfer?.files?.length)useFiles([...e.dataTransfer.files])});
  claimInput.addEventListener('input',()=>{invalidate();ready()});
  model.addEventListener('change',()=>{invalidate()});
- $('#propose-real').addEventListener('click',async()=>{
+ async function loadRealBenchmark(){
+  location.hash='propose';
+  $('#propose-title').scrollIntoView({block:'start'});
   const operation=++selectionGeneration;const revision=inputRevision;const button=$('#propose-real');button.disabled=true;
   try{
    await fetch('/api/session',{credentials:'same-origin'});
@@ -186,8 +188,10 @@ function proposer(){
    await useFiles(data.files.map(f=>new File([f.content],f.name)));
    ['train.json','test.json'].forEach(n=>state.share.add(JSON.stringify([n,'image'])));renderInventory();ready();
    $('#propose-drop-hint').textContent=data.notice+' Source rows: '+data.provenance['train.json'].rows+' training, '+data.provenance['test.json'].rows+' evaluation. Clinical conversations and question IDs excluded.';
-  }catch(e){if(operation===selectionGeneration)fail(e.message)}finally{button.disabled=false}
- });
+  }catch(e){if(operation===selectionGeneration)fail(e.message)}finally{button.disabled=false;$('#run-saved-benchmark').disabled=false}
+ }
+ $('#propose-real').addEventListener('click',loadRealBenchmark);
+ $('#run-saved-benchmark').addEventListener('click',()=>{if($('#propose-real').disabled)return;$('#run-saved-benchmark').disabled=true;loadRealBenchmark()});
  $('#propose-example').addEventListener('click',async()=>{
   try{const names=['README.md','train.json','test.json'];
    const files=await Promise.all(names.map(async n=>{const r=await fetch('/static/ladder-example-propose/'+n);if(!r.ok)throw new Error();return new File([await r.text()],n)}));
@@ -520,14 +524,28 @@ async function experiment(){
 }
 
 function updateView(){
- const hash=location.hash.slice(1),view=hash==='experiment'?'evidence':hash==='benchmarks'||/^(wsibench-|ptbxl|esc50-|urbansound8k-)/.test(hash)?'benchmarks':'workspace';
+ const hash=location.hash.slice(1),view=(!hash||hash==='receipt')?'receipt':hash==='experiment'?'evidence':hash==='benchmarks'||/^(wsibench-|ptbxl|esc50-|urbansound8k-)/.test(hash)?'benchmarks':'workspace';
  document.body.dataset.view=view;
- for(const link of document.querySelectorAll('.product-nav nav a')){const selected=link.getAttribute('href')===(view==='workspace'?'#propose':view==='benchmarks'?'#benchmarks':'#experiment');if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current')}
+ for(const link of document.querySelectorAll('.product-nav nav a')){const selected=link.getAttribute('href')===(view==='receipt'?'#receipt':view==='workspace'?'#propose':view==='benchmarks'?'#benchmarks':'#experiment');if(selected)link.setAttribute('aria-current','page');else link.removeAttribute('aria-current')}
 }
 updateView();window.addEventListener('hashchange',updateView);
-heroFigure($('#hero-rungs'));checker();proposer();
+heroFigure($('#hero-rungs'));savedWitness();checker();proposer();
 Promise.allSettled([gallery(),experiment()]).then(()=>{
  const id=location.hash.slice(1);if(['propose','benchmarks','experiment'].includes(id))document.getElementById(id)?.scrollIntoView();
 });
 
 providerAllowance();
+
+async function savedWitness(){
+ const panel=$('#saved-witness');
+ try{
+  const response=await fetch('/static/ladders/wsibench-report.json');if(!response.ok)throw Error();
+  const result=await response.json(),patient=result.levels.find(l=>l.name==='patient'),w=patient?.witnesses?.[0];if(!w)throw Error();
+  panel.replaceChildren(el('h2',{},'One patient. Two different slides.'),el('strong',{},w.unit),
+   el('dl',{},...[['Training',w.train],['Evaluation',w.test]].map(([label,side])=>el('div',{},el('dt',{},label),el('dd',{},side.sample),...side.unit_source.map(ref=>el('dd',{},`${ref.file} ${ref.at}`))))),
+   el('blockquote',{},'The participant is identified by the first three barcode components, Project-TSS-Participant, for example TCGA-02-0001 (12 characters).'),
+   el('p',{},'Recorded documentation: docs/tcga-barcode.md, line 2. ',el('a',{href:'https://docs.gdc.cancer.gov/Encyclopedia/pages/TCGA_Barcode/'},'Read the TCGA barcode definition ↗')),
+   el('p',{},'These are retained identifier references, not the original image contents. The patient rule groups both slide names under the same 12-character prefix.'),
+   el('a',{href:'/static/ladders/wsibench-report.json'},'Inspect the saved measurement JSON ↗'));
+ }catch{panel.replaceChildren(el('p',{},'The saved witness could not be loaded. Open Benchmarks to retry, or start a new check.'))}
+}

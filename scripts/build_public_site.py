@@ -32,6 +32,12 @@ def build(output, workspace_url, source_url=None, allow_local=False):
     values = {'WORKSPACE_URL': workspace_url, 'SLIDES': levels['slide']['shared'],
               'PATIENTS': levels['patient']['shared'], 'AFFECTED': levels['patient']['affected_test_rows'],
               'ROWS': levels['patient']['test_rows']}
+    witness = levels['patient']['witnesses'][0]
+    values.update({'WITNESS_UNIT': witness['unit'], 'WITNESS_TRAIN': witness['train']['sample'],
+                   'WITNESS_TEST': witness['test']['sample'],
+                   'WITNESS_TRAIN_REF': ', '.join(ref['file']+' '+ref['at'] for ref in witness['train']['unit_source']),
+                   'WITNESS_TEST_REF': ', '.join(ref['file']+' '+ref['at'] for ref in witness['test']['unit_source']),
+                   'PATIENT_QUOTE': (ROOT/'examples/ladders/docs/tcga-barcode.md').read_text().splitlines()[1]})
     page = (ROOT/'public_site/index.html').read_text()
     for key, value in values.items():
         page = page.replace('{{'+key+'}}', html.escape(str(value), quote=True))

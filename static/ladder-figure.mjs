@@ -28,7 +28,7 @@ export async function heroFigure(list,source='/static/ladders/wsibench-report.js
  try{
   const r=await fetch(source);if(!r.ok)throw new Error();const result=await r.json();
   const view=ladderView(result),levels=Object.fromEntries(result.levels.map(l=>[l.name,l]));
-  list.replaceChildren(...view.rows.filter(x=>x.kind!=='attribute').reverse().map(x=>rung(x,levels[x.name])));
+  list.replaceChildren(...view.rows.reverse().map(x=>rung(source==='/static/ladders/wsibench-report.json'&&x.name==='site'&&!x.isClaim?{...x,tone:'attribute',state:'Expected shared · context'}:x,levels[x.name])));
  }catch{list.replaceChildren(el('li',{class:'figure-loading'},'The measured ladder could not be loaded.'))}
 }
 

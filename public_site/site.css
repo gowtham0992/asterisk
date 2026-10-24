@@ -11,3 +11,5 @@ figure{background:#fff;border-color:var(--line);border-radius:20px}
 .rung.shared{background:var(--pale)}.close{border-radius:24px}
 a:focus-visible,summary:focus-visible{outline-color:var(--green)}
 @media(max-width:680px){h1{font-size:48px}.close{border-radius:20px}}
+
+.witness dl{display:grid;grid-template-columns:1fr 1fr;gap:32px}.witness dt{font-size:12px;color:var(--muted)}.witness dd{margin:8px 0;font:13px/1.7 monospace;overflow-wrap:anywhere}.witness blockquote{margin:24px 0;padding:20px;background:var(--pale);border-left:3px solid var(--green)}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:20px;background:#fff;border:1px solid var(--line);border-radius:12px;font-size:13px}code{overflow-wrap:anywhere}@media(max-width:680px){.witness dl{grid-template-columns:1fr;gap:20px}}
