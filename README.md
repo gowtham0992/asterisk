@@ -153,7 +153,7 @@ The shipping Super v4 prompt scored **5/10 on retained preparation set D**, belo
 
 Asterisk measures **exact recorded identifiers under declared derivations**. It does not detect image similarity, undocumented identity links or preprocessing leakage, and does not quantify accuracy effects. Researcher usefulness, time saved and adoption remain unmeasured.
 
-[Retained model evaluation](evaluation/ladder-proposal-v5/RESULTS.md) · [Later reliability exception](docs/submission/line-bounds-comparison-2026-10-07.md) · [Workflow verification](docs/submission/receipt-first-2026-10-23.md)
+[Retained model evaluation](evaluation/ladder-proposal-v5/RESULTS.md) · [Later reliability exception](docs/evidence/line-bounds-comparison-2026-10-07.md) · [Workflow verification](docs/evidence/receipt-first-2026-10-23.md)
 
 ## Development and deployment
 
@@ -166,7 +166,7 @@ Provider calls in automated tests are mocked. Some HTTP tests require permission
 
 For hosting, use `ASTERISK_HOSTED_WORKFLOW=ladder` with `scripts/start_hosted.sh`, HTTPS, persistent storage and explicit preview authentication. Configure provider usage limits before enabling remote calls. The hosted preview uses finite call reservations; it is not unlimited testing or a production account system. See [host configuration and rollback](docs/release.md).
 
-[Current product records](docs/current-readiness.md) · [Ladder implementation handover](docs/submission/HANDOVER-ladder.md) · [Historical single-binding guide](docs/history/single-binding-readme-2026-10-23.md)
+[Current product records](docs/current-readiness.md) · [Historical single-binding guide](docs/history/single-binding-readme-2026-10-23.md)
 
 ## License
 

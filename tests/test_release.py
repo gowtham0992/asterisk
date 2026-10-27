@@ -84,3 +84,20 @@ def test_only_exact_readonly_public_assets_bypass_preview_auth(client, monkeypat
         assert client.get(path).status_code == 401, path
     for method in ('post', 'put', 'delete'):
         assert getattr(client, method)('/public/').status_code == 401
+
+
+def test_source_release_excludes_submission_preparation_and_keeps_product_evidence(tmp_path):
+    from scripts.package_release import release_files
+    private = ('devpost-submission.md', 'docs/demo-script.md',
+               'docs/submission/devpost-ladder-draft.md', 'docs/submission/judge-testing.md',
+               'docs/reviews/external-product-direction-2026-09-26.md',
+               '.data/notes.md', 'artifacts/demo/narration.txt')
+    public = ('README.md', 'docs/evidence/line-bounds-comparison-2026-10-07.md',
+              'docs/operations/aws-deployment.md', 'docs/public-site.md')
+    for name in private + public:
+        path = tmp_path/name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text('fixture')
+    paths = {p.relative_to(tmp_path).as_posix() for p in release_files(tmp_path)}
+    assert set(public) <= paths
+    assert not set(private) & paths

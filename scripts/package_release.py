@@ -4,7 +4,7 @@ import hashlib,json,zipfile
 ROOT=Path(__file__).resolve().parents[1]
 TOP=['asterisk.py','README.md','LICENSE','.env.example','.gitignore','requirements.txt','requirements.lock.txt','requirements-sandbox.txt']
 TREES=['app','static','tests','scripts']
-DOCS=['evaluation/run.py','evaluation/cases.json','evaluation/README.md','evaluation/probe-pilot/budget.py','docs/architecture.md','docs/verification.md','docs/release.md','docs/demo-script.md','evaluation/probe-pilot/common.py','evaluation/probe-pilot/bake.py','evaluation/probe-pilot/replay.py','evaluation/probe-pilot/comprehension.md'] + ['evaluation/primitive-pilot/'+n for n in ('bake.py','freeze.py','run.py','scoring.py','protocol.md','README.md','twins.py','smoke.py','review_packet.py','REPORT.md')]
+DOCS=['evaluation/run.py','evaluation/cases.json','evaluation/README.md','evaluation/probe-pilot/budget.py','docs/architecture.md','docs/verification.md','docs/release.md','evaluation/probe-pilot/common.py','evaluation/probe-pilot/bake.py','evaluation/probe-pilot/replay.py','evaluation/probe-pilot/comprehension.md'] + ['evaluation/primitive-pilot/'+n for n in ('bake.py','freeze.py','run.py','scoring.py','protocol.md','README.md','twins.py','smoke.py','review_packet.py','REPORT.md')]
 
 DOCS += ['evaluation/primitive-v2/' + name for name in (
     'README.md', 'protocol.md', 'v2harness.py', 'v2scoring.py', 'inventory.py',
@@ -12,10 +12,10 @@ DOCS += ['evaluation/primitive-v2/' + name for name in (
 DOCS += ['evaluation/primitive-v3/'+p.name for p in (ROOT/'evaluation/primitive-v3').glob('*') if p.is_file() and p.suffix in {'.py','.md'}]
 DOCS += ['docs/validation/researcher-study.md','docs/validation/automated-review-2026-09-18.md','docs/design/evidence-report.md']
 DOCS += ['docs/repair-and-reuse-verification.md','docs/notebook-and-repair.md','docs/experiments/score-protocol.md','docs/experiments/score-results.md']
-DOCS += ['docs/experiments/size-control-protocol.md','docs/reviews/fable-final-response.md','docs/validation/recruitment-kit.md']
+DOCS += ['docs/experiments/size-control-protocol.md','docs/validation/release-corrections-rc2.md','docs/validation/recruitment-kit.md']
 DOCS += ['docs/build-readiness.md','evaluation/probe-pilot/protocol.md']
 DOCS += ['evaluation/primitive-v4/'+p.name for p in (ROOT/'evaluation/primitive-v4').glob('*') if p.is_file() and p.suffix in {'.py','.md'}]
-DOCS += ['docs/reviews/v3-acceptance-results.md','docs/reviews/v4-implementation.md','devpost-submission.md','docs/validation/reviewer-a.md','docs/validation/reviewer-b.md','docs/validation/ratings-template.json']
+DOCS += ['docs/reviews/v3-acceptance-results.md','docs/reviews/v4-implementation.md','docs/validation/reviewer-a.md','docs/validation/reviewer-b.md','docs/validation/ratings-template.json']
 
 DOCS += ['docs/reviews/rc7-verification-wording.md','docs/reviews/rc6-self-review.md','docs/reviews/rc4-receipt-scope.md','docs/reviews/rc5-runtime-provenance.md']
 
@@ -45,15 +45,14 @@ DOCS += ['docs/validation/product-finish-audit-2026-09-26.md',
          'research/anuran-user-trial-2026-09-26/REPORT.md',
          'research/preparation-failure-routing/REPORT.md']
 DOCS += ['research/identity-choice-preflight/REPORT.md',
-         'research/identity-choice-preflight/READER-TASK.md',
-         'docs/reviews/external-product-direction-2026-09-26.md']
+         'research/identity-choice-preflight/READER-TASK.md']
 
 # Product ladder specs, public derived summaries and fictional examples only.
 # Raw datasets, model replies, frozen evaluation cases and run records stay out.
 DOCS += ['docs/history/single-binding-readme-2026-10-23.md']
 DOCS += ['docs/images/asterisk-overview.png']
 DOCS += ['site/index.html', 'site/site.css', 'site/evidence.json', 'site/.nojekyll']
-DOCS += ['public_site/index.html', 'public_site/site.css', 'docs/submission/public-site.md']
+DOCS += ['public_site/index.html', 'public_site/site.css', 'docs/public-site.md']
 DOCS += ['static/ladders/'+name+'.json' for name in (
     'index','experiment','wsibench-report','wsibench-cross-task','ptbxl',
     'esc50-fold1','esc50-fold2','urbansound8k-fold1')]
@@ -65,7 +64,6 @@ DOCS += ['examples/ladders/'+name+'.json' for name in (
     *('esc50-fold'+str(i) for i in range(1,6)),
     *('urbansound8k-fold'+str(i) for i in range(1,11)))]
 DOCS += ['examples/ladders/docs/'+name+'.md' for name in ('esc50','ptbxl','tcga-barcode','urbansound8k')]
-DOCS += [str(p.relative_to(ROOT)) for p in (ROOT/'docs/submission').glob('*.md')]
 for folder in (ROOT/'evaluation').glob('ladder-proposal-v*'):
     DOCS += [str(p.relative_to(ROOT)) for p in folder.glob('*.md')]
 
@@ -82,6 +80,33 @@ DOCS += ['research/ladder-source-grammar-v7/'+name for name in ('variant.py','st
 
 # Research-only focused comparison; private packets and model replies excluded.
 DOCS += ['research/ladder-focused-v8/'+name for name in ('variant.py','study.py','test_study.py','PROTOCOL.md','REPORT.md')]
+
+
+# Technical product records only; submission drafts and review prompts stay private.
+DOCS += ['docs/evidence/'+name for name in (
+    'binding-correction-2026-10-07.md',
+    'citation-review-2026-10-07.md',
+    'correction-form-2026-10-07.md',
+    'correction-validation-2026-10-07.md',
+    'evidence-handoff-2026-10-07.md',
+    'hosted-browser-journey-2026-10-09.md',
+    'hosted-preparation-check-2026-10-09.md',
+    'ladder-workspace-verification-2026-09-27.md',
+    'line-bounds-comparison-2026-10-07.md',
+    'messy-preparation-comparison-2026-10-07.md',
+    'preparation-development-2026-10-07.md',
+    'preparation-reliability-2026-10-07.md',
+    'quiet-ui-2026-10-02.md',
+    'receipt-first-2026-10-23.md',
+    'recovery-fixes-2026-10-02.md',
+    'release-review-resolution-2026-09-28.md',
+    'reliability-and-human-evidence-2026-10-09.md',
+    'review-recovery-2026-10-07.md',
+    'text-list-intake-2026-10-07.md',
+    'ucf101-real-workflow-2026-10-07.md',
+    'unmapped-preview-2026-10-07.md',
+)]
+DOCS += ['docs/operations/aws-deployment.md']
 
 
 def release_files(root):

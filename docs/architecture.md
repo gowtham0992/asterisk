@@ -1,4 +1,4 @@
-Current product: v4 entity-only split receipts. See [v4 implementation](reviews/v4-implementation.md). The architecture below is retained development history and does not supersede v4.
+**Historical architecture notes.** The current independence-ladder workflow is documented in the [product guide](../README.md) and [product status](current-readiness.md). The dated descriptions below preserve earlier implementations and do not define the current supported scope.
 
 # Current repository investigation architecture — v2
 

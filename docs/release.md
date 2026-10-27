@@ -1,6 +1,6 @@
 # Release and rollback
 
-This is an invitation-only, single-process research preview. Human utility and fresh v4 acceptance remain unmeasured. The AWS hosted preview was deployed and checked on 28 September; see [deployment records](submission/aws-deployment.md). The source repository remains private at the owner’s request.
+Asterisk is a single-process research preview. Use the ladder profile below for the current product. Human usefulness remains unmeasured. Dated deployment observations are retained in the [AWS records](operations/aws-deployment.md); they are historical records rather than a live release pointer.
 
 ## Current ladder deployment
 
@@ -35,7 +35,7 @@ Use one worker and one replica, an HTTPS reverse proxy, a persistent SQLite disk
 
 Use `sh scripts/start_hosted.sh`. The platform must terminate HTTPS, preserve scheme/host, and restrict direct ingress to its proxy. Configure `FORWARDED_ALLOW_IPS` with the actual proxy addresses; never blindly trust arbitrary forwarding headers. Public mode uses Secure, HttpOnly, SameSite Strict session cookies, exact host validation and shared preview authentication. This is not a multi-tenant production identity system.
 
-The `/healthz` endpoint checks the database without paid inference. Keep an uptime check on it and monitor failed/stuck receipts and provider usage. Interactive ladder calls have persisted daily call reservations and an in-flight session limit; saved receipts have count and payload-size limits. These are not a dollar-cost guarantee. See [AWS configuration](submission/aws-deployment.md) before final judge access.
+The `/healthz` endpoint checks the database without paid inference. Keep an uptime check on it and monitor failed/stuck receipts and provider usage. Interactive ladder calls have persisted daily call reservations and an in-flight session limit; saved receipts have count and payload-size limits. These are not a dollar-cost guarantee. See the [AWS configuration records](operations/aws-deployment.md) when operating that preview.
 
 ## Same artifact and tested rollback
 
@@ -45,17 +45,17 @@ Stop new work and wait for in-flight jobs before deployment. Back up SQLite usin
 
 Release checks: healthy database; correct auth/host behavior; isolation between two sessions; fresh-browser synthetic receipt from proposal through confirmed binding, result and export; byte verification; recorded matching Sandbox replay; refresh during and after execution. Rollback checks must load the same records before and after code reversal. A local compatibility check does not prove the host's proxy, disk or deployment mechanism.
 
-Hosting, proxy configuration, TLS and tested rollback are established for the AWS preview. Final judge access remains pending. Keep the service available through the judging period; verify the event's schedule discrepancy before release and plan conservatively for access starting 2 November.
+The AWS preview has recorded proxy, TLS, persistence and rollback checks. Recheck the running release and operational configuration before any new deployment; dated observations do not establish current health.
 
 ## Rights and public source
 
 The default public artifact includes application source under MIT, tests with original synthetic fixtures and implementation docs. It excludes the authored third-party dataset packet, model transcripts and private evaluation records. The review reports aggregate measurements and limitations only. Before adding any real dataset to the hosted demo or public repository, retain its source URL, revision, license and required attribution and verify the projected fields are permitted. Do not assume a tool repository's license covers external notebooks or datasets.
 
-The public remote, actual hosted URL, YouTube video and Devpost submission remain external actions. Local prepared files are not evidence those actions occurred.
+A local source package is not evidence of a successful deployment. Verify the deployed bytes and live access boundaries separately.
 
 ## Frozen preview operating limits
 
-Do not enable `ASTERISK_LEGACY_AUDITS` for the judge preview. The historical API is read-only by default. One process-wide investigation lock serializes planning, execution and confirmation across sessions; a busy process can return 409 to another reviewer. Schedule the two sessions separately. This is appropriate for an invited preview, not a claim of concurrent multi-user capacity.
+Do not enable `ASTERISK_LEGACY_AUDITS` for the judge preview. The historical API is read-only by default. The historical investigation workflow has a process-wide lock; a busy operation can return 409 to another reviewer. The ladder workflow separately limits provider operations per session. These bounds do not establish production multi-user capacity.
 
 Build review packets with `scripts/build_review_packet.py` from an allowlisted release ZIP. It verifies source hashes, runs tests in a separate disposable copy, and archives only the original verified bytes. Test-created databases, credentials, caches and modified files cannot enter the output. The earlier September 18 review ZIP contained an empty test-created database and is retained only as a historical artifact; do not redistribute it as the current release.
 

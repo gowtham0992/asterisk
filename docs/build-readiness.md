@@ -1,6 +1,6 @@
 # Asterisk — build readiness
 
-**Historical build log.** The dated entries below describe past states and include superseded scope and access failures. For the current entity-only product, preserved RC7 fallback, extraction experiments and outstanding gates, use [current readiness](current-readiness.md). Do not use this history as deployment or submission status.
+**Historical build log.** The dated entries below describe past states and include superseded scope and access failures. For the current product, retained experiments and evidence limits, use [current readiness](current-readiness.md). Do not use this history as deployment or submission status.
 
 ## Per-audit Sandbox integration — 17 September 2026
 

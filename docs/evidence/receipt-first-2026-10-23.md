@@ -1,6 +1,6 @@
 # Receipt-first restructuring — 23 October 2026
 
-Implements the product and repository-facing changes in Fable's restructuring review. The owner explicitly deferred the demo and submission. No Devpost fields, repository visibility, video, prompt, dataset, inference budget or study protocol changed.
+Technical verification record for the receipt-first product workflow. The change preserved the prompt, measurement engine, supported datasets and provider limits.
 
 ## Changes
 
@@ -22,7 +22,3 @@ An agent-operated local browser journey verified the saved result, primary-actio
 ## Deployment boundary
 
 The existing host was inspected before release: `/opt/asterisk/releases/20261009-99844a9`, service active. The deployment preserves preview credentials, judge reserve, storage and the identifier cache. Verify the current release using `sudo readlink -f /opt/asterisk/current` and compare returned asset bytes with the release manifest; do not infer a current hash from older dated readiness sections. The deployment command record is retained privately in `.data/deployment/`.
-
-## Deferred by the owner
-
-Video recording, Devpost description/fields, final judge testing instructions and contact, repository publication, and final submission. The public page deliberately omits a source or video link until one is actually available. Human benefit remains unmeasured. No further prompt experiment, benchmark or recruitment work was started.

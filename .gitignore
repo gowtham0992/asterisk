@@ -9,3 +9,15 @@ __pycache__/
 .DS_Store
 artifacts/
 .devpost-hackathon-state.json
+
+# Local submission preparation and external strategy prompts are not product source.
+devpost-submission.md
+docs/demo-script.md
+docs/submission/
+docs/submission-history/
+docs/hackathon-build/
+docs/devpost-reference.json
+docs/official-rules.md
+docs/submission-requirements*.json
+docs/reviews/fable-*
+docs/reviews/external-product-direction*

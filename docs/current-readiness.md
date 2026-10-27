@@ -1,57 +1,46 @@
-# Asterisk current readiness
+# Asterisk product status
 
-Updated 23 October 2026, Denver. **Working hosted research preview; release-review hardening deployed and checked on 28 September. Researcher usefulness remains unmeasured.**
+Updated 27 October 2026. **Working research preview; researcher usefulness remains unmeasured.** The current product is the independence ladder described in the [product guide](../README.md).
 
-## Latest product restructuring, 23 October
+## Supported workflow
 
-The receipt-first entry (`/static/ladder.html#receipt`, also the default view) leads with the retained WSI-Bench result: 0 shared slide IDs, 42 shared patient IDs, 43 of 208 evaluation rows affected. One retained patient witness is expanded. Its main action loads the same identifier-only files into the normal reviewed workflow; loading makes no model or Sandbox call. The site rung is labeled expected-shared context in this introductory figure only; the recorded measurement and all scientific semantics remain unchanged.
+NVIDIA Nemotron 3 Super on Nebius Token Factory proposes a cited extraction rule from supplied documentation and identifier examples. A person reviews or edits the rule; application-owned code measures exact recorded overlap. Ultra is selectable, and manual definition and local measurement work without inference.
 
-The exact read-only `/public/` assets are accessible without workspace credentials. The workspace and APIs remain protected. The README now describes the ladder architecture alone and links the complete older text in a dated history file. Shipping v4 and its failed 5/10 gate remain unchanged; the later unsupported-binding exception is explicit. No new prompt, benchmark, recruitment, video or submission was created.
+A zero-overlap finding needs the required mapping coverage and confirmation of identity meaning before it can be called held out. Unsupported or ambiguous cases remain explicit. A fresh optional Nebius Sandbox runs the same measurement and compares its output with the server result.
 
-See [implementation and verification](submission/receipt-first-2026-10-23.md) for the current source checks and deployment status. Current restructuring checks: **620 Python passed, 9 existing skips; 194 JavaScript passed**. Counts in dated sections below are historical runs, not current totals.
+Saved receipts retain input files, the specification, full measurements, witness references and recorded confirmations. Server-linked proposals retain model origin and edit/input-change flags. Readable HTML, measurement JSON and an opt-in evidence ZIP are available. A separately trusted installation can recompute the ZIP without provider credentials or executing bundled code.
 
-## Current product
+## Recorded verification
 
-The independence ladder measures exact identifier overlap at observation, subject and other declared levels. NVIDIA Nemotron through Nebius Token Factory proposes supported extraction rules from documentation. People review the rules and partition mapping; application code measures. A separate optional Nebius Sandbox replay runs the same engine on the same inputs. It establishes same-code reproducibility, not independent scientific verification.
+- [Receipt-first workflow and access boundary](evidence/receipt-first-2026-10-23.md): public read-only introduction, saved witness, same-files loader, local measurement and exact protected-route boundaries.
+- [Hosted browser journey](evidence/hosted-browser-journey-2026-10-09.md): recorded proposal, measurement, matching Sandbox replay and exported-bundle recomputation on fictional inputs.
+- [Executable proposal validation](evidence/hosted-preparation-check-2026-10-09.md): every supported extraction expression is checked against the supplied files before acceptance.
+- [Real UCF101 workflow](evidence/ucf101-real-workflow-2026-10-07.md): actual file preparation, corrections, measurement and replay; limitations are retained.
+- [Input and binding recovery](evidence/recovery-fixes-2026-10-02.md): explicit partitions, Unicode-safe identifiers, duplicate-file rejection and preservation of transformations.
+- [Evidence export](evidence/evidence-handoff-2026-10-07.md): source inputs, witnesses and provenance can be handed off and recomputed locally.
 
-The hosted application runs on AWS with HTTPS and preview authentication. GitHub is private at the owner's request, with one branch, `main`. The review fixes and supported-scope/setup corrections are on GitHub main and the AWS workspace. GitHub Pages is unavailable under the current private-repository plan. Hosting records: [AWS deployment](submission/aws-deployment.md).
+The recorded 23 October suite passed **620 Python tests with nine existing scientific-trace skips, and 194 JavaScript tests**. These are engineering checks, not model-accuracy or user-benefit evidence. Dated reports retain their original counts.
 
-## Hardening since the release review
+## Model reliability
 
-- Column values require explicit selection before inference, including split-like column names. Selected files first reach the Asterisk server; this is not browser-only processing.
-- Partition mappings, raw row counts, deduplicated populations, exclusions, derivation rules and documentation quotes are retained in results and readable receipts.
-- Confirmation names the derivation and evaluation labels. Proposer prose is marked unverified.
-- Saved receipts reference owner-scoped server proposal records, with model, prompt version, request hash, validation attempts and computed edit/input-change flags. User-supplied specs do not claim recorded model authorship.
-- Daily provider-call reservations are persisted and atomic, with one in-flight operation per session. Receipt writes enforce per-owner counts and a global payload-size cap.
-- Zero-overlap rows say no shared values. Near-unique IDs and case/whitespace-folded overlap carry warnings without changing the exact matching rule.
-- Manual setup is available before any model call. Citation selection is explicit. A fictional subject-disjoint example exercises pending confirmation, confirmation, save and export.
+Across retained configurations, Super scored 21/41, Ultra 24/41 and Sonnet 36/41. The shipping Super v4 prompt scored **5/10 on retained set D**, below its performance threshold. References were developer-authored; prompts and correction opportunities varied. These are bounded development comparisons, not independent acceptance or a general model benchmark.
 
-These are engineering fixes, not new held-out accuracy or user-benefit evidence. The clean packaged release passed 598 Python tests (9 scientific-trace skips) and 173 JavaScript tests. The final 447-file manifest was verified again as the hosted service user.
+- [Retained set-D comparison](../evaluation/ladder-proposal-v5/RESULTS.md)
+- [Explicit-line-number candidate](evidence/preparation-development-2026-10-07.md)
+- [Bounds-only candidate and unsupported-binding counterexample](evidence/line-bounds-comparison-2026-10-07.md)
+- [Later grammar comparison](evidence/preparation-reliability-2026-10-07.md)
+- [Rejected focused candidate](../research/ladder-focused-v8/REPORT.md)
 
-## Recovery fixes, 2 October
+No later candidate passed its promotion rule. Valid syntax and executable expressions do not establish that the identity meaning is correct. Review and manual recovery remain necessary.
 
-The guided builder preserves transformations before lookup, supports different observation column names across sources, exposes any partition column with explicit assignment of unknown labels, and displays numbered documentation before citation selection. Duplicate filenames and oversized total selections are refused before file reads; input and workflow revisions discard obsolete responses. Unicode previews count code points consistently with Python. These changes were verified with failing regression tests, the full suite, a JavaScript-to-Python measurement, and a scratch browser journey. See [the recovery record](submission/recovery-fixes-2026-10-02.md). They do not change the retained model accuracy scores.
+## Data handling and operations
 
-## Quiet workspace redesign, 2 October
+Preview and measurement send selected input files to the Asterisk server. Inference sends the disclosed documentation, column summaries and selected identifier examples; Sandbox replay separately sends the engine, rule and supplied files. Personal fields are not automatically stripped from arbitrary user uploads.
 
-The new-check screen now uses Define, Review and Inspect stages, with separate benchmark/evaluation views and preserved drafts. Results lead with the finding, and binding details remain expanded while meaning confirmation is required. The product and saved workspace share a neutral system-type design, with responsive layout and AA contrast checks. See [the design verification](submission/quiet-ui-2026-10-02.md). Model prompts and measurement rules are unchanged.
+The hosted preview uses HTTPS, explicit authentication, owner-scoped sessions, persistent SQLite storage and bounded provider-call reservations. The static introduction is public; workspace records and APIs remain protected. This is a single-process research preview, not a production account system or unlimited paid execution service. See [host configuration](release.md), [dated AWS deployment records](operations/aws-deployment.md) and [the public-site guide](public-site.md).
 
-## Real workflow and judge access, 7 October
+## Limits and historical scope
 
-A real WSI-Bench identifier-only projection can now be loaded into the proposal workflow without hand-preparing files. Clinical conversations and question IDs are excluded; the cache stays outside source control. A scratch-browser live v4 Nemotron proposal recovered the patient prefix, measured 42 shared patient identifiers affecting 43 of 208 evaluation rows, matched one fresh Sandbox replay, and reopened its saved receipt. This reproduces an exposed benchmark through the product; it is not new-domain accuracy evidence.
+Asterisk checks exact identifiers under stated derivations. It does not establish content similarity, preprocessing cleanliness, data authenticity, model-accuracy effects or independence at undocumented levels. Human confirmation records an assumption. No independent researcher comprehension, time saving or adoption has been established.
 
-Dedicated judge credentials use an approved $25 estimated cumulative reserve through December 15, separate from preview daily caps. Remaining calls are visible, with persistent atomic reservations and legacy-route restrictions. A finite reserve is not unlimited testing; organizer confirmation of the unrestricted-access clause remains unobtained. See [judge access](submission/judge-access-2026-10-07.md).
-
-The human-review page supports screening, timed receipt reading, participant-owned answer download and withdrawal. Developer dry runs checked eligibility rejection and withdrawal; no human response was collected. The owner chose to skip Prolific; the voluntary study remains available without further recruitment work. See [human-review collection](submission/human-review-launch-2026-10-07.md).
-
-## Reliability and evidence limits
-
-Across retained configurations, Super scored 21/41, Ultra 24/41 and Sonnet 36/41. The shipping v4 Super prompt scored 5/10 on set D and failed its gate. Prompts differ across sets; guards were developed using exposed results, reference answers were developer-authored, and correction opportunities differ by model. Zero recorded false reassurance is not a guarantee on new files. See evaluation/ladder-proposal-v1 through v5.
-
-An October 7 explicit-line-number v5 candidate failed its fixed development gate (3/10 versus matched v4 4/10); both passed all six original synthetic tasks/refusal controls. It was rejected, and the default remains v4. See [the retained negative result](submission/preparation-development-2026-10-07.md). Earlier extraction and routing failures remain failures. Historical real-data checks include the DermaMNIST and frog trials, documented in [the benchmark audit](validation/product-finish-audit-2026-09-26.md) and [frog report](../research/anuran-user-trial-2026-09-26/REPORT.md). They used earlier product paths and do not validate the latest ladder model on fresh datasets. The 28 September hosted fictional smoke used one real Nemotron Super proposal (3,162 tokens) and one matching Sandbox replay, completing in 10.29 seconds. The saved and exported receipt retained the owner-scoped proposal origin and unedited binding. This is a deployment check, not an accuracy study.
-
-## Remaining release work
-
-The review fixes, clean-package tests, fictional browser journey and hosted model-to-receipt smoke are complete; see [the resolution record](submission/release-review-resolution-2026-09-28.md). Keep the repository private until the owner chooses publication; public source, final judge access arrangements, a real video and final submission remain pending. The daily live-call caps leave unrestricted judge testing unresolved; see [the current submission gates](submission/submission-gates-2026-09-30.md). The canonical draft is [the ladder submission](submission/devpost-ladder-draft.md).
-
-No independent researcher comprehension, time saving, adoption, general-agent superiority or hackathon outcome has been established. Tests and agent reviews cannot substitute for human evidence. Earlier readiness details remain in Git history and [the historical log](readiness-history-2026-09-26.md).
+The [historical single-binding guide](history/single-binding-readme-2026-10-23.md) and earlier primitive reports preserve the previous implementation and failed evaluations. They do not expand the current product's supported scope.

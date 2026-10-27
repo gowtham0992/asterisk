@@ -92,7 +92,7 @@ V3's frozen source, original cases and attempts remain in the private developmen
 
 MIT-licensed application code. The public source packager excludes keys, databases, evaluation inputs and private transcripts. Dataset and upstream source licenses do not become MIT merely by being used in a test. No third-party research data is included in the default source release.
 
-[Hosted preview and rollback](../../docs/release.md) · [Demo script](../../docs/demo-script.md) · [Draft entry](../../devpost-submission.md)
+[Hosted preview and rollback](../../docs/release.md) · [Current product guide](../../README.md)
 
 ## Repair and repeat
 
@@ -112,7 +112,7 @@ The workspace's **Load real benchmark** action loads a pinned WSI-Bench report-t
 
 To install the optional cache, obtain the two report-task files at the pinned URLs in `examples/ladders/sources.json`, retaining their `wsibench/` filenames under a local data directory. `scripts/build_wsibench_demo.py` verifies their hashes and projects identifiers. From the project root, run `.venv/bin/python -m scripts.build_wsibench_demo --data /absolute/path/to/source-data --output .data/benchmarks/wsibench`. Do not commit the source files or generated cache. Set `ASTERISK_BENCHMARK_DIR` to an absolute cache-parent path on hosted deployments.
 
-Dedicated judge login configuration, budget assumptions and remaining compliance limits are in [judge access](../../docs/submission/judge-access-2026-10-07.md). The prepared human comprehension page is `/static/receipt-study.html`; [collection instructions](../../docs/submission/human-review-launch-2026-10-07.md) distinguish real human responses from developer dry runs. No human benefit is claimed.
+Dedicated judge login configuration, budget assumptions and remaining compliance limits are in [judge access](../release.md). The prepared human comprehension page is `/static/receipt-study.html`; [collection instructions](../validation/researcher-study.md) distinguish real human responses from developer dry runs. No human benefit is claimed.
 
 ### Hand off a complete ladder measurement
 

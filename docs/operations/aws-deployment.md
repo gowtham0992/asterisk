@@ -69,7 +69,7 @@ The release-hardening code reserves provider calls in the application SQLite dat
 
 Only one provider operation may be in flight per owner. A crashed operation's lock expires after 30 minutes; daily usage is not refunded. Receipt writes atomically enforce 30 records per owner and 256 MiB of serialized receipt payloads globally. The latter excludes SQLite overhead, proposal metadata and backups. Users can export and delete their saved receipts to release capacity. A successful replay whose save fails still returns its result and warns against spending on another replay.
 
-These limits were deployed with the 28 September hardening and remain in the 30 September release. Their compatibility with unrestricted judge testing is unresolved; see [submission gates](submission-gates-2026-09-30.md).
+These limits were deployed with the 28 September hardening and remain in the 30 September release. Their compatibility with unrestricted judge testing is unresolved; see [submission gates](../current-readiness.md).
 
 ## Source and presentation sync — 30 September 2026
 
