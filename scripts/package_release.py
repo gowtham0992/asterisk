@@ -51,6 +51,7 @@ DOCS += ['research/identity-choice-preflight/REPORT.md',
 # Product ladder specs, public derived summaries and fictional examples only.
 # Raw datasets, model replies, frozen evaluation cases and run records stay out.
 DOCS += ['docs/history/single-binding-readme-2026-10-23.md']
+DOCS += ['docs/images/asterisk-overview.png']
 DOCS += ['site/index.html', 'site/site.css', 'site/evidence.json', 'site/.nojekyll']
 DOCS += ['public_site/index.html', 'public_site/site.css', 'docs/submission/public-site.md']
 DOCS += ['static/ladders/'+name+'.json' for name in (
